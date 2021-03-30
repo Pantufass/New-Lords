@@ -41,12 +41,12 @@ namespace NewNpc2
         //throw event when party reaches new settlement
 
 
-        private Dictionary<string, SocialExchangeType> existingExchanges;
+        private static Dictionary<string, SocialExchangeType> existingExchanges;
 
         //TODO
-        private List<Rule> microTheories;
+        private static List<Rule> microTheories;
         //TODO
-        private List<Rule> triggerRules;
+        private static List<Rule> triggerRules;
 
         //TODO
         public List<SocialExchange> SocialFactsDatabase;
@@ -65,7 +65,7 @@ namespace NewNpc2
 
             //typeof(Campaign).GetField("<CharacterRelationManager>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(Campaign.Current, new NewCharacterRelationManager());
 
-            createSocialExchanges();
+            existingExchanges = SocialExchangeManager.createSocialExchanges();
             createMicroTheories();
             createTriggerRules();
 
@@ -83,67 +83,6 @@ namespace NewNpc2
             }
         }
 
-        //TODO rest of exchange
-        private void createSocialExchanges()
-        {
-            existingExchanges = new Dictionary<string, SocialExchangeType>();
-
-            string n = "Introduce";
-            SocialExchangeType t = new SocialExchangeType(n);
-            existingExchanges.Add(n, t);
-
-            n = "Compliment";
-            t = new SocialExchangeType(n);
-            existingExchanges.Add(n, t);
-
-            n = "Insult";
-            t = new SocialExchangeType(n);
-            existingExchanges.Add(n, t);
-
-            n = "Brag";
-            t = new SocialExchangeType(n);
-            existingExchanges.Add(n, t);
-
-            n = "Converse";
-            t = new SocialExchangeType(n);
-            existingExchanges.Add(n, t);
-
-            //rumor
-            n = "RelayInformation";
-            t = new SocialExchangeType(n);
-            existingExchanges.Add(n, t);
-
-            n = "Gossip";
-            t = new SocialExchangeType(n);
-            existingExchanges.Add(n, t);
-
-            //romance 
-            n = "Flirt";
-            t = new SocialExchangeType(n);
-            existingExchanges.Add(n, t);
-
-            n = "Date";
-            t = new SocialExchangeType(n);
-            existingExchanges.Add(n, t);
-
-            n = "DeclareLove";
-            t = new SocialExchangeType(n);
-            existingExchanges.Add(n, t);
-
-            n = "BreakUp";
-            t = new SocialExchangeType(n);
-            existingExchanges.Add(n, t);
-            //-----------
-
-            //lords only
-            n = "Kick";
-            t = new SocialExchangeType(n);
-            existingExchanges.Add(n, t);
-
-            n = "Exile";
-            t = new SocialExchangeType(n);
-            existingExchanges.Add(n, t);
-        }
 
         //TODO
         private void createMicroTheories()

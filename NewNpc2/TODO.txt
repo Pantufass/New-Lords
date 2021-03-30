@@ -1,0 +1,54 @@
+﻿attach character new class 
+
+start implementing rumors - parties/individual 
+
+first cif implementation
+
+variaveis globais necessarias no cif
+
+relationships - easy
+
+cultural knowledge - dont know yet
+
+explorar companions interactions 
+
+-----------------------------------------------
+
+beliefs separados da social network - mais simples de entender (trabalhoso de fazer) mais efficiente
+
+tipos de rumor
+
+tratar das rules? microtheories trigger influence and social exchange creation
+
+------------------------------------------------
+
+sub characters -> find where character objects are created
+
+sub relation manager -> easy -> later
+
+perceber dialog manager
+
+find social exchanges
+
+--------------------------------------------
+
+find unique identifier for character object - id doesnt work
+
+find how character objects are created - david carry
+
+perceber dialog manager
+
+find conditions
+find influence rules
+find trigger rules
+for existing social exchanges
+
+find more social exchanges
+
+---------------------------------------------
+
+two weeks
+
+influence rules - working
+basic cif
+

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaleWorlds.CampaignSystem;
+using TaleWorlds.Core;
 
 namespace NewNpc2
 {
@@ -62,6 +64,24 @@ namespace NewNpc2
             this.culture = culture;
         }
 
+        public Character(CulturalKnowledge culture, CharacterTraits characterTraits)
+        {
+            personality = new Traits(characterTraits);
+            status = new List<Status>();
+
+            friendlyFeelings = new List<Feeling>();
+            romanticFeelings = new List<Feeling>();
+            admiration = new List<Feeling>();
+
+            beliefs = new List<Belief>();
+
+            socialKnowledge = new Dictionary<SocialExchange, float>();
+
+            influenceRules = new List<Rule>();
+
+            this.culture = culture;
+        }
+
         public void addInfluenceRule(Rule r)
         {
 
@@ -92,39 +112,64 @@ namespace NewNpc2
             public double stubborn;
             public double liar;
             public double curious;
-            public double helpfull;
+            public double helpful;
             public double shy;
-            public double carefull;
+            public double careful;
             public double sensitive;
             public double honor;
             public double charm;
 
             public double annoying;
 
+            public double calculating;
+
             public Traits()
             {
-                //TODO:
-                //adding custom traits (not random)
 
                 var rand = new Random();
                 kind = rand.NextDouble() * 2 - 1;
                 stubborn = rand.NextDouble() * 2 - 1;
                 liar = rand.NextDouble() * 2 - 1;
                 curious = rand.NextDouble() * 2 - 1;
-                helpfull = rand.NextDouble() * 2 - 1;
+                helpful = rand.NextDouble() * 2 - 1;
                 shy = rand.NextDouble() * 2 - 1;
-                carefull = rand.NextDouble() * 2 - 1;
+                careful = rand.NextDouble() * 2 - 1;
                 sensitive = rand.NextDouble() * 2 - 1;
                 honor = rand.NextDouble() * 2 - 1;
                 charm = rand.NextDouble() * 2 - 1;
 
                 annoying = rand.NextDouble() * 2 - 1;
+
+                calculating = rand.NextDouble() * 2 - 1;
             }
 
-            public Traits(Ogtraits original)
+            public Traits(CharacterTraits charaterTraits)
             {
+                
+                var rand = new Random();
+                kind = (rand.NextDouble()) * charaterTraits.Generosity % 1; 
+                stubborn = rand.NextDouble() * 2 - 1;
+                liar = rand.NextDouble() * 2 - 1;
+                curious = rand.NextDouble() * 2 - 1;
+                helpful = rand.NextDouble() * charaterTraits.Mercy % 1;
+                shy = rand.NextDouble() * 2 - 1;
+                careful = rand.NextDouble() * 2 - 1;
+                sensitive = rand.NextDouble() * -charaterTraits.Valor % 1;
+                honor = rand.NextDouble() * charaterTraits.Honor % 1;
+                charm = rand.NextDouble() * 2 - 1;
 
+                annoying = rand.NextDouble() * 2 - 1;
+
+                calculating = rand.NextDouble() * charaterTraits.Calculating % 1;
+
+
+                if(kind == 0)  kind = rand.NextDouble() * 2 - 1; ;
+                if(helpful == 0) helpful = rand.NextDouble() * 2 - 1; ;
+                if(sensitive == 0) sensitive = rand.NextDouble() * 2 - 1; ;
+                if(honor == 0) honor = rand.NextDouble() * 2 - 1; ;
+                if(calculating == 0) calculating = rand.NextDouble() * 2 - 1; ;
             }
+
 
            
         }
@@ -156,8 +201,4 @@ namespace NewNpc2
         }
     }
 
-    internal class Ogtraits
-    {
-
-    }
 }

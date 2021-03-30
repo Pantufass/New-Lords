@@ -71,6 +71,7 @@
   <ItemGroup>
     <Compile Include="Character.cs" />
     <Compile Include="CulturalKnowledge.cs" />
+    <Compile Include="Introduced.cs" />
     <Compile Include="NewCharacterRelationManager.cs" />
     <Compile Include="NewConvoBehaviour.cs" />
     <Compile Include="Rule.cs" />
@@ -80,6 +81,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Content Include="socialexchanges.txt" />
     <Content Include="SubModule.xml" />
+    <Content Include="TODO.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

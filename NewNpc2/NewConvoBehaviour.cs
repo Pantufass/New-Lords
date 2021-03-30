@@ -85,21 +85,37 @@ namespace NewNpc2
         private bool conversation_test()
         {
             CharacterObject c = CharacterObject.OneToOneConversationCharacter;
-            bool b = c.Occupation == Occupation.Townsfolk;
-            Character chara = CharacterManager.findChar(c);
-            if (chara  != null)
+            Character chara;
+            Hero h;
+            
+            chara = CharacterManager.findChar(c);
+            
+            if (chara != null)
             {
-                InformationManager.DisplayMessage(new InformationMessage(chara.isNice().ToString("F5")));
+                    InformationManager.DisplayMessage(new InformationMessage(chara.isNice().ToString("F5")));
             }
             else
             {
-                chara = new Character(new CulturalKnowledge());
-                CharacterManager.characters.Add(c, chara);
+                if (c.IsHero)
+                {
+                    h = c.HeroObject;
+                    chara = new Character(new CulturalKnowledge(), h.GetHeroTraits());
+                    CharacterManager.characters.Add(c, chara);
 
-                InformationManager.DisplayMessage(new InformationMessage(chara.isNice().ToString("F5")));
+                    InformationManager.DisplayMessage(new InformationMessage(chara.isNice().ToString("F5")));
+                }
+                else
+                {
+
+                    chara = new Character(new CulturalKnowledge());
+                    CharacterManager.characters.Add(c, chara);
+
+                    InformationManager.DisplayMessage(new InformationMessage(chara.isNice().ToString("F5")));
+                }
             }
+            
 
-            return b;
+            return true;
         } 
 
         private void conversation_on_consequence()

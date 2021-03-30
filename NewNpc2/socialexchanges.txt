@@ -2,7 +2,8 @@
 List of social exchanges
 
 threaten
-fight
+combat
+duel
 
 flirt
 
@@ -13,3 +14,4 @@ help
 
 smalltalk
 rumor
+barter
