@@ -12,6 +12,7 @@ namespace NewNpc2
     public static class CharacterManager
     {
         public static Dictionary<CharacterObject, Character> characters;
+        public static Character MainCharacter;
 
         public static void start(CulturalKnowledge ck)
         {
@@ -53,7 +54,7 @@ namespace NewNpc2
         //throw event when party reaches new settlement
 
 
-        private static Dictionary<string, SocialExchangeType> existingExchanges;
+        public static Dictionary<string, SocialInteraction> existingExchanges;
 
         //TODO
         private static List<Rule> microTheories;
@@ -70,7 +71,6 @@ namespace NewNpc2
 
         protected override void OnSubModuleLoad()
         {
-
 
             newRelationManager = new NewCharacterRelationManager();
 
@@ -90,7 +90,7 @@ namespace NewNpc2
         {
             if (game.GameType is Campaign campaign && gameStarter is CampaignGameStarter campaignGameStarter)
             {
-
+         
                 campaignGameStarter.AddBehavior(new NewConvoBehaviour());
                 campaignGameStarter.AddBehavior(new PlayerStartBehaviour());
             }

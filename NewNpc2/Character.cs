@@ -38,7 +38,7 @@ namespace NewNpc2
         //TODO
         //intention type
         //calc intent/goals
-        private SocialExchangeType intendedSocialExchange;
+        private SocialInteraction intendedSocialExchange;
 
         //TODO rumor
         private Rumor rumor;
@@ -112,7 +112,7 @@ namespace NewNpc2
             return influenceRules;
         }
 
-        public void addIntendedSocialExchange(SocialExchangeType se)
+        public void addIntendedSocialExchange(SocialInteraction se)
         {
             this.intendedSocialExchange = se;
         }

@@ -176,6 +176,11 @@ namespace NewNpc2
             return c;
         }
 
-
+        public static Condition NotAvailable()
+        {
+            Condition c = new Condition("LordsOnly");
+            c.setDel(() => false);
+            return c;
+        }
     }
 }

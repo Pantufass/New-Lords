@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace NewNpc2
 {
 
-    public class SocialExchangeType
+    public class SocialInteraction
     {
         public string name;
         //list of preconditions
@@ -18,12 +18,14 @@ namespace NewNpc2
         //treshhold for a neutral response
         public float lowerThresh;
 
+        public bool finish;
+
         public List<Dialog> sentences;
 
         protected List<InfluenceRule> initRules;
         protected List<InfluenceRule> respRules;
 
-        public SocialExchangeType(string n, float up, float low)
+        public SocialInteraction(string n, float up, float low)
         {
             name = n;
             preconditions = new List<Condition>();
@@ -31,11 +33,22 @@ namespace NewNpc2
             upperThresh = up;
             lowerThresh = low;
             addsentence("...");
+            finish = false;
+
+            initRules = new List<InfluenceRule>();
+            respRules = new List<InfluenceRule>();
         }
 
         public void addInitRule(InfluenceRule rule)
         {
             initRules.Add(rule);
+            respRules.Add(rule);
+        }
+
+        public void addInitRule(InfluenceRule rule, bool b)
+        {
+            initRules.Add(rule);
+            if (b) respRules.Add(rule);
         }
 
         public void addRespRule(InfluenceRule rule)
@@ -57,7 +70,7 @@ namespace NewNpc2
         }
 
         //return a sum of the preconditions
-        public bool preConditions()
+        public bool validate()
         {
             bool b = true;
             foreach(Condition c in preconditions)
@@ -71,7 +84,6 @@ namespace NewNpc2
         //return a sum of the influence rules
         public float calculateVolition(Character init,Character rec, intent intent)
         {
-
             float res = 0;
             foreach(InfluenceRule r in initRules)
             {
@@ -96,6 +108,25 @@ namespace NewNpc2
             }
             return res;
         }
+
+        //TODO pick sentence
+        public string getDialogLine(sentenceType t, float v)
+        {
+            return sentences[0].sentence;
+        }
+
+        public string getResponse(float v)
+        {
+            return (from d in sentences
+                    where d.type == (v > upperThresh ? sentenceType.pResponse : v > lowerThresh ? sentenceType.normalResponse : sentenceType.nResponse)
+                    orderby d ascending
+                    select d.sentence).First();
+        }
+
+        public outcome GetOutcome(float v)
+        {
+            return (v > upperThresh ? outcome.Positive : v > lowerThresh ? outcome.Neutral : outcome.Negative);
+        }
     }
 
     public class SocialExchange : Feeling
@@ -103,7 +134,7 @@ namespace NewNpc2
 
         protected Character receiver;
         //type of the social exchange
-        private SocialExchangeType type;
+        private SocialInteraction type;
 
         //date of the exchange
         private int date;
@@ -122,19 +153,15 @@ namespace NewNpc2
         //study dialog manager better
         private List<Effect> effects;
 
-
-
-        public SocialExchange(Character i, Character r, SocialExchangeType set) : base(i)
+        public SocialExchange(Character i, Character r, SocialInteraction set, outcome o) : base(i)
         {
             type = set;
 
             receiver = r;
-
+            this.o = o;
         }
 
-        
 
-        
     }
 
 
@@ -183,18 +210,18 @@ namespace NewNpc2
 
     public class Dialog
     {
-        protected string sentence;
+        public string sentence;
         
         //more value means more confidence
         public float value;
 
-        public sentenceType t;
+        public sentenceType type;
 
         public Dialog(string s, float v, sentenceType t)
         {
             sentence = s;
             value = v;
-            this.t = t;
+            this.type = t;
         }
 
         public void updateValue(float v)
@@ -205,12 +232,12 @@ namespace NewNpc2
 
     public enum sentenceType
     {
-        Cordial,
-        Normal,
-        Crude,
-        pResponse,
-        nResponse,
-        normalResponse
+        Cordial =1,
+        Normal = 0,
+        Crude = 1,
+        pResponse = -1,
+        nResponse =-1,
+        normalResponse = -1
     }
 
     public enum intent
@@ -236,15 +263,17 @@ namespace NewNpc2
 
     public static class SocialExchangeManager
     {
-        private static void Introduce(Dictionary<string,SocialExchangeType> sc)
+
+        private static void Introduce(Dictionary<string,SocialInteraction> sc)
         {
             string n = "Introduce";
-            SocialExchangeType t = new SocialExchangeType(n,1,1);
+            SocialInteraction t = new SocialInteraction(n,1,1);
 
             t.addCondition(ConditionManager.NotIntroduced());
 
             InfluenceRule r = new InfluenceRule("NeedtoIntroduce");
             r.setDel((Character c1, Character c2, intent it) => 100);
+            t.addInitRule(r,false);
 
             t.addsentence("Hello.",1,sentenceType.Normal);
 
@@ -253,10 +282,10 @@ namespace NewNpc2
             sc.Add(n, t);
         }
 
-        private static void Compliment(Dictionary<string, SocialExchangeType> sc)
+        private static void Compliment(Dictionary<string, SocialInteraction> sc)
         {
             string n = "Compliment";
-            SocialExchangeType t = new SocialExchangeType(n, 1, 1);
+            SocialInteraction t = new SocialInteraction(n, 1, 1);
 
 
             InfluenceRule r = new InfluenceRule("ImproveRel"); //is positive
@@ -275,10 +304,10 @@ namespace NewNpc2
             sc.Add(n, t);
         }
 
-        private static void Insult(Dictionary<string, SocialExchangeType> sc)
+        private static void Insult(Dictionary<string, SocialInteraction> sc)
         {
             string n = "Insult";
-            SocialExchangeType t = new SocialExchangeType(n, 1, 1);
+            SocialInteraction t = new SocialInteraction(n, 1, 1);
 
             InfluenceRule r = new InfluenceRule("Hurtful");//return 5 if not good
             r.setDel((Character c1, Character c2, intent it) => c1.isGood() ? 0 : 10);
@@ -289,10 +318,10 @@ namespace NewNpc2
             sc.Add(n, t);
         }
 
-        private static void Brag(Dictionary<string, SocialExchangeType> sc)
+        private static void Brag(Dictionary<string, SocialInteraction> sc)
         {
             string n = "Brag";
-            SocialExchangeType t = new SocialExchangeType(n, 1, 1);
+            SocialInteraction t = new SocialInteraction(n, 1, 1);
 
             InfluenceRule r = new InfluenceRule("Gloated"); 
             r.setDel((Character c1, Character c2, intent it) => c1.isGloated() ? 10 : 0);
@@ -302,10 +331,10 @@ namespace NewNpc2
             sc.Add(n, t);
         }
 
-        private static void Converse(Dictionary<string, SocialExchangeType> sc)
+        private static void Converse(Dictionary<string, SocialInteraction> sc)
         {
             string n = "Converse";
-            SocialExchangeType t = new SocialExchangeType(n, 1, 1);
+            SocialInteraction t = new SocialInteraction(n, 1, 1);
 
             InfluenceRule r = new InfluenceRule("Bored");
             r.setDel((Character c1, Character c2, intent it) => c1.isBored() ? 10 : 0);
@@ -322,11 +351,11 @@ namespace NewNpc2
             t.addsentence("I like pudding.");
             sc.Add(n, t);
         }
-        private static void RunAway(Dictionary<string, SocialExchangeType> sc)
+        private static void RunAway(Dictionary<string, SocialInteraction> sc)
         {
             string n = "RunAway";
-            SocialExchangeType t = new SocialExchangeType(n, 1, 1);
-
+            SocialInteraction t = new SocialInteraction(n, 1, 1);
+            t.finish = true;
 
             InfluenceRule r = new InfluenceRule("Hurtful");//return 5 if not good
             r.setDel((Character c1, Character c2, intent it) => c1.isGood() ? 0 : 10);
@@ -338,12 +367,22 @@ namespace NewNpc2
 
             sc.Add(n, t);
         }
+        private static void Leave(Dictionary<string, SocialInteraction> sc)
+        {
+            string n = "Leave";
+            SocialInteraction t = new SocialInteraction(n, 1, 1);
+            t.finish = true;
+            t.addsentence("Goodbye.");
+            sc.Add(n, t);
+        }
+
 
         //rumor
-        private static void RelayInformation(Dictionary<string, SocialExchangeType> sc)
+        private static void RelayInformation(Dictionary<string, SocialInteraction> sc)
         {
             string n = "RelayInformation";
-            SocialExchangeType t = new SocialExchangeType(n, 1, 1);
+            SocialInteraction t = new SocialInteraction(n, 1, 1);
+            t.addCondition(ConditionManager.NotAvailable());
 
             InfluenceRule r = new InfluenceRule("Bored");
             r.setDel((Character c1, Character c2, intent it) => c1.isBored() ? 10 : 0);
@@ -366,10 +405,11 @@ namespace NewNpc2
             sc.Add(n, t);
         }
 
-        private static void Gossip(Dictionary<string, SocialExchangeType> sc)
+        private static void Gossip(Dictionary<string, SocialInteraction> sc)
         {
             string n = "Gossip";
-            SocialExchangeType t = new SocialExchangeType(n, 1, 1);
+            SocialInteraction t = new SocialInteraction(n, 1, 1);
+            t.addCondition(ConditionManager.NotAvailable());
 
             InfluenceRule r = new InfluenceRule("Bored");
             r.setDel((Character c1, Character c2, intent it) => c1.isBored() ? 10 : 0);
@@ -385,11 +425,12 @@ namespace NewNpc2
 
 
         //romance
-        private static void Flirt(Dictionary<string, SocialExchangeType> sc)
+        private static void Flirt(Dictionary<string, SocialInteraction> sc)
         {
             string n = "Flirt";
-            SocialExchangeType t = new SocialExchangeType(n, 1, 1);
+            SocialInteraction t = new SocialInteraction(n, 1, 1);
             t.addCondition(ConditionManager.Adults());
+            t.addCondition(ConditionManager.NotAvailable());
 
             InfluenceRule r = new InfluenceRule("Romantic");
             r.setDel((Character c1, Character c2, intent it) => it == intent.Romantic ? 10 : 0);
@@ -399,12 +440,13 @@ namespace NewNpc2
             sc.Add(n, t);
         }
 
-        private static void Date(Dictionary<string, SocialExchangeType> sc)
+        private static void Date(Dictionary<string, SocialInteraction> sc)
         {
             string n = "Date";
-            SocialExchangeType t = new SocialExchangeType(n, 1, 1);
+            SocialInteraction t = new SocialInteraction(n, 1, 1);
             t.addCondition(ConditionManager.Adults());
             t.addCondition(ConditionManager.NoRomanceYet());
+            t.addCondition(ConditionManager.NotAvailable());
 
             InfluenceRule r = new InfluenceRule("Romantic");
             r.setDel((Character c1, Character c2, intent it) => it == intent.Romantic ? 10 : 0);
@@ -424,11 +466,12 @@ namespace NewNpc2
             sc.Add(n, t);
         }
 
-        private static void DeclareLove(Dictionary<string, SocialExchangeType> sc)
+        private static void DeclareLove(Dictionary<string, SocialInteraction> sc)
         {
             string n = "DeclareLove";
-            SocialExchangeType t = new SocialExchangeType(n, 1, 1);
+            SocialInteraction t = new SocialInteraction(n, 1, 1);
             t.addCondition(ConditionManager.Adults());
+            t.addCondition(ConditionManager.NotAvailable());
 
 
 
@@ -436,12 +479,13 @@ namespace NewNpc2
             sc.Add(n, t);
         }
 
-        private static void BreakUp(Dictionary<string, SocialExchangeType> sc)
+        private static void BreakUp(Dictionary<string, SocialInteraction> sc)
         {
             string n = "BreakUp";
-            SocialExchangeType t = new SocialExchangeType(n, 1, 1);
+            SocialInteraction t = new SocialInteraction(n, 1, 1);
             t.addCondition(ConditionManager.Adults());
             t.addCondition(ConditionManager.Romance());
+            t.addCondition(ConditionManager.NotAvailable());
 
 
 
@@ -450,10 +494,11 @@ namespace NewNpc2
         }
 
         //lords only
-        private static void Kick(Dictionary<string, SocialExchangeType> sc)
+        private static void Kick(Dictionary<string, SocialInteraction> sc)
         {
             string n = "Kick";
-            SocialExchangeType t = new SocialExchangeType(n, 1, 1);
+            SocialInteraction t = new SocialInteraction(n, 1, 1);
+            t.addCondition(ConditionManager.NotAvailable());
 
 
 
@@ -462,12 +507,12 @@ namespace NewNpc2
         }
 
 
-        private static void Exile(Dictionary<string, SocialExchangeType> sc)
+        private static void Exile(Dictionary<string, SocialInteraction> sc)
         {
             string n = "Exile";
-            SocialExchangeType t = new SocialExchangeType(n, 1, 1);
+            SocialInteraction t = new SocialInteraction(n, 1, 1);
             t.addCondition(ConditionManager.LordsOnly());
-
+            t.addCondition(ConditionManager.NotAvailable());
 
 
             t.addsentence("You are not allowed here anymore.");
@@ -475,9 +520,9 @@ namespace NewNpc2
         }
 
 
-        public static Dictionary<string,SocialExchangeType> createSocialExchanges()
+        public static Dictionary<string,SocialInteraction> createSocialExchanges()
         {
-            Dictionary<string, SocialExchangeType> existingExchanges = new Dictionary<string, SocialExchangeType>();
+            Dictionary<string, SocialInteraction> existingExchanges = new Dictionary<string, SocialInteraction>();
 
             Introduce(existingExchanges);
             Compliment(existingExchanges);
