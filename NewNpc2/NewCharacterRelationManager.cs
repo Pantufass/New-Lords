@@ -64,11 +64,11 @@ namespace NewNpc2
 
         public enum relation
         {
-            Great,
-            Good,
-            Neutral,
-            Bad,
-            Terrible
+            Great=5,
+            Good=4,
+            Neutral=3,
+            Bad=2,
+            Terrible=1
         }
 
         [SaveableClass(200181)]

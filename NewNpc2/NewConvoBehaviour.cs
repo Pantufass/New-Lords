@@ -28,35 +28,35 @@ namespace NewNpc2
             starter.AddDialogLine("test_id", "start", "test_out", "{=*}heelo",
                 new ConversationSentence.OnConditionDelegate(this.conversation_test),
                 new ConversationSentence.OnConsequenceDelegate(this.conversation_on_consequence),
-                10000012, null);
+                12, null);
             starter.AddDialogLine("test_id", "test_out", "test_out2", "{=*}hello",
                  null,
                  null,
-                 10000012, null);
+                 12, null);
             starter.AddDialogLine("test_id", "test_out2", "test_out3", "{=*}very words",
                  null,
                  null,
-                 10000012, null);
+                 12, null);
             starter.AddPlayerLine("test_id", "test_out3", "close_window", "{=*}leave",
                   null,
                   new ConversationSentence.OnConsequenceDelegate(this.conversation_leave_on_consequence),
-                  10000012, null);
+                  12, null);
             starter.AddPlayerLine("test_id", "test_out3", "test_out4", "{=*}player option",
                 new ConversationSentence.OnConditionDelegate(this.conversation_new_relation_test),
                 null,
-                10000022, null);
+                12, null);
             starter.AddPlayerLine("test_id", "test_out3", "test_out4", "{=*}raise relation 2",
                 null,
                  new ConversationSentence.OnConsequenceDelegate(this.raise2),
-                10000022, null);
+                12, null);
             starter.AddPlayerLine("test_id", "test_out3", "test_out4", "{=*}player option2",
                 new ConversationSentence.OnConditionDelegate(this.conversation_new_relation_test2),
                 null,
-                10000022, null);
+                12, null);
             starter.AddDialogLine("test_id", "test_out4", "close_window", "{=*}no",
                  null,
                  new ConversationSentence.OnConsequenceDelegate(this.conversation_leave_on_consequence),
-                 10000012, null);
+                 12, null);
         }
 
         private void raise2()
@@ -92,25 +92,25 @@ namespace NewNpc2
             
             if (chara != null)
             {
-                    InformationManager.DisplayMessage(new InformationMessage(chara.isNice().ToString("F5")));
+                    InformationManager.DisplayMessage(new InformationMessage(chara.isHappy().ToString()));
             }
             else
             {
                 if (c.IsHero)
                 {
                     h = c.HeroObject;
-                    chara = new Character(new CulturalKnowledge(), h.GetHeroTraits());
+                    chara = new Character(new CulturalKnowledge("a"), h.GetHeroTraits());
                     CharacterManager.characters.Add(c, chara);
 
-                    InformationManager.DisplayMessage(new InformationMessage(chara.isNice().ToString("F5")));
+                    InformationManager.DisplayMessage(new InformationMessage(chara.isHappy().ToString()));
                 }
                 else
                 {
 
-                    chara = new Character(new CulturalKnowledge());
+                    chara = new Character(new CulturalKnowledge("a"));
                     CharacterManager.characters.Add(c, chara);
 
-                    InformationManager.DisplayMessage(new InformationMessage(chara.isNice().ToString("F5")));
+                    InformationManager.DisplayMessage(new InformationMessage(chara.isHappy().ToString()));
                 }
             }
             

@@ -52,3 +52,6 @@ two weeks
 influence rules - working
 basic cif
 
+--------------------------------------------
+
+rule manager

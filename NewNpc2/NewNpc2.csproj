@@ -71,14 +71,16 @@
   <ItemGroup>
     <Compile Include="Character.cs" />
     <Compile Include="CulturalKnowledge.cs" />
-    <Compile Include="Introduced.cs" />
+    <Compile Include="Introduction.cs" />
     <Compile Include="NewCharacterRelationManager.cs" />
     <Compile Include="NewConvoBehaviour.cs" />
+    <Compile Include="PlayerStartBehaviour.cs" />
     <Compile Include="Rule.cs" />
     <Compile Include="Rumor.cs" />
     <Compile Include="SocialExchange.cs" />
     <Compile Include="SubModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Content Include="rules.txt" />
     <Content Include="socialexchanges.txt" />
     <Content Include="SubModule.xml" />
     <Content Include="TODO.txt" />

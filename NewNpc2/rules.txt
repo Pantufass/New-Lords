@@ -1,0 +1,15 @@
+﻿influence rules
+
+NeedtoIntroduce
+ImproveRel
+IsNice
+BeingNice
+Hurtful
+Gloated
+Bored
+Entertain
+LikesToSpeak
+Feared
+HasRumor
+Romantic
+Isliked

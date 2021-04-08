@@ -8,5 +8,17 @@ namespace NewNpc2
 {
     public class CulturalKnowledge
     {
+        protected string name;
+        protected List<InfluenceRule> culturalRules;
+
+        public CulturalKnowledge(string n)
+        {
+            name = n;
+        }
+
+        public List<InfluenceRule> getCulturealRules()
+        {
+            return culturalRules;
+        }
     }
 }

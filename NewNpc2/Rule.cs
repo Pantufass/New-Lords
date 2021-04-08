@@ -32,6 +32,8 @@ namespace NewNpc2
             targets.Add(target);
         }
 
+        public abstract bool validate();
+
         protected bool validateTargets()
         {
             return numberTargets == targets.Count();
@@ -41,22 +43,24 @@ namespace NewNpc2
 
     public class Condition : Rule
     {
-        protected conditions name;
-        //TODO
-        protected Func<bool> del;
+        
+        public Func<bool> del;
 
-        public Condition(conditions name, string d) : base(d)
+        public Condition(string d) : base(d)
         {
-            this.name = name;
         }
-        public Condition(conditions name,string d, int n) : base(d,n)
+        public Condition(string d, int n) : base(d, n)
         {
-            this.name = name;
         }
 
-        public bool validate()
+        public void setDel(Func<bool> d)
         {
-            if(validateTargets()) return ConditionManager.Run(name, targets[1], targets[2]);
+            del = d;
+        }
+
+        public override bool validate()
+        {
+            if(validateTargets()) return del();
             return false;
         }
     }
@@ -65,17 +69,32 @@ namespace NewNpc2
     {
         public List<Condition> conditions;
 
-        public InfluenceRule(string d) : base(d)
+        protected Func<Character, Character, intent, float> del;
+        
+
+        public InfluenceRule(string d) : base(d,0)
         {
             conditions = new List<Condition>();
         }
+
+        public InfluenceRule(string d, int i) : base(d,i)
+        {
+            conditions = new List<Condition>();
+
+        }
+
 
         public void addCondition(Condition c)
         {
             conditions.Add(c);
         }
 
-        public bool validate()
+        public void setDel(Func<Character, Character, intent, float> d)
+        {
+            del = d;
+        }
+
+        public override bool validate()
         {
             bool b = true;
             foreach(Condition c in conditions)
@@ -85,9 +104,9 @@ namespace NewNpc2
             return b;
         }
 
-        public float value()
+        public float value(Character init, Character rec, intent t)
         {
-            return 0;
+            return del(init,rec,t);
         }
     }
 
@@ -101,45 +120,62 @@ namespace NewNpc2
             conditions = new List<Condition>();
             effects = new List<Effect>();
         }
-    }
-
-    public enum conditions
-    {
-        LordsOnly,
-        Romance,
-        Adults,
-        NoRomance,
-        NotIntroduced
-
-    }
-
-    public static class ConditionManager
-    {
-        public static bool Run(conditions c, CharacterObject target1, CharacterObject target2)
+        public TriggerRule(string d, int i) : base(d,i)
         {
-            switch (c)
+            conditions = new List<Condition>();
+            effects = new List<Effect>();
+        }
+
+        public override bool validate()
+        {
+            bool b = true;
+            foreach (Condition c in conditions)
             {
-                case conditions.LordsOnly:
-                    return target1.Occupation == Occupation.Lord && target2.Occupation == Occupation.Lord;
-                case conditions.Romance:
-                    NewCharacterRelationManager.relation r1 = NewCharacterRelationManager.GetRomantic(target1.HeroObject, target2.HeroObject);
-                    return r1 == NewCharacterRelationManager.relation.Good || r1 == NewCharacterRelationManager.relation.Great;
-                case conditions.Adults:
-                    return true;
-                case conditions.NoRomance:
-                    NewCharacterRelationManager.relation r2 = NewCharacterRelationManager.GetRomantic(target1.HeroObject, target2.HeroObject);
-                    return r2 == NewCharacterRelationManager.relation.Terrible || r2 == NewCharacterRelationManager.relation.Bad || r2 == NewCharacterRelationManager.relation.Neutral;
-                case conditions.NotIntroduced:
-                    return Introduction.Introduced(target1, target2);
-                default:
-                    return false;
+                b = b && c.validate();
             }
+            return b;
         }
+    }
 
-        public static bool Run(conditions c, Character target1, Character target2)
+
+    public class ConditionManager
+    {
+
+        public static Condition NotIntroduced()
         {
-
-            return false;
+            Condition c = new Condition("NotIntroduced");
+            c.setDel(()=>Introduction.Introduced(c.targets[0],c.targets[1]));
+            return c; 
         }
+
+        public static Condition Adults()
+        {
+            Condition c = new Condition("Adults");
+            c.setDel(() => true);
+            return c;
+        }
+
+        public static Condition NoRomanceYet()
+        {
+            Condition c = new Condition("NoRomanceYet");
+            c.setDel(() => NewCharacterRelationManager.GetRomantic(c.targets[0].HeroObject, c.targets[1].HeroObject) < NewCharacterRelationManager.relation.Good);
+            return c;
+        }
+
+        public static Condition Romance()
+        {
+            Condition c = new Condition("Romance");
+            c.setDel(() => NewCharacterRelationManager.GetRomantic(c.targets[0].HeroObject, c.targets[1].HeroObject) > NewCharacterRelationManager.relation.Neutral);
+            return c;
+        }
+
+        public static Condition LordsOnly()
+        {
+            Condition c = new Condition("LordsOnly");
+            c.setDel(() => c.targets[0].Occupation == Occupation.Lord && c.targets[1].Occupation == Occupation.Lord);
+            return c;
+        }
+
+
     }
 }

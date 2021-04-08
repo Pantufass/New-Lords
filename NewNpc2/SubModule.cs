@@ -30,6 +30,18 @@ namespace NewNpc2
             }
             return null;
         }
+
+        public static List<InfluenceRule> generalRules()
+        {
+            List<InfluenceRule> ir = new List<InfluenceRule>();
+
+
+            InfluenceRule r = new InfluenceRule("Shyness",1);
+            r.setDel((Character c1, Character c2, intent it) => c1.personality.shy * 5);
+            ir.Add(r);
+
+            return ir;
+        }
     }
 
     public class SubModule : MBSubModuleBase
@@ -66,7 +78,7 @@ namespace NewNpc2
             //typeof(Campaign).GetField("<CharacterRelationManager>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(Campaign.Current, new NewCharacterRelationManager());
 
             existingExchanges = SocialExchangeManager.createSocialExchanges();
-            createMicroTheories();
+            
             createTriggerRules();
 
 
@@ -80,6 +92,7 @@ namespace NewNpc2
             {
 
                 campaignGameStarter.AddBehavior(new NewConvoBehaviour());
+                campaignGameStarter.AddBehavior(new PlayerStartBehaviour());
             }
         }
 
