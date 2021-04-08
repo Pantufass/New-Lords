@@ -10,7 +10,9 @@ namespace NewNpc2
     public abstract class Rule
     {
         public string description;
-        public List<CharacterObject> targets;
+        public CharacterObject target1;
+        public CharacterObject target2;
+        //public List<CharacterObject> targets;
         public int numberTargets;
 
         public Rule(string d)
@@ -36,7 +38,8 @@ namespace NewNpc2
 
         protected bool validateTargets()
         {
-            return numberTargets == targets.Count();
+            return target1 != null && target2 != null;
+           // return numberTargets == targets.Count();
         }
 
     }
@@ -144,7 +147,7 @@ namespace NewNpc2
         public static Condition NotIntroduced()
         {
             Condition c = new Condition("NotIntroduced");
-            c.setDel(()=>Introduction.Introduced(c.targets[0],c.targets[1]));
+            c.setDel(()=>!(Introduction.Introduced(c.targets[0],c.targets[1])));
             return c; 
         }
 

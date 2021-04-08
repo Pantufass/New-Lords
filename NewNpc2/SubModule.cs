@@ -19,7 +19,7 @@ namespace NewNpc2
             //create a character for each hero
             foreach(CharacterObject h in Campaign.Current.Characters)
             {
-                characters.Add(h, new Character(ck));
+                characters.Add(h, new Character(ck,h));
             }
         }
 
@@ -83,6 +83,7 @@ namespace NewNpc2
 
 
             CharacterManager.characters = new Dictionary<CharacterObject, Character>();
+
             
         }
 

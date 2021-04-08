@@ -28,12 +28,35 @@ namespace NewNpc2
         private void CreateCharacter()
         {
             //create MH character
-            Character c = new Character(new CulturalKnowledge("MainHero"), Hero.MainHero.GetHeroTraits());
+            Character c = new Character(new CulturalKnowledge("MainHero"), Hero.MainHero.GetHeroTraits(), Hero.MainHero.CharacterObject);
             CharacterManager.characters.Add(Hero.MainHero.CharacterObject, c);
             CharacterManager.MainCharacter = c;
         }
 
         private void startInterction(CampaignGameStarter campaign)
+        {
+
+            campaign.AddDialogLine(" start", "start", "start", " ",
+                null,
+                null,
+                1000, null);
+
+            foreach (SocialInteraction si in SubModule.existingExchanges.Values)
+            {
+                CharacterObject c = CharacterObject.OneToOneConversationCharacter;
+                campaign.AddPlayerLine(si.name, "start", "step",si.getDialogLine(sentenceType.Normal,0),
+                    (()=>si.validate(Hero.MainHero.CharacterObject,c)),
+                    (()=>
+                    {
+                        newInteraction(campaign,si);
+                    }),
+                    1000, null);
+                }
+            
+           
+        }
+
+        private void newInteraction(CampaignGameStarter campaign, SocialInteraction si)
         {
             CharacterObject c = CharacterObject.OneToOneConversationCharacter;
             Character character = CharacterManager.findChar(c);
@@ -41,64 +64,29 @@ namespace NewNpc2
             {
                 if (c.IsHero)
                 {
-                    character = new Character(new CulturalKnowledge("a"), c.HeroObject.GetHeroTraits());
+                    character = new Character(new CulturalKnowledge("a"), c.HeroObject.GetHeroTraits(),c);
                     CharacterManager.characters.Add(c, character);
                 }
                 else
                 {
-                    character = new Character(new CulturalKnowledge("a"));
+                    character = new Character(new CulturalKnowledge("a"),c);
                     CharacterManager.characters.Add(c, character);
                 }
             }
+            float result = si.calculateResponse(CharacterManager.MainCharacter, character, intent.Neutral);
 
-            foreach (SocialInteraction si in SubModule.existingExchanges.Values)
-            {
-                if (si.validate())
-                {
-                    campaign.AddPlayerLine(si.name, "start", "step",si.getDialogLine(sentenceType.Normal,0),
-                    null,
-                    (()=>
-                    {
-                        newInteraction(campaign,si,si.calculateResponse(CharacterManager.MainCharacter, character, intent.Neutral),character);
-                    }),
-                    1000, null);
-                }
-            }
-           
-        }
-
-        private void newInteraction(CampaignGameStarter campaign, SocialInteraction si,float result, Character c2)
-        {
-            if (si.finish) endInteraction(si, si.GetOutcome(result), c2);
-            campaign.AddDialogLine(si.name, "step", "next", si.getResponse(result),
+            if (si.finish) endInteraction(si, si.GetOutcome(result), character);
+            campaign.AddDialogLine(si.name, "step", "start", si.getResponse(result),
                 null,
                 (() =>
                 {
-                    playerInteraction(campaign, si, si.GetOutcome(result),c2);
+                    makeExchange(si, si.GetOutcome(result), character);
                 }),
                 1000,null
                 );
 
         }
 
-        private void playerInteraction(CampaignGameStarter campaign, SocialInteraction prev, outcome o,Character character)
-        {
-            makeExchange(prev, o, character);
-            
-            foreach (SocialInteraction si in SubModule.existingExchanges.Values)
-            {
-                if (si.validate())
-                {
-                    campaign.AddPlayerLine(si.name, "next", "step", si.getDialogLine(sentenceType.Normal, 0),
-                    null,
-                    (() =>
-                    {
-                        newInteraction(campaign, si, si.calculateResponse(CharacterManager.MainCharacter, character, intent.Neutral),character);
-                    }),
-                    1000, null);
-                }
-            }
-        }
 
         private void makeExchange(SocialInteraction prev, outcome o, Character character)
         {

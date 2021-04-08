@@ -17,6 +17,7 @@ namespace NewNpc2
         private List<Status> status;
 
         //likes?
+        public CharacterObject characterObject;
 
         //social network
         //3 unidirectional relations between this and other characters
@@ -46,7 +47,7 @@ namespace NewNpc2
         //TODO influence rules
         private List<InfluenceRule> influenceRules;
 
-        public Character(CulturalKnowledge culture)
+        public Character(CulturalKnowledge culture,CharacterObject co)
         {
             personality = new Traits();
             status = new List<Status>();
@@ -62,11 +63,11 @@ namespace NewNpc2
 
             rumor = null;
             this.culture = culture;
-
+            characterObject = co;
             initialState();
         }
 
-        public Character(CulturalKnowledge culture, CharacterTraits characterTraits)
+        public Character(CulturalKnowledge culture, CharacterTraits characterTraits,CharacterObject co)
         {
             personality = new Traits(characterTraits);
             status = new List<Status>();
@@ -83,6 +84,7 @@ namespace NewNpc2
             rumor = null;
             this.culture = culture;
 
+            characterObject = co;
             initialState();
         }
 

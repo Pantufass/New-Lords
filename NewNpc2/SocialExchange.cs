@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaleWorlds.CampaignSystem;
 
 namespace NewNpc2
 {
@@ -70,11 +71,13 @@ namespace NewNpc2
         }
 
         //return a sum of the preconditions
-        public bool validate()
+        public bool validate(CharacterObject c1, CharacterObject c2)
         {
             bool b = true;
             foreach(Condition c in preconditions)
             {
+                c.target1 = c1;
+                c.target2 = c2;
                 b = b && c.validate();
             }
             return b;
@@ -112,15 +115,13 @@ namespace NewNpc2
         //TODO pick sentence
         public string getDialogLine(sentenceType t, float v)
         {
-            return sentences[0].sentence;
+            return (sentences.Count > 1 ? sentences[1].sentence : sentences[0].sentence);
         }
 
         public string getResponse(float v)
         {
-            return (from d in sentences
-                    where d.type == (v > upperThresh ? sentenceType.pResponse : v > lowerThresh ? sentenceType.normalResponse : sentenceType.nResponse)
-                    orderby d ascending
-                    select d.sentence).First();
+            return (v > upperThresh ? getDialogLine(sentenceType.pResponse, v) : v > lowerThresh ? getDialogLine(sentenceType.normalResponse, v) : getDialogLine(sentenceType.nResponse, v));
+            
         }
 
         public outcome GetOutcome(float v)
@@ -530,6 +531,7 @@ namespace NewNpc2
             Brag(existingExchanges);
             Converse(existingExchanges);
             RunAway(existingExchanges);
+            Leave(existingExchanges);
 
             RelayInformation(existingExchanges);
             Gossip(existingExchanges);

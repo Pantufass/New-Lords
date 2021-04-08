@@ -10,7 +10,7 @@ namespace NewNpc2
 {
     public static class Introduction
     {
-        private static Dictionary<long,bool> intro;
+        private static Dictionary<long,bool> intro = new Dictionary<long, bool>();
 
         public static void Introduce(CharacterObject c1, CharacterObject c2)
         {
