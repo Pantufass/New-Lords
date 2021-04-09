@@ -99,7 +99,7 @@ namespace NewNpc2
                 if (c.IsHero)
                 {
                     h = c.HeroObject;
-                    chara = new Character(new CulturalKnowledge("a"), h.GetHeroTraits());
+                    chara = new Character(new CulturalKnowledge("a"), h.GetHeroTraits(),c);
                     CharacterManager.characters.Add(c, chara);
 
                     InformationManager.DisplayMessage(new InformationMessage(chara.isHappy().ToString()));
@@ -107,7 +107,7 @@ namespace NewNpc2
                 else
                 {
 
-                    chara = new Character(new CulturalKnowledge("a"));
+                    chara = new Character(new CulturalKnowledge("a"),c);
                     CharacterManager.characters.Add(c, chara);
 
                     InformationManager.DisplayMessage(new InformationMessage(chara.isHappy().ToString()));

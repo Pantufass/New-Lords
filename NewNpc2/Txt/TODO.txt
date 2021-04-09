@@ -47,11 +47,18 @@ find more social exchanges
 
 ---------------------------------------------
 
-two weeks
-
 influence rules - working
 basic cif
 
 --------------------------------------------
 
-rule manager
+look into saving? - xmls?
+influence rule manager
+trigger rules working
+calc value for dialog choices
+calc intention
+rework dialog
+meter dois npcs a falar
+jogador com as proprias volitions
+
+----------------------------------------------

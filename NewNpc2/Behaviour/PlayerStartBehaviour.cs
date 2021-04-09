@@ -14,7 +14,9 @@ namespace NewNpc2
 
         public override void SyncData(IDataStore dataStore)
         {
+
         }
+
         public void OnSessionLaunched(CampaignGameStarter starter)
         {
             this.startInterction(starter);
@@ -75,12 +77,12 @@ namespace NewNpc2
             }
             float result = si.calculateResponse(CharacterManager.MainCharacter, character, intent.Neutral);
 
-            if (si.finish) endInteraction(si, si.GetOutcome(result), character);
             campaign.AddDialogLine(si.name, "step", "start", si.getResponse(result),
                 null,
                 (() =>
                 {
                     makeExchange(si, si.GetOutcome(result), character);
+                    if (si.finish) endInteraction(si, si.GetOutcome(result), character);
                 }),
                 1000,null
                 );
@@ -91,6 +93,7 @@ namespace NewNpc2
         private void makeExchange(SocialInteraction prev, outcome o, Character character)
         {
             SocialExchange se = new SocialExchange(CharacterManager.MainCharacter, character, prev,o);
+            SubModule.SocialFactsDatabase.Add(se);
             //TODO spread exchange
             //todo calc exchange interest
         }

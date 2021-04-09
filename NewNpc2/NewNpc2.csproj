@@ -69,25 +69,36 @@
   </ItemGroup>
   <!-- Files & Classes -->
   <ItemGroup>
-    <Compile Include="Character.cs" />
-    <Compile Include="CulturalKnowledge.cs" />
-    <Compile Include="Introduction.cs" />
-    <Compile Include="NewCharacterRelationManager.cs" />
-    <Compile Include="NewConvoBehaviour.cs" />
-    <Compile Include="PlayerStartBehaviour.cs" />
-    <Compile Include="Rule.cs" />
-    <Compile Include="Rumor.cs" />
-    <Compile Include="SocialExchange.cs" />
+    <Compile Include="Character\Character.cs" />
+    <Compile Include="Character\CharacterManager.cs" />
+    <Compile Include="Character\CulturalKnowledge.cs" />
+    <Compile Include="Character\Feeling.cs" />
+    <Compile Include="Character\Introduction.cs" />
+    <Compile Include="Character\NewCharacterRelationManager.cs" />
+    <Compile Include="Behaviour\NewConvoBehaviour.cs" />
+    <Compile Include="Behaviour\PlayerStartBehaviour.cs" />
+    <Compile Include="Rules\Condition.cs" />
+    <Compile Include="Rules\ConditionManager.cs" />
+    <Compile Include="Rules\InfluenceRule.cs" />
+    <Compile Include="Rules\InfluenceRuleManager.cs" />
+    <Compile Include="Rules\Rule.cs" />
+    <Compile Include="Rules\TriggerRule.cs" />
+    <Compile Include="SocialExchange\Dialog.cs" />
+    <Compile Include="SocialExchange\Rumor.cs" />
+    <Compile Include="SocialExchange\SocialExchange.cs" />
+    <Compile Include="SocialExchange\SocialInteraction.cs" />
+    <Compile Include="SocialExchange\SocialInteractionManager.cs" />
     <Compile Include="SubModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Content Include="rules.txt" />
-    <Content Include="socialexchanges.txt" />
+    <Content Include="Txt\rules.txt" />
+    <Content Include="Txt\socialexchanges.txt" />
     <Content Include="SubModule.xml" />
-    <Content Include="TODO.txt" />
+    <Content Include="Txt\TODO.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <!-- Post-Build -->
   <PropertyGroup>
     <PostBuildEvent>xcopy /d /y "$(MSBuildProjectDirectory)\SubModule.xml" "C:\Program Files (x86)\Steam\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\NewNpc2"</PostBuildEvent>
