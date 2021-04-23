@@ -43,13 +43,7 @@ namespace NewNpc2
             triggerRules = new List<TriggerRule>();
         }
 
-        public void addInitRule(InfluenceRule rule)
-        {
-            initRules.Add(rule);
-            respRules.Add(rule);
-        }
-
-        public void addInitRule(InfluenceRule rule, bool b)
+        public void addInitRule(InfluenceRule rule, bool b = true)
         {
             initRules.Add(rule);
             if (b) respRules.Add(rule);
@@ -114,15 +108,9 @@ namespace NewNpc2
         }
 
 
-        //TODO calculate the receiver's response
-        public float calculateResponse(Character init, Character rec, intent intent)
+        public List<InfluenceRule> getRespRules()
         {
-            float res = 0;
-            foreach (InfluenceRule r in respRules)
-            {
-                if (r.validate()) res += r.value(init, rec, intent);
-            }
-            return res;
+            return respRules;
         }
 
         //TODO pick sentence
@@ -137,10 +125,7 @@ namespace NewNpc2
 
         }
 
-        public outcome GetOutcome(float v)
-        {
-            return (v > upperThresh ? outcome.Positive : v > lowerThresh ? outcome.Neutral : outcome.Negative);
-        }
+        
     }
 
 

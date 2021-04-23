@@ -8,15 +8,14 @@ using TaleWorlds.CampaignSystem;
 namespace NewNpc2
 {
 
-    
-
     public class SocialExchange : Feeling
     {
 
         protected Character receiver;
         //type of the social exchange
-        private SocialInteraction type;
+        public SocialInteraction type;
 
+        public outcome outcome;
         //date of the exchange
         private int date;
 
@@ -30,33 +29,59 @@ namespace NewNpc2
         private Information info;
 
 
-        public SocialExchange(Character i, Character r, SocialInteraction set, outcome o) : base(i)
+        public SocialExchange(Character s, Character r, SocialInteraction set, intent i) : base(s)
         {
             type = set;
 
             receiver = r;
-            this.o = o;
+            base.intent = i;
         }
 
+        //TODO calculate the receiver's response
+        public float calculateResponse()
+        {
+            float res = 0;
+            foreach (InfluenceRule r in type.getRespRules())
+            {
+                if (r.validate()) res += r.value(initiator, receiver, intent);
+            }
+            return res;
+        }
+        public void setOutcome(float v)
+        {
+            outcome = (v > type.upperThresh ? outcome.Positive : v > type.lowerThresh ? outcome.Neutral : outcome.Negative);
+        }
 
+        private class Information
+        {
+
+        }
+
+        public List<TriggerRule> getTriggerRules()
+        {
+            return type.getTrigger();
+        }
+
+        public void setInCharacters()
+        {
+            //TODO add to viewers
+            initiator.addExchange(this);
+            receiver.addExchange(this);
+        }
+
+        public Character getReceiver()
+        {
+            return receiver;
+        }
     }
-
-
-    
-
-    public class Information
-    {
-
-    }
-
 
 
     public enum outcome
     {
-        Neutral,
-        Positive,
-        Negative
+        Neutral = 0,
+        Positive = 1,
+        Negative = -1
     }
-
     
+
 }

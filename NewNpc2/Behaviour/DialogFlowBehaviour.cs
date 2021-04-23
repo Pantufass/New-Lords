@@ -4,9 +4,9 @@ using TaleWorlds.CampaignSystem;
 
 namespace NewNpc2
 {
-    public class NpcStartBehaviour : CampaignBehaviorBase
+    public class DialogFlowBehaviour : CampaignBehaviorBase
     {
-        int step = 0;
+        DialogFlow df;
         bool loaded = false;
 
         public override void RegisterEvents()
@@ -41,23 +41,11 @@ namespace NewNpc2
 
         private void startInterction(CampaignGameStarter campaign)
         {
-            campaign.AddDialogLine(" start", "start", nextStep(), " ",
-                null,
-                () => startPlayerInt(campaign),
-                1000, null);
-
-            InformationManager.DisplayMessage(new InformationMessage(nextStep()));
-            step++;
-        }
-
-        private string nextStep()
-        {
-            return "step" + (step + 1);
-        }
-
-        private string getStep()
-        {
-            return "step" + step;
+            df = DialogFlow.CreateDialogFlow(null, 10000);
+            df.NpcLine(" ",null);
+            df.Consequence(() =>startPlayerInt(campaign));
+            df.CloseDialog();
+            Campaign.Current.ConversationManager.AddDialogFlow(df);
         }
 
         private void startPlayerInt(CampaignGameStarter campaign)
@@ -81,52 +69,30 @@ namespace NewNpc2
                 }
             }
 
-            CharacterManager.MainCharacter.calcVolitions(character);
-
-            InformationManager.DisplayMessage(new InformationMessage(CharacterManager.MainCharacter.isHappy() ? "happy" : "not"));
+            df.BeginPlayerOptions();
 
             foreach (SocialInteraction si in CharacterManager.MainCharacter.getIntented())
             {
-                campaign.AddPlayerLine(si.name, getStep(), nextStep(), si.getDialogLine(sentenceType.Normal, 0),
-                    (() => si.validate(Hero.MainHero.CharacterObject, c)),
-                    (() =>
-                    {
-                        newInteraction(campaign, si);
-                    }),
-                    1000, null);
+                df.PlayerOption(si.getDialogLine(sentenceType.Normal, 0)).Consequence(() =>
+                {
+                    newInteraction(campaign, si,character);
+                });
             }
 
+            df.CloseDialog();
             SocialInteraction l = SocialInteractionManager.Leave();
-            campaign.AddPlayerLine(l.name, getStep(), nextStep(), l.getDialogLine(sentenceType.Normal, 0),
-                    (() => l.validate(Hero.MainHero.CharacterObject, c)),
-                    (() =>
-                    {
-                        newInteraction(campaign, l);
-                    }),
-                    1000, null);
-            step++;
-        }
-
-        private void newInteraction(CampaignGameStarter campaign, SocialInteraction si)
-        {
-            CharacterObject c = CharacterObject.OneToOneConversationCharacter;
-            Character character = CharacterManager.findChar(c);
-            if (character == null)
+            df.PlayerOption(l.getDialogLine(sentenceType.Normal, 0)).Consequence(() =>
             {
-                if (c.IsHero)
-                {
-                    character = new Character(new CulturalKnowledge("a"), c.HeroObject.GetHeroTraits(), c);
-                    CharacterManager.characters.Add(c, character);
-                }
-                else
-                {
-                    character = new Character(new CulturalKnowledge("a"), c);
-                    CharacterManager.characters.Add(c, character);
-                }
-            }
-            step++;
+                newInteraction(campaign, l,character);
+            });
+            df.EndPlayerOptions();
         }
 
+        private void newInteraction(CampaignGameStarter campaign, SocialInteraction si, Character c)
+        {
+
+
+        }
 
         private void makeExchange(SocialInteraction prev, outcome o, Character character)
         {
@@ -137,12 +103,12 @@ namespace NewNpc2
 
         private void endInteraction(SocialInteraction prev, outcome o, Character character)
         {
-            makeExchange(prev, o, character);
 
             if (PlayerEncounter.Current != null)
             {
                 PlayerEncounter.LeaveEncounter = true;
             }
+            df.CloseDialog();
         }
     }
 }

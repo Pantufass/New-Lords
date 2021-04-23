@@ -19,6 +19,10 @@ namespace NewNpc2
             initiator = init;
         }
 
+        public Character getInitiator()
+        {
+            return initiator;
+        }
 
         public void setIntensity(float i)
         {

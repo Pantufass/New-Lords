@@ -62,3 +62,6 @@ meter dois npcs a falar
 jogador com as proprias volitions
 
 ----------------------------------------------
+
+update interaction manager with influence manager
+create more trigger rules

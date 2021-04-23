@@ -14,6 +14,7 @@ namespace NewNpc2
             List<TriggerRule> list = new List<TriggerRule>();
 
 
+
             return list;
         }
     }

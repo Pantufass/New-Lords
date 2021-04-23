@@ -14,7 +14,7 @@ namespace NewNpc2
         public Traits personality;
 
         //List of possible statuses
-        private List<Status> status;
+        public List<Status> status;
 
         //likes?
         public CharacterObject characterObject;
@@ -147,14 +147,14 @@ namespace NewNpc2
 
         }
 
+        public void addExchange(SocialExchange se)
+        {
+            //TODO
+        }
+
         public List<InfluenceRule> getRules()
         {
             return influenceRules;
-        }
-
-        public void addIntendedSocialExchange(SocialInteraction se)
-        {
-            this.intendedSocialExchange.Add(se);
         }
 
         public void addRumor(Rumor r)
@@ -196,7 +196,7 @@ namespace NewNpc2
             int b = 0;
             foreach(Status s in status)
             {
-                b += (int) s;
+                b += (int) s / Math.Abs((int)s);
             }
             return b >= 0;
         }
@@ -272,28 +272,28 @@ namespace NewNpc2
 
         
 
-        public enum Status : int
+        public enum Status
         {
-            Wounded=-1,
-            Bored=-1,
-            Tired=-1,
-            Hungry=-1,
+            Wounded=-10,
+            Bored=-9,
+            Tired=-8,
+            Hungry=-7,
 
             //?
-            SocialInteract=0,
+            SocialInteract=1,
 
-            Angry=-1,
-            Feared=0,
-            Confident=1,
-            Happy=1,
-            Sad=-1,
-            Surprised=0,
+            Angry=-6,
+            Feared=-5,
+            Sad = -4,
+            Confident =2,
+            Happy=3,
+            Surprised=4,
 
-            Ashamed=0,
-            Pity=0,
-            Gloated=0,
-            Resented=-1,
-            HappyFor=1
+            Ashamed=-3,
+            Resented = -2,
+            Gloated =4,
+            Pity = 5,
+            HappyFor =6
         }
     }
 

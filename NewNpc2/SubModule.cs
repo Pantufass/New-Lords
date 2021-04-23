@@ -68,15 +68,15 @@ namespace NewNpc2
         }
 
 
-        public static void runTriggerRules(List<TriggerRule> interactionRules, Character c1, Character c2, intent i,outcome o)
+        public static void runTriggerRules(List<TriggerRule> interactionRules, SocialExchange se)
         {
             foreach (TriggerRule r in triggerRules)
             {
-                r.runEffects(c1, c2, i,o);
+                r.runEffects(se.getInitiator(), se.getReceiver(), se.getIntent(), se.outcome);
             }
             foreach(TriggerRule r in interactionRules)
             {
-                r.runEffects(c1, c2, i,o);
+                r.runEffects(se.getInitiator(), se.getReceiver(), se.getIntent(), se.outcome);
             }
 
         }

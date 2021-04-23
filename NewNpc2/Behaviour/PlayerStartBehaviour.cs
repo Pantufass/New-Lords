@@ -84,7 +84,9 @@ namespace NewNpc2
 
             CharacterManager.MainCharacter.calcVolitions(character);
 
-            InformationManager.DisplayMessage(new InformationMessage(CharacterManager.MainCharacter.isHappy() ? "happy" : "not"));
+
+            InformationManager.DisplayMessage(new InformationMessage(CharacterManager.MainCharacter.isBored() ? "bored" : "not"));
+
 
             foreach (SocialInteraction si in CharacterManager.MainCharacter.getIntented())
             {
@@ -125,15 +127,17 @@ namespace NewNpc2
                     CharacterManager.characters.Add(c, character);
                 }
             }
-            float result = si.calculateResponse(CharacterManager.MainCharacter, character, intent.Neutral);
+
+            SocialExchange se = new SocialExchange(CharacterManager.MainCharacter, character, si,intent.Neutral);
+            float result = se.calculateResponse();
 
             campaign.AddDialogLine(si.name, getStep(), nextStep(), si.getResponse(result),
                 null,
                 (() =>
                 {
-                    makeExchange(si, si.GetOutcome(result), character);
-                    if (si.finish) endInteraction(si, si.GetOutcome(result), character);
-                    startPlayerInt(campaign);
+                    makeExchange(se);
+                    if (si.finish) endInteraction();
+                    else startPlayerInt(campaign);
                 }),
                 1000,null
                 );
@@ -142,20 +146,21 @@ namespace NewNpc2
         }
 
 
-        private void makeExchange(SocialInteraction prev, outcome o, Character character)
+        private void makeExchange(SocialExchange se)
         {
-            SubModule.runTriggerRules(prev.getTrigger(), CharacterManager.MainCharacter, character, intent.Neutral, o);
+            SubModule.runTriggerRules(se.getTriggerRules(), se);
 
-            SocialExchange se = new SocialExchange(CharacterManager.MainCharacter, character, prev,o);
-            SubModule.SocialFactsDatabase.Add(se);
-            //TODO spread exchange
-            //todo calc exchange interest
+            if (se.type.IsImportant)
+            {
+                SubModule.SocialFactsDatabase.Add(se);
+                se.setInCharacters();
+                //TODO spread exchange
+                //todo calc exchange interest
+            }
         }
 
-        private void endInteraction(SocialInteraction prev, outcome o, Character character)
+        private void endInteraction()
         {
-            makeExchange(prev, o, character);
-
             if (PlayerEncounter.Current != null)
             {
                 PlayerEncounter.LeaveEncounter = true;

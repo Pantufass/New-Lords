@@ -96,7 +96,11 @@ namespace NewNpc2
             r.setDel((Character c1, Character c2, intent it) => 5);
             t.addInitRule(r);
 
-            t.addTriggerRule(new TriggerRule("Raise", (Character c1, Character c2, intent it, outcome o) => CharacterManager.MainCharacter.addStatus(Character.Status.Happy)));
+
+            t.addTriggerRule(new TriggerRule("Raise", (Character c1, Character c2, intent it, outcome o) => {
+                if (!CharacterManager.MainCharacter.isBored())
+                    CharacterManager.MainCharacter.addStatus(Character.Status.Bored);
+                    }));
 
 
             t.addsentence("I like pudding.");
