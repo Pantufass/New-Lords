@@ -20,10 +20,13 @@ namespace NewNpc2
 
         public bool finish;
 
+        public bool IsImportant = false;
+
         public List<Dialog> sentences;
 
         protected List<InfluenceRule> initRules;
         protected List<InfluenceRule> respRules;
+        protected List<TriggerRule> triggerRules;
 
         public SocialInteraction(string n, float up, float low)
         {
@@ -37,6 +40,7 @@ namespace NewNpc2
 
             initRules = new List<InfluenceRule>();
             respRules = new List<InfluenceRule>();
+            triggerRules = new List<TriggerRule>();
         }
 
         public void addInitRule(InfluenceRule rule)
@@ -54,6 +58,16 @@ namespace NewNpc2
         public void addRespRule(InfluenceRule rule)
         {
             respRules.Add(rule);
+        }
+
+        public void addTriggerRule(TriggerRule rule)
+        {
+            triggerRules.Add(rule);
+        }
+
+        public List<TriggerRule> getTrigger()
+        {
+            return triggerRules;
         }
 
         public void addsentence(string sentence)

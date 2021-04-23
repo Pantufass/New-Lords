@@ -20,6 +20,9 @@ namespace NewNpc2
             r.setDel((Character c1, Character c2, intent it) => 100);
             t.addInitRule(r);
 
+            t.addTriggerRule(new TriggerRule("Introduced", (Character c1, Character c2, intent it, outcome o) => Introduction.Introduce(c1.characterObject, c2.characterObject)));
+
+
             t.addsentence("Hello.", 1, sentenceType.Normal);
 
             t.addsentence("Hi back.", 1, sentenceType.pResponse);
@@ -93,6 +96,9 @@ namespace NewNpc2
             r.setDel((Character c1, Character c2, intent it) => 5);
             t.addInitRule(r);
 
+            t.addTriggerRule(new TriggerRule("Raise", (Character c1, Character c2, intent it, outcome o) => CharacterManager.MainCharacter.addStatus(Character.Status.Happy)));
+
+
             t.addsentence("I like pudding.");
             sc.Add(n, t);
         }
@@ -114,13 +120,16 @@ namespace NewNpc2
         }
         private static void Leave(Dictionary<string, SocialInteraction> sc)
         {
-            string n = "Leave";
-            SocialInteraction t = new SocialInteraction(n, 1, 1);
-            t.finish = true;
-            t.addsentence("Goodbye.");
-            sc.Add(n, t);
+            sc.Add("Leave",Leave());
         }
 
+        public static SocialInteraction Leave()
+        {
+            SocialInteraction t = new SocialInteraction("Leave", 1, 1);
+            t.finish = true;
+            t.addsentence("Goodbye.");
+            return t;
+        }
 
         //rumor
         private static void RelayInformation(Dictionary<string, SocialInteraction> sc)

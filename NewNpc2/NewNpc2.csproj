@@ -69,6 +69,7 @@
   </ItemGroup>
   <!-- Files & Classes -->
   <ItemGroup>
+    <Compile Include="Behaviour\NpcStartBehaviour.cs" />
     <Compile Include="Character\Character.cs" />
     <Compile Include="Character\CharacterManager.cs" />
     <Compile Include="Character\CulturalKnowledge.cs" />
@@ -83,6 +84,7 @@
     <Compile Include="Rules\InfluenceRuleManager.cs" />
     <Compile Include="Rules\Rule.cs" />
     <Compile Include="Rules\TriggerRule.cs" />
+    <Compile Include="Rules\TriggerRuleManager.cs" />
     <Compile Include="SocialExchange\Dialog.cs" />
     <Compile Include="SocialExchange\Rumor.cs" />
     <Compile Include="SocialExchange\SocialExchange.cs" />

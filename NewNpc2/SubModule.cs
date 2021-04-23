@@ -21,11 +21,12 @@ namespace NewNpc2
 
 
         public static Dictionary<string, SocialInteraction> existingExchanges;
+        public static Dictionary<string, InfluenceRule> existingRules;
 
         //TODO
         private static List<Rule> microTheories;
         //TODO
-        private static List<Rule> triggerRules;
+        public static List<TriggerRule> triggerRules;
 
         //TODO
         public static List<SocialExchange> SocialFactsDatabase;
@@ -45,8 +46,9 @@ namespace NewNpc2
             //typeof(Campaign).GetField("<CharacterRelationManager>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(Campaign.Current, new NewCharacterRelationManager());
 
             existingExchanges = SocialInteractionManager.createSocialExchanges();
-            
-            createTriggerRules();
+            existingRules = InfluenceRuleManager.createRules();
+
+            triggerRules = TriggerRuleManager.createRules();
 
 
             CharacterManager.characters = new Dictionary<CharacterObject, Character>();
@@ -61,19 +63,21 @@ namespace NewNpc2
          
                 campaignGameStarter.AddBehavior(new NewConvoBehaviour());
                 campaignGameStarter.AddBehavior(new PlayerStartBehaviour());
+                //campaignGameStarter.AddBehavior(new NpcStartBehaviour());
             }
         }
 
 
-        //TODO
-        private void createMicroTheories()
+        public static void runTriggerRules(List<TriggerRule> interactionRules, Character c1, Character c2, intent i,outcome o)
         {
-
-        }
-
-        //TODO
-        private void createTriggerRules()
-        {
+            foreach (TriggerRule r in triggerRules)
+            {
+                r.runEffects(c1, c2, i,o);
+            }
+            foreach(TriggerRule r in interactionRules)
+            {
+                r.runEffects(c1, c2, i,o);
+            }
 
         }
 
@@ -107,6 +111,13 @@ namespace NewNpc2
 
         //trigger rules and instantiations 
         private void exchangeEffects()
+        {
+
+        }
+
+
+        //TODO
+        private void createMicroTheories()
         {
 
         }

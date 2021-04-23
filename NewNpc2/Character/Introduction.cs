@@ -12,10 +12,11 @@ namespace NewNpc2
     {
         private static Dictionary<long,bool> intro = new Dictionary<long, bool>();
 
-        public static void Introduce(CharacterObject c1, CharacterObject c2)
+        public static bool Introduce(CharacterObject c1, CharacterObject c2)
         {
             long hash = MBGUID.GetHash2(c1.Id, c2.Id);
             intro[hash] = true;
+            return true;
         }
 
         public static bool Introduced(CharacterObject c1, CharacterObject c2)

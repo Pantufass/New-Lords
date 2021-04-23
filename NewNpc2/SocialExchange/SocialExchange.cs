@@ -30,10 +30,6 @@ namespace NewNpc2
         private Information info;
 
 
-        //TODO effects
-        //study dialog manager better
-        private List<Effect> effects;
-
         public SocialExchange(Character i, Character r, SocialInteraction set, outcome o) : base(i)
         {
             type = set;
@@ -48,10 +44,6 @@ namespace NewNpc2
 
     
 
-    public class Effect
-    {
-
-    }
     public class Information
     {
 

@@ -36,16 +36,15 @@ namespace NewNpc2
         //cultural knowledge TODO probably 
         private CulturalKnowledge culture;
 
-        //TODO
-        //intention type
-        //calc intent/goals
-        private SocialInteraction intendedSocialExchange;
+        private List<SocialInteraction> intendedSocialExchange;
 
         //TODO rumor
         private Rumor rumor;
 
         //TODO influence rules
         private List<InfluenceRule> influenceRules;
+
+        private int intendedMaxNumber = 3;
 
         public Character(CulturalKnowledge culture,CharacterObject co)
         {
@@ -60,7 +59,7 @@ namespace NewNpc2
             socialKnowledge = new Dictionary<SocialExchange, float>();
 
             influenceRules = new List<InfluenceRule>();
-
+            intendedSocialExchange = new List<SocialInteraction>();
             rumor = null;
             this.culture = culture;
             characterObject = co;
@@ -77,13 +76,12 @@ namespace NewNpc2
             admiration = new List<Feeling>();
 
             beliefs = new Dictionary<Character, Feeling>();
-
             socialKnowledge = new Dictionary<SocialExchange, float>();
 
             influenceRules = new List<InfluenceRule>();
+            intendedSocialExchange = new List<SocialInteraction>();
             rumor = null;
             this.culture = culture;
-
             characterObject = co;
             initialState();
         }
@@ -104,9 +102,49 @@ namespace NewNpc2
 
         }
 
+        public void clearIntented()
+        {
+            intendedSocialExchange.Clear();
+        }
+
+        public void setIntendedRule(SocialInteraction si)
+        {
+            intendedSocialExchange.Add(si);
+        }
+
+        public List<SocialInteraction> getIntented()
+        {
+            return intendedSocialExchange;
+        }
+        
         public void addInfluenceRule(InfluenceRule r)
         {
             influenceRules.Add(r);
+        }
+
+        public void calcVolitions(Character r)
+        {
+            Dictionary<float, SocialInteraction> d = new Dictionary<float, SocialInteraction>();
+            foreach(SocialInteraction si in SubModule.existingExchanges.Values){
+                if (si.validate(this.characterObject, r.characterObject))
+                {
+                    //TODO calc intent
+                    float res = si.calculateVolition(this, r, intent.Neutral);
+                    //TDODO fix
+                    while (d.ContainsKey(res))
+                        res -= 0.1f;
+                    d.Add(res,si);
+                }
+            }
+            List<float> l = d.Keys.ToList();
+            l.Sort();
+            l.Reverse();
+
+            for(int i = 0; i < intendedMaxNumber; i++)
+            {
+                intendedSocialExchange.Add(d[l[i]]);
+            }
+
         }
 
         public List<InfluenceRule> getRules()
@@ -116,7 +154,7 @@ namespace NewNpc2
 
         public void addIntendedSocialExchange(SocialInteraction se)
         {
-            this.intendedSocialExchange = se;
+            this.intendedSocialExchange.Add(se);
         }
 
         public void addRumor(Rumor r)
@@ -133,6 +171,12 @@ namespace NewNpc2
         {
             return status.Contains(Status.Happy);
         }
+
+        public void addStatus(Status s)
+        {
+            status.Add(s);
+        }
+
         public bool isGloated()
         {
             return status.Contains(Status.Gloated);
@@ -228,7 +272,7 @@ namespace NewNpc2
 
         
 
-        enum Status : int
+        public enum Status : int
         {
             Wounded=-1,
             Bored=-1,
