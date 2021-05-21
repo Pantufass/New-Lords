@@ -19,6 +19,13 @@ namespace NewNpc2
             initiator = init;
         }
 
+        public Feeling(Character init,float i, intent intent)
+        {
+            initiator = init;
+            intensity = i;
+            this.intent = intent;
+        }
+
         public Character getInitiator()
         {
             return initiator;
@@ -40,6 +47,11 @@ namespace NewNpc2
         public intent getIntent()
         {
             return intent;
+        }
+
+        internal void addIntensity(float v)
+        {
+            intensity += v;
         }
     }
 }

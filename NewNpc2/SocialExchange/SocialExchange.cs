@@ -26,7 +26,7 @@ namespace NewNpc2
         private List<Character> others;
 
         //TODO other type of information possible in the exchange
-        private Information info;
+        //private Information info;
 
 
         public SocialExchange(Character s, Character r, SocialInteraction set, intent i) : base(s)
@@ -41,25 +41,37 @@ namespace NewNpc2
         public float calculateResponse()
         {
             float res = 0;
+            List<dynamic> l = new List<dynamic>();
+            l.Add(initiator);
+            l.Add(receiver);
+            l.Add(intent);
+
             foreach (InfluenceRule r in type.getRespRules())
             {
-                if (r.validate()) res += r.value(initiator, receiver, intent);
+                if (r.validate(l)) res += r.value(l);
             }
             return res;
         }
+
+        public void chooseResponse(float result)
+        {
+            if (result > type.upperThresh)
+                type.chooseDialog(sentenceType.pResponse, result);
+            else if (result > type.lowerThresh)
+                type.chooseDialog(sentenceType.normalResponse, result);
+            else type.chooseDialog(sentenceType.nResponse, result);
+
+        }
+
         public void setOutcome(float v)
         {
             outcome = (v > type.upperThresh ? outcome.Positive : v > type.lowerThresh ? outcome.Neutral : outcome.Negative);
         }
 
-        private class Information
-        {
 
-        }
-
-        public List<TriggerRule> getTriggerRules()
+        public List<InstRule> getInstRules()
         {
-            return type.getTrigger();
+            return type.getInstRules();
         }
 
         public void setInCharacters()

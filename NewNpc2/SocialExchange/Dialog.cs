@@ -15,16 +15,31 @@ namespace NewNpc2
 
         public sentenceType type;
 
-        public Dialog(string s, float v, sentenceType t)
+        public bool playera;
+        public bool cresponse;
+
+        public Dialog(string s, float v, sentenceType t, bool c = false)
         {
             sentence = s;
             value = v;
             this.type = t;
+            playera = false;
+            cresponse = false;
         }
 
         public void updateValue(float v)
         {
             value = v;
+        }
+
+        public bool validateNpcLine()
+        {
+            return cresponse;
+        }
+
+        public bool validatePlayerLine()
+        {
+            return playera;
         }
     }
 

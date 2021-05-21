@@ -12,20 +12,25 @@ namespace NewNpc2
         private static void Introduce(Dictionary<string, SocialInteraction> sc)
         {
             string n = "Introduce";
-            SocialInteraction t = new SocialInteraction(n, 1, 1);
+            SocialInteraction t = new SocialInteraction(n, 10, 0);
 
-            t.addCondition(ConditionManager.NotIntroduced());
+            Condition c;
+            SubModule.existingConditions.TryGetValue("NotIntroduced", out c);
+            t.addCondition(c);
 
-            InfluenceRule r = new InfluenceRule("NeedtoIntroduce");
-            r.setDel((Character c1, Character c2, intent it) => 100);
+            InfluenceRule r;
+            SubModule.existingRules.TryGetValue("NeedToIntroduce", out r);
             t.addInitRule(r);
 
-            t.addTriggerRule(new TriggerRule("Introduced", (Character c1, Character c2, intent it, outcome o) => Introduction.Introduce(c1.characterObject, c2.characterObject)));
+            t.addInstRule(new InstRule("Introduced", (List<dynamic> d) => Introduction.Introduce((d[0] as Character).characterObject, (d[1] as Character).characterObject)));
 
 
             t.addsentence("Hello.", 1, sentenceType.Normal);
+            t.addsentence("Good Evening.", 1, sentenceType.Cordial);
+            t.addsentence("Hey", 1, sentenceType.Crude);
 
             t.addsentence("Hi back.", 1, sentenceType.pResponse);
+            t.addsentence("Hi.", 1, sentenceType.normalResponse);
             t.addsentence("No.", 2, sentenceType.nResponse);
             sc.Add(n, t);
         }
@@ -33,93 +38,132 @@ namespace NewNpc2
         private static void Compliment(Dictionary<string, SocialInteraction> sc)
         {
             string n = "Compliment";
-            SocialInteraction t = new SocialInteraction(n, 1, 1);
+            SocialInteraction t = new SocialInteraction(n, 10, 0);
 
 
-            InfluenceRule r = new InfluenceRule("ImproveRel"); //is positive
-            r.setDel((Character c1, Character c2, intent it) => 5 * (it == intent.Positive ? 1 : -1));
+            InfluenceRule r;
+            SubModule.existingRules.TryGetValue("ImproveRel", out r);
             t.addInitRule(r);
 
-            r = new InfluenceRule("IsNice"); //-5 to 5 less to more kind
-            r.setDel((Character c1, Character c2, intent it) => c1.personality.kind * 5);
+            SubModule.existingRules.TryGetValue("IsNice", out r);
             t.addInitRule(r);
 
-            r = new InfluenceRule("BeingNice");//return 5 if happy 0 if not
-            r.setDel((Character c1, Character c2, intent it) => c1.isHappy() ? 5 : 0);
+            SubModule.existingRules.TryGetValue("BeingNice", out r);
             t.addInitRule(r);
 
             t.addsentence("You look good.");
+            t.addsentence("You look wonderfuly", 1, sentenceType.Cordial);
+            t.addsentence("You look okay", 1, sentenceType.Crude);
+
+            t.addsentence("Thank you so much", 1, sentenceType.pResponse);
+            t.addsentence("Thank You", 1, sentenceType.normalResponse);
+            t.addsentence("Not really", 2, sentenceType.nResponse);
             sc.Add(n, t);
         }
 
         private static void Insult(Dictionary<string, SocialInteraction> sc)
         {
             string n = "Insult";
-            SocialInteraction t = new SocialInteraction(n, 1, 1);
+            SocialInteraction t = new SocialInteraction(n, 10, 0);
 
-            InfluenceRule r = new InfluenceRule("Hurtful");//return 5 if not good
-            r.setDel((Character c1, Character c2, intent it) => c1.isGood() ? 0 : 10);
+            InfluenceRule r;
+            SubModule.existingRules.TryGetValue("Hurtful", out r);
             t.addInitRule(r);
 
 
-            t.addsentence("You look stupid.");
+            t.addsentence("You look ugly.");
+            t.addsentence("You should dedicate yourself to just fighting.", 1, sentenceType.Cordial);
+            t.addsentence("You stupid", 1, sentenceType.Crude);
+
+
+            t.addsentence("Uh", 1, sentenceType.pResponse);
+            t.addsentence(" ", 1, sentenceType.normalResponse);
+            t.addsentence("No", 2, sentenceType.nResponse);
+            sc.Add(n, t);
+        }
+
+        private static void Assault(Dictionary<string, SocialInteraction> sc)
+        {
+            string n = "Assault";
+            SocialInteraction t = new SocialInteraction(n, 10, 0);
+
+            InfluenceRule r;
+            SubModule.existingRules.TryGetValue("Hurtful", out r);
+            t.addInitRule(r);
+
+
+            t.addsentence("Fight me.");
+            t.addsentence("You look like you couldnt handle anyone in a fight", 1, sentenceType.Cordial);
+            t.addsentence("Punch", 1, sentenceType.Crude);
+
             sc.Add(n, t);
         }
 
         private static void Brag(Dictionary<string, SocialInteraction> sc)
         {
             string n = "Brag";
-            SocialInteraction t = new SocialInteraction(n, 1, 1);
+            SocialInteraction t = new SocialInteraction(n, 10, 0);
 
-            InfluenceRule r = new InfluenceRule("Gloated");
-            r.setDel((Character c1, Character c2, intent it) => c1.isGloated() ? 10 : 0);
-            t.addInitRule(r);
+            InfluenceRule r;
+            SubModule.existingRules.TryGetValue("Gloated", out r);
+            t.addInitRule(r,false);
 
             t.addsentence("I am the best.");
+            t.addsentence("I can be anything i want.", 1, sentenceType.Cordial);
+            t.addsentence("I am better than you", 1, sentenceType.Crude);
+
+            t.addsentence("Yes", 1, sentenceType.pResponse);
+            t.addsentence("Uh okay", 1, sentenceType.normalResponse);
+            t.addsentence("Not really", 2, sentenceType.nResponse);
             sc.Add(n, t);
         }
 
         private static void Converse(Dictionary<string, SocialInteraction> sc)
         {
             string n = "Converse";
-            SocialInteraction t = new SocialInteraction(n, 1, 1);
+            SocialInteraction t = new SocialInteraction(n, 10, 0);
 
-            InfluenceRule r = new InfluenceRule("Bored");
-            r.setDel((Character c1, Character c2, intent it) => c1.isBored() ? 10 : 0);
-            t.addInitRule(r);
-
-            r = new InfluenceRule("Entertain");
-            r.setDel((Character c1, Character c2, intent it) => it == intent.Entertain ? 10 : 0);
-            t.addInitRule(r);
-
-            r = new InfluenceRule("LikesToSpeak");
-            r.setDel((Character c1, Character c2, intent it) => 5);
+            InfluenceRule r;
+            SubModule.existingRules.TryGetValue("Bored", out r);
             t.addInitRule(r);
 
 
-            t.addTriggerRule(new TriggerRule("Raise", (Character c1, Character c2, intent it, outcome o) => {
-                if (!CharacterManager.MainCharacter.isBored())
-                    CharacterManager.MainCharacter.addStatus(Character.Status.Bored);
+            SubModule.existingRules.TryGetValue("LikesToSpeak", out r);
+            t.addInitRule(r);
+
+            t.addInstRule(new InstRule("Raise", (List<dynamic> d) => {
+                if (CharacterManager.MainCharacter.isBored())
+                    CharacterManager.MainCharacter.removeStatus(Character.Status.Bored);
                     }));
 
 
             t.addsentence("I like pudding.");
+            t.addsentence("You seem to enjoy some pudding", 1, sentenceType.Cordial);
+            t.addsentence("Can you buy me food?", 1, sentenceType.Crude);
+
+            t.addsentence("Oh really", 1, sentenceType.pResponse);
+            t.addsentence("Okay", 1, sentenceType.normalResponse);
+            t.addsentence("Dont care", 2, sentenceType.nResponse);
             sc.Add(n, t);
         }
         private static void RunAway(Dictionary<string, SocialInteraction> sc)
         {
             string n = "RunAway";
-            SocialInteraction t = new SocialInteraction(n, 1, 1);
+            SocialInteraction t = new SocialInteraction(n, 10, 0);
             t.finish = true;
 
-            InfluenceRule r = new InfluenceRule("Hurtful");//return 5 if not good
-            r.setDel((Character c1, Character c2, intent it) => c1.isGood() ? 0 : 10);
+            InfluenceRule r;
+            SubModule.existingRules.TryGetValue("Hurtful", out r);
             t.addInitRule(r);
 
-            r = new InfluenceRule("Feared");
-            r.setDel((Character c1, Character c2, intent it) => c1.isFeared() ? 10 : 0);
+            SubModule.existingRules.TryGetValue("Feared", out r);
             t.addInitRule(r);
 
+            t.addsentence(" ", 1, sentenceType.Normal);
+
+            t.addsentence(" ", 1, sentenceType.pResponse);
+            t.addsentence("Running away?", 1, sentenceType.normalResponse);
+            t.addsentence("RUN RUN RUN", 2, sentenceType.nResponse);
             sc.Add(n, t);
         }
         private static void Leave(Dictionary<string, SocialInteraction> sc)
@@ -129,55 +173,72 @@ namespace NewNpc2
 
         public static SocialInteraction Leave()
         {
-            SocialInteraction t = new SocialInteraction("Leave", 1, 1);
+            SocialInteraction t = new SocialInteraction("Leave", 0, 0);
             t.finish = true;
             t.addsentence("Goodbye.");
+            t.addsentence("I must take my leave", 1, sentenceType.Cordial);
+            t.addsentence("Cya", 1, sentenceType.Crude);
+
+            t.addsentence("Goodbye, see you soon", 1, sentenceType.pResponse);
+            t.addsentence("Goodbye", 1, sentenceType.normalResponse);
+            t.addsentence(" ", 2, sentenceType.nResponse);
             return t;
         }
 
-        //rumor
+        //rumor 
         private static void RelayInformation(Dictionary<string, SocialInteraction> sc)
         {
             string n = "RelayInformation";
-            SocialInteraction t = new SocialInteraction(n, 1, 1);
-            t.addCondition(ConditionManager.NotAvailable());
+            SocialInteraction t = new SocialInteraction(n, 10, 0);
 
-            InfluenceRule r = new InfluenceRule("Bored");
-            r.setDel((Character c1, Character c2, intent it) => c1.isBored() ? 10 : 0);
+            Condition c;
+            SubModule.existingConditions.TryGetValue("NotAvailable", out c);
+            t.addCondition(c);
+
+            InfluenceRule r;
+            SubModule.existingRules.TryGetValue("Bored", out r);
             t.addInitRule(r);
 
-            r = new InfluenceRule("Entertain");
-            r.setDel((Character c1, Character c2, intent it) => it == intent.Entertain ? 10 : 0);
+            SubModule.existingRules.TryGetValue("LikesToSpeak", out r);
             t.addInitRule(r);
 
-            r = new InfluenceRule("LikesToSpeak");
-            r.setDel((Character c1, Character c2, intent it) => 5);
+            SubModule.existingRules.TryGetValue("HasRumor", out r);
             t.addInitRule(r);
 
-            r = new InfluenceRule("HasRumor");
-            r.setDel((Character c1, Character c2, intent it) => c1.hasRumor() ? 5 : -10);
-            t.addInitRule(r);
-
+            t.addInstRule(new InstRule("Information", (List<dynamic> f) => InstRule.RelayRumor(f) ));
 
             t.addsentence("I have to tell you something.");
+
+            t.addsentence("I see", 1, sentenceType.pResponse);
+            t.addsentence("I see", 1, sentenceType.normalResponse);
+            t.addsentence("Hm", 2, sentenceType.nResponse);
+
             sc.Add(n, t);
         }
 
         private static void Gossip(Dictionary<string, SocialInteraction> sc)
         {
             string n = "Gossip";
-            SocialInteraction t = new SocialInteraction(n, 1, 1);
-            t.addCondition(ConditionManager.NotAvailable());
+            SocialInteraction t = new SocialInteraction(n, 10, 0);
 
-            InfluenceRule r = new InfluenceRule("Bored");
-            r.setDel((Character c1, Character c2, intent it) => c1.isBored() ? 10 : 0);
+            Condition c;
+            SubModule.existingConditions.TryGetValue("NotAvailable", out c);
+            t.addCondition(c);
+
+            InfluenceRule r;
+            SubModule.existingRules.TryGetValue("Bored", out r);
             t.addInitRule(r);
 
-            r = new InfluenceRule("LikesToSpeak");
-            r.setDel((Character c1, Character c2, intent it) => 5);
+            SubModule.existingRules.TryGetValue("LikesToSpeak", out r);
             t.addInitRule(r);
+
+            t.addInstRule(new InstRule("Information", (List<dynamic> f) => InstRule.NextRelay(f)));
 
             t.addsentence("Please tell me something.");
+
+            t.addsentence("Sure", 1, sentenceType.pResponse);
+            t.addsentence("Hm", 1, sentenceType.normalResponse);
+            t.addsentence("No", 2, sentenceType.nResponse);
             sc.Add(n, t);
         }
 
@@ -186,50 +247,69 @@ namespace NewNpc2
         private static void Flirt(Dictionary<string, SocialInteraction> sc)
         {
             string n = "Flirt";
-            SocialInteraction t = new SocialInteraction(n, 1, 1);
-            t.addCondition(ConditionManager.Adults());
-            t.addCondition(ConditionManager.NotAvailable());
+            SocialInteraction t = new SocialInteraction(n, 10, 0);
 
-            InfluenceRule r = new InfluenceRule("Romantic");
-            r.setDel((Character c1, Character c2, intent it) => it == intent.Romantic ? 10 : 0);
+            Condition c;
+            SubModule.existingConditions.TryGetValue("Adults", out c);
+            t.addCondition(c);
+
+
+            InfluenceRule r;
+            SubModule.existingRules.TryGetValue("Romantic", out r);
             t.addInitRule(r);
 
             t.addsentence("Do you want to hang out?");
+
+            t.addsentence("Yes", 1, sentenceType.pResponse);
+            t.addsentence("Uh okay", 1, sentenceType.normalResponse);
+            t.addsentence("Not really", 2, sentenceType.nResponse);
             sc.Add(n, t);
         }
 
         private static void Date(Dictionary<string, SocialInteraction> sc)
         {
             string n = "Date";
-            SocialInteraction t = new SocialInteraction(n, 1, 1);
-            t.addCondition(ConditionManager.Adults());
-            t.addCondition(ConditionManager.NoRomanceYet());
-            t.addCondition(ConditionManager.NotAvailable());
+            SocialInteraction t = new SocialInteraction(n, 10, 0);
+            Condition c;
+            SubModule.existingConditions.TryGetValue("Adults", out c);
+            t.addCondition(c);
+            SubModule.existingConditions.TryGetValue("NoRomanceYet", out c);
+            t.addCondition(c);
 
-            InfluenceRule r = new InfluenceRule("Romantic");
-            r.setDel((Character c1, Character c2, intent it) => it == intent.Romantic ? 10 : 0);
+            InfluenceRule r;
+            SubModule.existingRules.TryGetValue("Romantic", out r);
             t.addInitRule(r);
 
-            r = new InfluenceRule("Isliked");
-            r.setDel((Character c1, Character c2, intent it) => {
-                Feeling feeling;
-                if (c1.beliefs.TryGetValue(c2, out feeling))
-                    if (feeling.getIntent() == intent.Romantic)
-                        return feeling.getIntensity();
-                return 0;
-            });
+            SubModule.existingRules.TryGetValue("IsLiked", out r);
             t.addInitRule(r);
+
+            t.addInstRule(new InstRule("StartDating", (List<dynamic> d) =>
+                {
+                    if (d.Count < 4) return;
+
+                    Character c1 = d[0] as Character;
+                    Character c2 = d[1] as Character;
+
+                    NewCharacterRelationManager.SetRomantic(c1.characterObject, c2.characterObject, NewCharacterRelationManager.relation.Good);
+                }));
 
             t.addsentence("Let's date.");
+
+
+            t.addsentence("Yes", 1, sentenceType.pResponse);
+            t.addsentence("No", 2, sentenceType.nResponse);
             sc.Add(n, t);
         }
 
         private static void DeclareLove(Dictionary<string, SocialInteraction> sc)
         {
             string n = "DeclareLove";
-            SocialInteraction t = new SocialInteraction(n, 1, 1);
-            t.addCondition(ConditionManager.Adults());
-            t.addCondition(ConditionManager.NotAvailable());
+            SocialInteraction t = new SocialInteraction(n, 10, 0);
+            Condition c;
+            SubModule.existingConditions.TryGetValue("Adults", out c);
+            t.addCondition(c);
+            SubModule.existingConditions.TryGetValue("NotAvailable", out c);
+            t.addCondition(c);
 
 
 
@@ -240,11 +320,15 @@ namespace NewNpc2
         private static void BreakUp(Dictionary<string, SocialInteraction> sc)
         {
             string n = "BreakUp";
-            SocialInteraction t = new SocialInteraction(n, 1, 1);
-            t.addCondition(ConditionManager.Adults());
-            t.addCondition(ConditionManager.Romance());
-            t.addCondition(ConditionManager.NotAvailable());
+            SocialInteraction t = new SocialInteraction(n, 10, 0);
 
+            Condition c;
+            SubModule.existingConditions.TryGetValue("Adults", out c);
+            t.addCondition(c);
+            SubModule.existingConditions.TryGetValue("NotAvailable", out c);
+            t.addCondition(c);
+            SubModule.existingConditions.TryGetValue("Romance", out c);
+            t.addCondition(c);
 
 
             t.addsentence("I don't like you anymore.");
@@ -255,8 +339,10 @@ namespace NewNpc2
         private static void Kick(Dictionary<string, SocialInteraction> sc)
         {
             string n = "Kick";
-            SocialInteraction t = new SocialInteraction(n, 1, 1);
-            t.addCondition(ConditionManager.NotAvailable());
+            SocialInteraction t = new SocialInteraction(n, 10, 0);
+            Condition c;
+            SubModule.existingConditions.TryGetValue("NotAvailable", out c);
+            t.addCondition(c);
 
 
 
@@ -268,9 +354,13 @@ namespace NewNpc2
         private static void Exile(Dictionary<string, SocialInteraction> sc)
         {
             string n = "Exile";
-            SocialInteraction t = new SocialInteraction(n, 1, 1);
-            t.addCondition(ConditionManager.LordsOnly());
-            t.addCondition(ConditionManager.NotAvailable());
+            SocialInteraction t = new SocialInteraction(n, 10, 0);
+            Condition c;
+            SubModule.existingConditions.TryGetValue("NotAvailable", out c);
+            t.addCondition(c);
+
+            SubModule.existingConditions.TryGetValue("LordsOnly", out c);
+            t.addCondition(c);
 
 
             t.addsentence("You are not allowed here anymore.");

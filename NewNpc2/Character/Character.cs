@@ -5,16 +5,17 @@ using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.Core;
+using TaleWorlds.TwoDimension;
 
 namespace NewNpc2
 {
     public class Character
     {
         //class with the personality traits
-        public Traits personality;
+        private Traits personality;
 
         //List of possible statuses
-        public List<Status> status;
+        private List<Status> status;
 
         //likes?
         public CharacterObject characterObject;
@@ -26,8 +27,9 @@ namespace NewNpc2
         private List<Feeling> admiration;
 
         //belief network
-        //it is a list of relations with 2 characters as reference as well as a goal and intensity (how strongly he believes in that)
-        public Dictionary<Character,Feeling> beliefs;
+        private Dictionary<Character,List<Feeling>> beliefs;
+
+        private intent currIntent;
 
         //list of social exchanges known
         //each exchange is paired with the respective believability 
@@ -55,7 +57,7 @@ namespace NewNpc2
             romanticFeelings = new List<Feeling>();
             admiration = new List<Feeling>();
 
-            beliefs = new Dictionary<Character, Feeling>();
+            beliefs = new Dictionary<Character, List<Feeling>>();
             socialKnowledge = new Dictionary<SocialExchange, float>();
 
             influenceRules = new List<InfluenceRule>();
@@ -63,8 +65,10 @@ namespace NewNpc2
             rumor = null;
             this.culture = culture;
             characterObject = co;
+            currIntent = intent.Neutral;
             initialState();
         }
+
 
         public Character(CulturalKnowledge culture, CharacterTraits characterTraits,CharacterObject co)
         {
@@ -75,7 +79,7 @@ namespace NewNpc2
             romanticFeelings = new List<Feeling>();
             admiration = new List<Feeling>();
 
-            beliefs = new Dictionary<Character, Feeling>();
+            beliefs = new Dictionary<Character, List<Feeling>>();
             socialKnowledge = new Dictionary<SocialExchange, float>();
 
             influenceRules = new List<InfluenceRule>();
@@ -84,6 +88,13 @@ namespace NewNpc2
             this.culture = culture;
             characterObject = co;
             initialState();
+        }
+
+        internal List<Feeling> getBeliefs(Character character)
+        {
+            List<Feeling> l;
+            beliefs.TryGetValue(character, out l);
+            return l;
         }
 
         public bool hasRumor()
@@ -99,7 +110,7 @@ namespace NewNpc2
                 status.Add(Status.Happy);
             else
                 status.Add(Status.Angry);
-
+            status.Add(Status.Bored);
         }
 
         public void clearIntented()
@@ -122,17 +133,20 @@ namespace NewNpc2
             influenceRules.Add(r);
         }
 
-        public void calcVolitions(Character r)
+        public intent calcVolitions(Character r)
         {
+            intent intent = calcIntent(r);
+            Random rand = new Random();
+            float chance = 2;
+
             Dictionary<float, SocialInteraction> d = new Dictionary<float, SocialInteraction>();
             foreach(SocialInteraction si in SubModule.existingExchanges.Values){
                 if (si.validate(this.characterObject, r.characterObject))
                 {
-                    //TODO calc intent
-                    float res = si.calculateVolition(this, r, intent.Neutral);
+                    float res = (float)(si.calculateVolition(this, r, intent) + (2*chance*rand.NextDouble()-chance));
                     //TDODO fix
                     while (d.ContainsKey(res))
-                        res -= 0.1f;
+                        res += (float)rand.NextDouble()* 0.2f -0.1f;
                     d.Add(res,si);
                 }
             }
@@ -145,11 +159,129 @@ namespace NewNpc2
                 intendedSocialExchange.Add(d[l[i]]);
             }
 
+            return intent;
+        }
+
+        internal sentenceType calcDialogType()
+        {
+            Random r = new Random();
+            float v = Mathf.Lerp(0,1,(personality.careful + personality.honor + personality.shy) * ((float)r.NextDouble() * 0.3f - 0.15f));
+            if (v < 0.1) return sentenceType.Crude;
+            else if (v > 0.85) return sentenceType.Cordial;
+            else return sentenceType.Normal;
+        }
+        
+        private intent calcIntent(Character r)
+        {
+            intent i = intent.Neutral;
+
+            Feeling friendly = getFeeling(friendlyFeelings, r);
+            Feeling romantic = getFeeling(romanticFeelings, r);
+            Feeling admire = getFeeling(admiration, r);
+
+            if(friendly != null) 
+                i = friendly.getIntent();
+
+            if (romantic != null && romantic.getIntensity() > (friendly != null ? friendly.getIntensity(): 0))
+                i = romantic.getIntent();
+
+            if (admire != null)
+                if (admire.getIntensity() > (friendly != null ? friendly.getIntensity() : 0) &&
+                    admire.getIntensity() > (romantic != null ? romantic.getIntensity() : 0))
+                    i = admire.getIntent();
+                    
+            return i;
+        }
+
+        public void raiseRomantic(Character c, float v = 1)
+        {
+            float value = v + ((v / 5) * personality.stubborn);
+            Feeling f = null;
+            for(int i = 0; i < romanticFeelings.Count; i++)
+            {
+                if (romanticFeelings[i].getInitiator() == c)
+                {
+                    romanticFeelings[i].addIntensity(value);
+                    f = romanticFeelings[i];
+                }
+            }
+            if (f == null) romanticFeelings.Add(new Feeling(c,v,intent.Romantic));
+        }
+
+        public void lowerRomantic(Character c, float v = 1)
+        {
+            raiseRomantic(c, -v);
+
+        }
+
+        internal void overpowered(Character c, float v = 1)
+        {
+            Feeling f = null;
+            for (int i = 0; i < admiration.Count; i++)
+            {
+                if (admiration[i].getInitiator() == c)
+                {
+                    admiration[i].addIntensity(v);
+                    f = admiration[i];
+                    if (getFeeling(friendlyFeelings, c).getIntent() == intent.Positive) admiration[i].setIntent(intent.Embellish);
+                }
+            }
+            if (f == null) admiration.Add(new Feeling(c, v, intent.Neutral));
+
+        }
+
+        internal void raiseFriendly(Character c, float v = 1)
+        {
+            Random r = new Random();
+            float value = v - ((v / 4) * personality.stubborn *(float) r.NextDouble());
+            Feeling f = null;
+            for (int i = 0; i < friendlyFeelings.Count; i++)
+            {
+                if (friendlyFeelings[i].getInitiator() == c)
+                {
+                    f = friendlyFeelings[i];
+                    friendlyFeelings[i].addIntensity(value);
+                    if(friendlyFeelings[i].getIntensity() > 10 && friendlyFeelings[i].getIntent() == intent.Neutral)
+                        friendlyFeelings[i].setIntent(intent.Positive);
+                    else if(friendlyFeelings[i].getIntensity() > 0 && friendlyFeelings[i].getIntent() == intent.Negative)
+                        friendlyFeelings[i].setIntent(intent.Neutral);
+                    else if (friendlyFeelings[i].getIntensity() < 10 && friendlyFeelings[i].getIntent() == intent.Positive)
+                        friendlyFeelings[i].setIntent(intent.Neutral);
+                    else if (friendlyFeelings[i].getIntensity() < 0 && friendlyFeelings[i].getIntent() == intent.Neutral)
+                        friendlyFeelings[i].setIntent(intent.Negative);
+                }
+            }
+            if (f == null) friendlyFeelings.Add(new Feeling(c, v, intent.Positive));
+        }
+
+        internal void lowerFriendly(Character c, float v = 1)
+        {
+            raiseFriendly(c, -v);
+        }
+         
+        private Feeling getFeeling(List<Feeling> list, Character c)
+        {
+            Feeling f = null;
+            foreach(Feeling f2 in list)
+            {
+                if (f2.getInitiator() == c) f = f2;
+            }
+            return f;
+        }
+
+        public void setIntent(intent i)
+        {
+            currIntent = i;
+        }
+
+        public intent getIntent()
+        {
+            return currIntent;
         }
 
         public void addExchange(SocialExchange se)
         {
-            //TODO
+            socialKnowledge.Add(se, 1);
         }
 
         public List<InfluenceRule> getRules()
@@ -177,6 +309,11 @@ namespace NewNpc2
             status.Add(s);
         }
 
+        public void removeStatus(Status s)
+        {
+            status.Remove(s);
+        }
+
         public bool isGloated()
         {
             return status.Contains(Status.Gloated);
@@ -184,6 +321,11 @@ namespace NewNpc2
         public bool isBored()
         {
             return status.Contains(Status.Bored);
+        }
+
+        public void notBored()
+        {
+            status.Remove(Status.Bored);
         }
 
         public bool isFeared()
@@ -201,8 +343,35 @@ namespace NewNpc2
             return b >= 0;
         }
         
+        internal float getSensitive()
+        {
+            return personality.sensitive;
+        }
+        internal float getShy()
+        {
+            return personality.shy;
+        }
+        internal float getKind()
+        {
+            return personality.kind;
+        }
 
-        public class Traits
+        internal bool isGay()
+        {
+            return personality.isGay;
+        }
+
+        internal float getCharm()
+        {
+            return personality.charm;
+        }
+
+        internal float getHonor()
+        {
+            return personality.honor;
+        }
+
+        internal class Traits
         {
             public float kind;
             public float stubborn;
@@ -219,7 +388,9 @@ namespace NewNpc2
 
             public float calculating;
 
-            public Traits()
+            public bool isGay; 
+
+            internal Traits()
             {
 
                 var rand = new Random();
@@ -237,6 +408,8 @@ namespace NewNpc2
                 annoying = (float)rand.NextDouble() * 2 - 1;
 
                 calculating = (float)rand.NextDouble() * 2 - 1;
+
+                isGay = rand.NextDouble() < 0.1;
             }
 
             public Traits(CharacterTraits charaterTraits)
@@ -264,6 +437,9 @@ namespace NewNpc2
                 if(sensitive == 0) sensitive = (float)rand.NextDouble() * 2 - 1; ;
                 if(honor == 0) honor = (float)rand.NextDouble() * 2 - 1; ;
                 if(calculating == 0) calculating = (float)rand.NextDouble() * 2 - 1; ;
+
+
+                isGay = rand.NextDouble() < 0.1;
             }
 
 

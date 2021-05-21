@@ -6,24 +6,24 @@ using System.Threading.Tasks;
 
 namespace NewNpc2
 {
-    public class TriggerRule : Rule
+    public class InstRule : Rule
     {
-        protected List<Condition> conditions; 
+        protected List<Condition> conditions;
         protected Action<List<dynamic>> del;
 
-        public TriggerRule(string d, Action<List<dynamic>> f = null) : base(d)
+        public InstRule(string d, Action<List<dynamic>> f = null) : base(d)
         {
             conditions = new List<Condition>();
             del = f;
         }
 
-        
+
         public void runEffects(List<dynamic> d = null)
         {
-            if(validate(d)) del(d);
+            if (validate(d)) del(d);
         }
 
-        
+
 
         public void addCondition(Condition c)
         {
@@ -40,8 +40,20 @@ namespace NewNpc2
             return b;
         }
 
+
+        //TODO Information
+        public static void RelayRumor(List<dynamic> f)
+        {
+
+        }
+
+        //TODO Information
+        public static void NextRelay(List<dynamic> f)
+        {
+
+        }
+
     }
+}
 
     
-
-}

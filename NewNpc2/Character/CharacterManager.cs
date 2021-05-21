@@ -27,7 +27,19 @@ namespace NewNpc2
             {
                 return c;
             }
-            return null;
+            Character character;
+                if (h.IsHero)
+                {
+                    character = new Character(new CulturalKnowledge("a"), h.HeroObject.GetHeroTraits(), h);
+                    CharacterManager.characters.Add(h, character);
+                }
+                else
+                {
+                    character = new Character(new CulturalKnowledge("a"), h);
+                    CharacterManager.characters.Add(h, character);
+                }
+            
+            return character;
         }
 
         public static List<InfluenceRule> generalRules()
@@ -35,8 +47,8 @@ namespace NewNpc2
             List<InfluenceRule> ir = new List<InfluenceRule>();
 
 
-            InfluenceRule r = new InfluenceRule("Shyness", 1);
-            r.setDel((Character c1, Character c2, intent it) => c1.personality.shy * -5);
+            InfluenceRule r = new InfluenceRule("Shyness");
+            r.setDel((List<dynamic> d) => (d[0] as Character).getShy() * -5);
             ir.Add(r);
 
             return ir;

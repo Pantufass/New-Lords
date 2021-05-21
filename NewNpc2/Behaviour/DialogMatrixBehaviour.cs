@@ -5,11 +5,11 @@ using System.Collections.Generic;
 
 namespace NewNpc2
 {
-    public class PlayerStartBehaviour : CampaignBehaviorBase
+    public class DialogMatrixBehaviour : CampaignBehaviorBase
     {
-        int step = 0;
-        bool loaded = false;
 
+        string playerInput = "player";
+        string npcResponse = "response";
 
         public override void RegisterEvents()
         {
@@ -26,7 +26,7 @@ namespace NewNpc2
             CampaignEvents.PlayerStartTalkFromMenu.AddNonSerializedListener(this, new Action<Hero>(this.Start));
             CampaignEvents.VillageBeingRaided.AddNonSerializedListener(this, new Action<Village>(Microtheory.Raid));
             CampaignEvents.VillageLooted.AddNonSerializedListener(this, new Action<Village>(Microtheory.Raid));
-            
+
         }
 
         public override void SyncData(IDataStore dataStore)
@@ -46,6 +46,7 @@ namespace NewNpc2
 
         public void OnSessionLaunched(CampaignGameStarter starter)
         {
+            CreateDialog(starter);
             this.startInterction(starter);
 
         }
@@ -53,7 +54,6 @@ namespace NewNpc2
         public void AfterGameLoad()
         {
             CreateCharacter();
-            loaded = true;
         }
 
         private void CreateCharacter()
@@ -64,109 +64,87 @@ namespace NewNpc2
             CharacterManager.MainCharacter = c;
         }
 
+        private void CreateDialog(CampaignGameStarter starter)
+        {
+            CreateNPCResponse(starter,npcResponse,playerInput);
+            CreatePlayerDialog(starter,playerInput,npcResponse);
+        }
+
         private void startInterction(CampaignGameStarter campaign)
         {
-            campaign.AddDialogLine(" start", "start", nextStep(), " ",
+            campaign.AddDialogLine("starter", "start", playerInput, " ",
                 null,
-                ()=>startPlayerInt(campaign),
+                () => runPlayerLine(),
                 1000, null);
 
-            InformationManager.DisplayMessage(new InformationMessage(nextStep()));
-            step++;
         }
 
-        private string nextStep()
+        public void CreateNPCResponse(CampaignGameStarter campaign, string intoken, string outtoken)
         {
-            return "step" + (step+1);
+            foreach (KeyValuePair<string, SocialInteraction> sipair in SubModule.existingExchanges)
+            {
+                int i = 0;
+                foreach (Dialog d in sipair.Value.sentences)
+                {
+                    campaign.AddDialogLine((sipair.Value.name + d.type + i), intoken, outtoken, d.sentence,
+                        () => d.validateNpcLine(),
+                        () => {
+
+                        },
+                        1000, null);
+                    i++;
+                }
+            }
         }
 
-        private string getStep()
+        public void CreatePlayerDialog(CampaignGameStarter campaign, string intoken, string outtoken)
         {
-            return "step" + step;
+            foreach (KeyValuePair<string, SocialInteraction> sipair in SubModule.existingExchanges)
+            {
+                int i = 0;
+                foreach (Dialog d in sipair.Value.sentences)
+                {
+                    campaign.AddPlayerLine((sipair.Value.name + d.type + i), intoken, outtoken, d.sentence,
+                        () => d.validatePlayerLine(),
+                        () => {
+                            runNpcResponse(sipair.Value);
+                        },
+                        1000, null);
+                    i++;
+                }
+            }
         }
 
-        private void startPlayerInt(CampaignGameStarter campaign)
+        private void runPlayerLine()
         {
-
-            Campaign.Current.ConversationManager.ClearCurrentOptions();
             CharacterObject c = CharacterObject.OneToOneConversationCharacter;
-
-            if (!loaded) return;
-
             Character character = CharacterManager.findChar(c);
-
             intent i = CharacterManager.MainCharacter.calcVolitions(character);
-
-
-            InformationManager.DisplayMessage(new InformationMessage(CharacterManager.MainCharacter.isBored() ? "bored" : "not"));
-
-
+            CharacterManager.MainCharacter.setIntent(i);
             foreach (SocialInteraction si in CharacterManager.MainCharacter.getIntented())
             {
-                campaign.AddPlayerLine(si.name, getStep(), nextStep(), si.getDialogLine(sentenceType.Normal, 0),
-                    (() => si.validate(Hero.MainHero.CharacterObject, c)),
-                    (() =>
-                    {
-                        newInteraction(campaign, si, i);
-                    }),
-                    1000, null);
+                si.chooseDialog(CharacterManager.MainCharacter.calcDialogType(),0);
             }
-
             SocialInteraction l = SocialInteractionManager.Leave();
-            campaign.AddPlayerLine(l.name, getStep(), nextStep(), l.getDialogLine(sentenceType.Normal, 0),
-                    (() => l.validate(Hero.MainHero.CharacterObject, c)),
-                    (() =>
-                    {
-                        newInteraction(campaign, l, i);
-                    }),
-                    1000, null);
-            step++;
+            l.chooseDialog(CharacterManager.MainCharacter.calcDialogType(),0);
         }
 
-        private void newInteraction(CampaignGameStarter campaign, SocialInteraction si, intent i)
+        private void runNpcResponse(SocialInteraction social)
         {
             CharacterObject c = CharacterObject.OneToOneConversationCharacter;
             Character character = CharacterManager.findChar(c);
-
-            SocialExchange se = new SocialExchange(CharacterManager.MainCharacter, character, si, i);
+            SocialExchange se = new SocialExchange(CharacterManager.MainCharacter, character, social, CharacterManager.MainCharacter.getIntent());
             float result = se.calculateResponse();
-
-            campaign.AddDialogLine(si.name, getStep(), nextStep(), si.getResponse(result),
-                null,
-                (() =>
-                {
-                    makeExchange(se);
-                    if (si.finish) endInteraction();
-                    else
-                    {
-                        startPlayerInt(campaign);
-                    }
-                }),
-                1000,null );
-
-            step++;
+            se.chooseResponse(result);
+            SubModule.makeExchange(se);
+            if (social.finish) SubModule.endInteraction();
+            else runPlayerLine();
         }
 
 
-        private void makeExchange(SocialExchange se)
-        {
-            SubModule.runTriggerRules(se.getInstRules(), se);
 
-            if (se.type.IsImportant)
-            {
-                SubModule.SocialFactsDatabase.Add(se);
-                se.setInCharacters();
-                //TODO spread exchange
-                //todo calc exchange interest
-            }
-        }
+        
 
-        private void endInteraction()
-        {
-            if (PlayerEncounter.Current != null)
-            {
-                PlayerEncounter.LeaveEncounter = true;
-            }
-        }
+        
     }
 }

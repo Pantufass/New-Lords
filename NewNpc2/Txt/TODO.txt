@@ -55,13 +55,27 @@ basic cif
 look into saving? - xmls?
 influence rule manager
 trigger rules working
-calc value for dialog choices
+calc value for dialog choices <<<<<<
 calc intention
 rework dialog
-meter dois npcs a falar
+meter dois npcs a falar <<<<<<<<<<
 jogador com as proprias volitions
 
 ----------------------------------------------
 
 update interaction manager with influence manager
-create more trigger rules
+create more trigger rules - create beliefs
+check if intent is working
+outcome working - set tresholds
+fazer jogador escolher intent
+dialog still not working 
+
+--------------------------------------------
+
+learn to group Interactions
+fix first impression -> harmony
+
+
+---------------------------------------------
+
+start npc to npc interaction

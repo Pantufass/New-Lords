@@ -5,11 +5,13 @@ using System.Collections.Generic;
 
 namespace NewNpc2
 {
-    public class PlayerStartBehaviour : CampaignBehaviorBase
+    public class SingleInteractionBehaviour : CampaignBehaviorBase
     {
         int step = 0;
         bool loaded = false;
 
+        List<bool> chosenExchanges;
+        List<bool> chosenDialog;
 
         public override void RegisterEvents()
         {
@@ -26,7 +28,7 @@ namespace NewNpc2
             CampaignEvents.PlayerStartTalkFromMenu.AddNonSerializedListener(this, new Action<Hero>(this.Start));
             CampaignEvents.VillageBeingRaided.AddNonSerializedListener(this, new Action<Village>(Microtheory.Raid));
             CampaignEvents.VillageLooted.AddNonSerializedListener(this, new Action<Village>(Microtheory.Raid));
-            
+
         }
 
         public override void SyncData(IDataStore dataStore)
@@ -47,6 +49,8 @@ namespace NewNpc2
         public void OnSessionLaunched(CampaignGameStarter starter)
         {
             this.startInterction(starter);
+            chosenExchanges = new List<bool>();
+            chosenDialog = new List<bool>();
 
         }
 
@@ -66,29 +70,15 @@ namespace NewNpc2
 
         private void startInterction(CampaignGameStarter campaign)
         {
-            campaign.AddDialogLine(" start", "start", nextStep(), " ",
+            campaign.AddDialogLine(" start", "start","playerturn", " ",
                 null,
-                ()=>startPlayerInt(campaign),
+                () => startPlayerInt(campaign),
                 1000, null);
-
-            InformationManager.DisplayMessage(new InformationMessage(nextStep()));
-            step++;
         }
 
-        private string nextStep()
-        {
-            return "step" + (step+1);
-        }
-
-        private string getStep()
-        {
-            return "step" + step;
-        }
 
         private void startPlayerInt(CampaignGameStarter campaign)
         {
-
-            Campaign.Current.ConversationManager.ClearCurrentOptions();
             CharacterObject c = CharacterObject.OneToOneConversationCharacter;
 
             if (!loaded) return;
@@ -98,12 +88,9 @@ namespace NewNpc2
             intent i = CharacterManager.MainCharacter.calcVolitions(character);
 
 
-            InformationManager.DisplayMessage(new InformationMessage(CharacterManager.MainCharacter.isBored() ? "bored" : "not"));
-
-
             foreach (SocialInteraction si in CharacterManager.MainCharacter.getIntented())
             {
-                campaign.AddPlayerLine(si.name, getStep(), nextStep(), si.getDialogLine(sentenceType.Normal, 0),
+                campaign.AddPlayerLine(si.name, "playerturn", "response", si.getDialogLine(CharacterManager.MainCharacter.calcDialogType(), 0),
                     (() => si.validate(Hero.MainHero.CharacterObject, c)),
                     (() =>
                     {
@@ -113,7 +100,7 @@ namespace NewNpc2
             }
 
             SocialInteraction l = SocialInteractionManager.Leave();
-            campaign.AddPlayerLine(l.name, getStep(), nextStep(), l.getDialogLine(sentenceType.Normal, 0),
+            campaign.AddPlayerLine(l.name, "playerturn", "response", l.getDialogLine(CharacterManager.MainCharacter.calcDialogType(), 0),
                     (() => l.validate(Hero.MainHero.CharacterObject, c)),
                     (() =>
                     {
@@ -131,18 +118,14 @@ namespace NewNpc2
             SocialExchange se = new SocialExchange(CharacterManager.MainCharacter, character, si, i);
             float result = se.calculateResponse();
 
-            campaign.AddDialogLine(si.name, getStep(), nextStep(), si.getResponse(result),
+            campaign.AddDialogLine(si.name, "response","end", si.getResponse(result),
                 null,
                 (() =>
                 {
+                    endInteraction();
                     makeExchange(se);
-                    if (si.finish) endInteraction();
-                    else
-                    {
-                        startPlayerInt(campaign);
-                    }
                 }),
-                1000,null );
+                1000, null);
 
             step++;
         }

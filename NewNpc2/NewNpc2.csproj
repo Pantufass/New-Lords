@@ -70,19 +70,23 @@
   <!-- Files & Classes -->
   <ItemGroup>
     <Compile Include="Behaviour\DialogFlowBehaviour.cs" />
+    <Compile Include="Behaviour\DialogMatrixBehaviour.cs" />
     <Compile Include="Behaviour\NpcStartBehaviour.cs" />
+    <Compile Include="Behaviour\SingleInteractionBehaviour.cs" />
     <Compile Include="Character\Character.cs" />
     <Compile Include="Character\CharacterManager.cs" />
     <Compile Include="Character\CulturalKnowledge.cs" />
     <Compile Include="Character\Feeling.cs" />
     <Compile Include="Character\Introduction.cs" />
     <Compile Include="Character\NewCharacterRelationManager.cs" />
-    <Compile Include="Behaviour\NewConvoBehaviour.cs" />
     <Compile Include="Behaviour\PlayerStartBehaviour.cs" />
+    <Compile Include="Patch.cs" />
     <Compile Include="Rules\Condition.cs" />
     <Compile Include="Rules\ConditionManager.cs" />
     <Compile Include="Rules\InfluenceRule.cs" />
     <Compile Include="Rules\InfluenceRuleManager.cs" />
+    <Compile Include="Rules\InstRule.cs" />
+    <Compile Include="Rules\Microtheory.cs" />
     <Compile Include="Rules\Rule.cs" />
     <Compile Include="Rules\TriggerRule.cs" />
     <Compile Include="Rules\TriggerRuleManager.cs" />

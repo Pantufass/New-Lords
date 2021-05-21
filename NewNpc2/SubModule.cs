@@ -6,6 +6,7 @@ using TaleWorlds.CampaignSystem;
 using System.Collections.Generic;
 using System.Reflection;
 using Module = TaleWorlds.MountAndBlade.Module;
+using HarmonyLib;
 
 namespace NewNpc2
 {
@@ -19,22 +20,22 @@ namespace NewNpc2
         //deal with the problem "only load NPCs close to player"
         //throw event when party reaches new settlement
 
-
+        public static Dictionary<string, Condition> existingConditions;
         public static Dictionary<string, SocialInteraction> existingExchanges;
         public static Dictionary<string, InfluenceRule> existingRules;
 
-        //TODO
-        private static List<Rule> microTheories;
-        //TODO
         public static List<TriggerRule> triggerRules;
 
-        //TODO
         public static List<SocialExchange> SocialFactsDatabase;
 
         //Relationships in the world
         public static NewCharacterRelationManager newRelationManager;
 
-        
+        public static void DoPatching()
+        {
+            var harmony = new Harmony("example.patch");
+            harmony.PatchAll();
+        }
 
         protected override void OnSubModuleLoad()
         {
@@ -45,8 +46,9 @@ namespace NewNpc2
 
             //typeof(Campaign).GetField("<CharacterRelationManager>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(Campaign.Current, new NewCharacterRelationManager());
 
-            existingExchanges = SocialInteractionManager.createSocialExchanges();
+            existingConditions = ConditionManager.CreateConditions();
             existingRules = InfluenceRuleManager.createRules();
+            existingExchanges = SocialInteractionManager.createSocialExchanges();
 
             triggerRules = TriggerRuleManager.createRules();
 
@@ -61,22 +63,55 @@ namespace NewNpc2
             if (game.GameType is Campaign campaign && gameStarter is CampaignGameStarter campaignGameStarter)
             {
          
-                campaignGameStarter.AddBehavior(new NewConvoBehaviour());
-                campaignGameStarter.AddBehavior(new PlayerStartBehaviour());
+                //campaignGameStarter.AddBehavior(new NewConvoBehaviour());
+                //campaignGameStarter.AddBehavior(new PlayerStartBehaviour());
                 //campaignGameStarter.AddBehavior(new NpcStartBehaviour());
+                //campaignGameStarter.AddBehavior(new DialogFlowBehaviour());
+                //campaignGameStarter.AddBehavior(new SingleInteractionBehaviour());
+                campaignGameStarter.AddBehavior(new DialogMatrixBehaviour());
             }
         }
 
+        
 
-        public static void runTriggerRules(List<TriggerRule> interactionRules, SocialExchange se)
+        public static void makeExchange(SocialExchange se)
         {
+            runTriggerRules(se.getInstRules(), se);
+
+            if (se.type.IsImportant)
+            {
+                SocialFactsDatabase.Add(se);
+                se.setInCharacters();
+                //TODO spread exchange
+                //todo calc exchange interest
+            }
+        }
+
+        public static void endInteraction()
+        {
+            if (PlayerEncounter.Current != null)
+            {
+                PlayerEncounter.LeaveEncounter = true;
+            }
+        }
+
+        public static void runTriggerRules(List<InstRule> interactionRules, SocialExchange se)
+        {
+            List<dynamic> l = new List<dynamic>();
+            l.Add(se.getInitiator());
+            l.Add(se.getReceiver());
+            l.Add(se.getIntent());
+            l.Add(se.outcome);
+            l.Add(se.type);
+
+            foreach (InstRule r in interactionRules)
+            {
+                r.runEffects(l);
+            }
+
             foreach (TriggerRule r in triggerRules)
             {
-                r.runEffects(se.getInitiator(), se.getReceiver(), se.getIntent(), se.outcome);
-            }
-            foreach(TriggerRule r in interactionRules)
-            {
-                r.runEffects(se.getInitiator(), se.getReceiver(), se.getIntent(), se.outcome);
+                r.runEffects(l);
             }
 
         }

@@ -10,18 +10,12 @@ namespace NewNpc2
     {
         public List<Condition> conditions;
 
-        protected Func<Character, Character, intent, float> del;
+        protected Func<List<dynamic>, float> del;
 
 
-        public InfluenceRule(string d) : base(d, 0)
+        public InfluenceRule(string d) : base(d)
         {
             conditions = new List<Condition>();
-        }
-
-        public InfluenceRule(string d, int i) : base(d, i)
-        {
-            conditions = new List<Condition>();
-
         }
 
 
@@ -30,24 +24,24 @@ namespace NewNpc2
             conditions.Add(c);
         }
 
-        public void setDel(Func<Character, Character, intent, float> d)
+        public void setDel(Func<List<dynamic>, float> d)
         {
             del = d;
         }
 
-        public override bool validate()
+        public override bool validate(List<dynamic> d = null)
         {
             bool b = true;
             foreach (Condition c in conditions)
             {
-                b = b && c.validate();
+                b = b && c.validate(d);
             }
             return b;
         }
 
-        public float value(Character init, Character rec, intent t)
+        public float value(List<dynamic> d)
         {
-            return del(init, rec, t);
+            return del(d);
         }
     }
 }

@@ -13,73 +13,73 @@ namespace NewNpc2
         {
             Dictionary<string, InfluenceRule> existing = new Dictionary<string, InfluenceRule>();
 
+
             string n = "NeedToIntroduce";
             InfluenceRule r = new InfluenceRule(n); 
-            r.setDel((Character c1, Character c2, intent it) => 100);
+            r.setDel((List<dynamic> d) => 100);
             existing.Add(n, r);
 
             n = "ImproveRel";
             r = new InfluenceRule(n);
-            r.setDel((Character c1, Character c2, intent it) => 5 * (it == intent.Positive ? 1 : -1));
+            r.setDel((List<dynamic> d) => 5 * (d[2] as intent? == intent.Positive ? 1 : -1));
             existing.Add(n, r);
 
             n = "IsNice";
             r = new InfluenceRule(n);
-            r.setDel((Character c1, Character c2, intent it) => c1.personality.kind * 5);
+            r.setDel((List<dynamic> d) => (d[0] as Character).getKind() * 5);
             existing.Add(n, r);
 
             n = "BeingNice";
             r = new InfluenceRule(n);
-            r.setDel((Character c1, Character c2, intent it) => c1.isHappy() ? 5 : 0);
+            r.setDel((List<dynamic> d) => (d[0] as Character).isHappy() ? 5 : 0);
             existing.Add(n, r);
 
             n = "Hurtful";
             r = new InfluenceRule(n);
-            r.setDel((Character c1, Character c2, intent it) => c1.isGood() ? 0 : 10);
+            r.setDel((List<dynamic> d) => (d[0] as Character).isGood() ? 0 : 10);
             existing.Add(n, r);
 
             n = "Gloated";
             r = new InfluenceRule(n);
-            r.setDel((Character c1, Character c2, intent it) => c1.isGloated() ? 10 : 0);
+            r.setDel((List<dynamic> d) => (d[0] as Character).isGloated() ? 10 : 0);
             existing.Add(n, r);
 
             n = "Bored";
             r = new InfluenceRule(n);
-            r.setDel((Character c1, Character c2, intent it) => c1.isBored() ? 10 : 0);
-            existing.Add(n, r);
-
-            n = "Entertain";
-            r = new InfluenceRule(n);
-            r.setDel((Character c1, Character c2, intent it) => it == intent.Entertain ? 10 : 0);
+            r.setDel((List<dynamic> d) => (d[0] as Character).isBored() ? 10 : 0);
             existing.Add(n, r);
 
             n = "LikesToSpeak";
             r = new InfluenceRule(n);
-            r.setDel((Character c1, Character c2, intent it) => 5);
+            r.setDel((List<dynamic> d) => 5);
             existing.Add(n, r);
 
             n = "Feared";
             r = new InfluenceRule(n);
-            r.setDel((Character c1, Character c2, intent it) => c1.isFeared() ? 10 : 0);
+            r.setDel((List<dynamic> d) => (d[0] as Character).isFeared() ? 10 : 0);
             existing.Add(n, r);
 
             n = "HasRumor";
             r = new InfluenceRule(n);
-            r.setDel((Character c1, Character c2, intent it) => c1.hasRumor() ? 5 : -10);
+            r.setDel((List<dynamic> d) => (d[0] as Character).hasRumor() ? 5 : -15);
             existing.Add(n, r);
 
             n = "Romantic";
             r = new InfluenceRule(n);
-            r.setDel((Character c1, Character c2, intent it) => it == intent.Romantic ? 10 : 0);
+            r.setDel((List<dynamic> d) => d[2] as intent? == intent.Romantic ? 10 : 0);
             existing.Add(n, r);
 
             n = "IsLiked";
             r = new InfluenceRule(n);
-            r.setDel((Character c1, Character c2, intent it) => {
-                Feeling feeling;
-                if (c1.beliefs.TryGetValue(c2, out feeling))
-                    if (feeling.getIntent() == intent.Romantic)
-                        return feeling.getIntensity();
+            r.setDel((List<dynamic> d) => {
+                List<Feeling> feelings = (d[0] as Character).getBeliefs(d[1] as Character);
+                if(feelings != null)
+                    foreach(Feeling f in feelings)
+                    {
+                        if (f.getIntent() == intent.Romantic)
+                            return f.getIntensity() * 5;
+                    }
+                    
                 return 0;
             });
             existing.Add(n, r);

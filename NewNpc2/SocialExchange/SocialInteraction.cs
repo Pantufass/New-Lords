@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
+using TaleWorlds.TwoDimension;
 
 namespace NewNpc2
 {
@@ -26,7 +27,7 @@ namespace NewNpc2
 
         protected List<InfluenceRule> initRules;
         protected List<InfluenceRule> respRules;
-        protected List<TriggerRule> triggerRules;
+        protected List<InstRule> instRules;
 
         public SocialInteraction(string n, float up, float low)
         {
@@ -40,7 +41,7 @@ namespace NewNpc2
 
             initRules = new List<InfluenceRule>();
             respRules = new List<InfluenceRule>();
-            triggerRules = new List<TriggerRule>();
+            instRules = new List<InstRule>();
         }
 
         public void addInitRule(InfluenceRule rule, bool b = true)
@@ -54,14 +55,14 @@ namespace NewNpc2
             respRules.Add(rule);
         }
 
-        public void addTriggerRule(TriggerRule rule)
+        public void addInstRule(InstRule rule)
         {
-            triggerRules.Add(rule);
+            instRules.Add(rule);
         }
 
-        public List<TriggerRule> getTrigger()
+        public List<InstRule> getInstRules()
         {
-            return triggerRules;
+            return instRules;
         }
 
         public void addsentence(string sentence)
@@ -80,12 +81,14 @@ namespace NewNpc2
         //return a sum of the preconditions
         public bool validate(CharacterObject c1, CharacterObject c2)
         {
+            List<dynamic> l = new List<dynamic>();
+            l.Add(c1);
+            l.Add(c2);
+
             bool b = true;
             foreach (Condition c in preconditions)
             {
-                c.target1 = c1;
-                c.target2 = c2;
-                b = b && c.validate();
+                b = b && c.validate(l);
             }
             return b;
         }
@@ -94,14 +97,19 @@ namespace NewNpc2
         //return a sum of the influence rules
         public float calculateVolition(Character init, Character rec, intent intent)
         {
+            List<dynamic> l = new List<dynamic>();
+            l.Add(init);
+            l.Add(rec);
+            l.Add(intent);
+
             float res = 0;
             foreach (InfluenceRule r in initRules)
             {
-                if (r.validate()) res += r.value(init, rec, intent);
+                if (r.validate(l)) res += r.value(l);
             }
             foreach (InfluenceRule r in init.getRules())
             {
-                if (r.validate()) res += r.value(init, rec, intent);
+                if (r.validate(l)) res += r.value(l);
             }
 
             return res;
@@ -113,10 +121,41 @@ namespace NewNpc2
             return respRules;
         }
 
-        //TODO pick sentence
+        private Dialog getTheDialog(sentenceType t, float v)
+        {
+            Dialog res = sentences[0];
+            IEnumerable<Dialog> l = from d in sentences
+                                    where d.type == t
+                                    orderby d.value descending
+                                    select d;
+            if (l.Count() > 0)
+            {
+                if (Mathf.Lerp(0, 1, v) > 0.5) res = l.Last();
+                else res = l.First();
+            }
+
+            return res;
+        }
+
         public string getDialogLine(sentenceType t, float v)
         {
-            return (sentences.Count > 1 ? sentences[1].sentence : sentences[0].sentence);
+            return getTheDialog(t,v).sentence;
+        }
+
+        public void chooseDialog(sentenceType t, float v, bool player = false)
+        {
+            Dialog d = getTheDialog(t, v);
+            d.playera = player;
+            d.cresponse = !player;
+        }
+
+        public void clearDialog()
+        {
+            foreach(Dialog d in sentences)
+            {
+                d.cresponse = false;
+                d.playera = false;
+            }
         }
 
         public string getResponse(float v)
@@ -125,7 +164,6 @@ namespace NewNpc2
 
         }
 
-        
     }
 
 
@@ -135,11 +173,6 @@ namespace NewNpc2
         Positive,
         Negative,
         Romantic,
-        SpreadNews,
-        AdquireKnowledge,
-        Power,
-        Entertain,
-        Like,
-        Dislike
+        Embellish
     }
 }

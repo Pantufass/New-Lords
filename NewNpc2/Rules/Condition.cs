@@ -9,25 +9,21 @@ namespace NewNpc2
     public class Condition : Rule
     {
 
-        public Func<bool> del;
+        public Func<List<dynamic>,bool> del;
 
-        public Condition(string d) : base(d)
-        {
-        }
-        public Condition(string d, int n) : base(d, n)
-        {
-            del = () => false;
-        }
-
-        public void setDel(Func<bool> d)
+        public Condition(string s, Func<List<dynamic>, bool> d = null) : base(s)
         {
             del = d;
         }
 
-        public override bool validate()
+        public void setDel(Func<List<dynamic>,bool> d)
         {
-            if (validateTargets()) return del();
-            return false;
+            del = d;
+        }
+
+        public override bool validate(List<dynamic> d = null)
+        {
+            return del(d);
         }
     }
 }
