@@ -28,6 +28,8 @@ namespace NewNpc2
 
         public static List<SocialExchange> SocialFactsDatabase;
 
+        public static NPCDialogBehaviour npc;
+
         //Relationships in the world
         public static NewCharacterRelationManager newRelationManager;
 
@@ -54,7 +56,7 @@ namespace NewNpc2
 
 
             CharacterManager.characters = new Dictionary<CharacterObject, Character>();
-
+            CharacterManager.startAgents();
             
         }
 
@@ -69,10 +71,20 @@ namespace NewNpc2
                 //campaignGameStarter.AddBehavior(new DialogFlowBehaviour());
                 //campaignGameStarter.AddBehavior(new SingleInteractionBehaviour());
                 campaignGameStarter.AddBehavior(new DialogMatrixBehaviour());
+
+                npc = new NPCDialogBehaviour();
+                campaignGameStarter.AddBehavior(npc);
+
             }
         }
 
-        
+        public override void OnMissionBehaviourInitialize(Mission mission)
+        {
+            base.OnMissionBehaviourInitialize(mission);
+            mission.MissionBehaviours.Add(new OnTick());
+        }
+
+
 
         public static void makeExchange(SocialExchange se)
         {

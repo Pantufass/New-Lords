@@ -10,6 +10,7 @@ namespace NewNpc2
 
         string playerInput = "player";
         string npcResponse = "response";
+        string intentChoice = "intent";
 
         public override void RegisterEvents()
         {
@@ -59,22 +60,65 @@ namespace NewNpc2
         private void CreateCharacter()
         {
             //create MH character
-            Character c = new Character(new CulturalKnowledge("MainHero"), Hero.MainHero.GetHeroTraits(), Hero.MainHero.CharacterObject);
+            Character c = new Character(new Culture("MainHero"), Hero.MainHero.GetHeroTraits(), Hero.MainHero.CharacterObject);
             CharacterManager.characters.Add(Hero.MainHero.CharacterObject, c);
             CharacterManager.MainCharacter = c;
         }
 
         private void CreateDialog(CampaignGameStarter starter)
         {
-            CreateNPCResponse(starter,npcResponse,playerInput);
+            CreateNPCResponse(starter,npcResponse, intentChoice);
             CreatePlayerDialog(starter,playerInput,npcResponse);
+            AddIntentChoices(starter, intentChoice, playerInput);
         }
 
         private void startInterction(CampaignGameStarter campaign)
         {
-            campaign.AddDialogLine("starter", "start", playerInput, " ",
+            campaign.AddDialogLine("starter", "start", intentChoice, " ",
                 null,
-                () => runPlayerLine(),
+                () => intentStep(),
+                1000, null);
+
+        }
+
+        private void AddIntentChoices( CampaignGameStarter campaign, string intoken, string outtoken)
+        {
+            string buffer = "buffer";
+                    campaign.AddPlayerLine("positive", intoken, buffer, "Positive",
+                        null,
+                        () => {
+                            runPlayerLine(intent.Positive);
+                        },
+                        1000, null);
+
+            campaign.AddPlayerLine("neutral", intoken, buffer, "Neutral",
+                        null,
+                        () => {
+                            runPlayerLine(intent.Neutral);
+                        },
+                        1000, null);
+
+            campaign.AddPlayerLine("negative", intoken, buffer, "Negative",
+                        null,
+                        () => {
+                            runPlayerLine(intent.Negative);
+                        },
+                        1000, null);
+            campaign.AddPlayerLine("Romantic", intoken, buffer, "Romantic",
+                        null,
+                        () => {
+                            runPlayerLine(intent.Romantic);
+                        },
+                        1000, null);
+            campaign.AddPlayerLine("End", intoken, buffer, "Leave",
+                        null,
+                        () => {
+                            SubModule.endInteraction();
+                        },
+                        1000, null);
+            campaign.AddDialogLine("buffer", buffer, outtoken, " ",
+                null,
+                () => { },
                 1000, null);
 
         }
@@ -108,6 +152,7 @@ namespace NewNpc2
                         () => d.validatePlayerLine(),
                         () => {
                             runNpcResponse(sipair.Value);
+                            playerChoice(sipair.Value);
                         },
                         1000, null);
                     i++;
@@ -115,22 +160,36 @@ namespace NewNpc2
             }
         }
 
-        private void runPlayerLine()
+        private void intentStep()
+        {
+
+            
+        }
+
+        private void playerChoice(SocialInteraction si)
+        {
+            //change player when he does this
+            //modify his character in the game on each choice 
+            //tough to do
+        }
+
+
+        private void runPlayerLine(intent i)
         {
             CharacterObject c = CharacterObject.OneToOneConversationCharacter;
+            
             Character character = CharacterManager.findChar(c);
-            intent i = CharacterManager.MainCharacter.calcVolitions(character);
-            CharacterManager.MainCharacter.setIntent(i);
-            foreach (SocialInteraction si in CharacterManager.MainCharacter.getIntented())
+            foreach (SocialInteraction si in CharacterManager.MainCharacter.getIntented(character, i))
             {
-                si.chooseDialog(CharacterManager.MainCharacter.calcDialogType(),0);
+                si.chooseDialog(CharacterManager.MainCharacter.calcDialogType(),0,true);
             }
             SocialInteraction l = SocialInteractionManager.Leave();
-            l.chooseDialog(CharacterManager.MainCharacter.calcDialogType(),0);
+            l.chooseDialog(CharacterManager.MainCharacter.calcDialogType(),0,true);
         }
 
         private void runNpcResponse(SocialInteraction social)
         {
+            social.clearDialog();
             CharacterObject c = CharacterObject.OneToOneConversationCharacter;
             Character character = CharacterManager.findChar(c);
             SocialExchange se = new SocialExchange(CharacterManager.MainCharacter, character, social, CharacterManager.MainCharacter.getIntent());
@@ -138,7 +197,7 @@ namespace NewNpc2
             se.chooseResponse(result);
             SubModule.makeExchange(se);
             if (social.finish) SubModule.endInteraction();
-            else runPlayerLine();
+            else intentStep();
         }
 
 

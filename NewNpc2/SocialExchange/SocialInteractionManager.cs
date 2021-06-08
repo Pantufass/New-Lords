@@ -3,11 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaleWorlds.CampaignSystem;
 
 namespace NewNpc2
 {
     public static class SocialInteractionManager
     {
+
+        private static SocialInteraction Complain()
+        {
+
+            SocialInteraction si = new SocialInteraction("Complain", 1, 1);
+            si.addInitRule(new InfluenceRule("a", ((List<dynamic> d) =>
+            {
+                return 15;
+            })));
+            si.addsentence("Im tired");
+            return si;
+        }
 
         private static void Introduce(Dictionary<string, SocialInteraction> sc)
         {
@@ -175,6 +188,10 @@ namespace NewNpc2
         {
             SocialInteraction t = new SocialInteraction("Leave", 0, 0);
             t.finish = true;
+
+            t.addInstRule(new InstRule("End", (List<dynamic> d) => PlayerEncounter.LeaveEncounter = true));
+
+
             t.addsentence("Goodbye.");
             t.addsentence("I must take my leave", 1, sentenceType.Cordial);
             t.addsentence("Cya", 1, sentenceType.Crude);
@@ -322,6 +339,8 @@ namespace NewNpc2
             string n = "BreakUp";
             SocialInteraction t = new SocialInteraction(n, 10, 0);
 
+            t.addInstRule(new InstRule("End", (List<dynamic> d) => PlayerEncounter.LeaveEncounter = true));
+
             Condition c;
             SubModule.existingConditions.TryGetValue("Adults", out c);
             t.addCondition(c);
@@ -344,6 +363,7 @@ namespace NewNpc2
             SubModule.existingConditions.TryGetValue("NotAvailable", out c);
             t.addCondition(c);
 
+            t.addInstRule(new InstRule("End", (List<dynamic> d) => PlayerEncounter.LeaveEncounter = true));
 
 
             t.addsentence("Get out right now.");
@@ -362,6 +382,8 @@ namespace NewNpc2
             SubModule.existingConditions.TryGetValue("LordsOnly", out c);
             t.addCondition(c);
 
+
+            t.addInstRule(new InstRule("End", (List<dynamic> d) => PlayerEncounter.LeaveEncounter = true));
 
             t.addsentence("You are not allowed here anymore.");
             sc.Add(n, t);

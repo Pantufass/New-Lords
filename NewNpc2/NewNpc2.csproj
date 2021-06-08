@@ -70,12 +70,15 @@
   <!-- Files & Classes -->
   <ItemGroup>
     <Compile Include="Behaviour\DialogFlowBehaviour.cs" />
+    <Compile Include="Behaviour\DialogManager.cs" />
     <Compile Include="Behaviour\DialogMatrixBehaviour.cs" />
+    <Compile Include="Behaviour\NPCDialogBehaviour.cs" />
     <Compile Include="Behaviour\NpcStartBehaviour.cs" />
+    <Compile Include="Behaviour\OnTick.cs" />
     <Compile Include="Behaviour\SingleInteractionBehaviour.cs" />
     <Compile Include="Character\Character.cs" />
     <Compile Include="Character\CharacterManager.cs" />
-    <Compile Include="Character\CulturalKnowledge.cs" />
+    <Compile Include="Character\Culture.cs" />
     <Compile Include="Character\Feeling.cs" />
     <Compile Include="Character\Introduction.cs" />
     <Compile Include="Character\NewCharacterRelationManager.cs" />
@@ -97,9 +100,9 @@
     <Compile Include="SocialExchange\SocialInteractionManager.cs" />
     <Compile Include="SubModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Content Include="SubModule.xml" />
     <Content Include="Txt\rules.txt" />
     <Content Include="Txt\socialexchanges.txt" />
-    <Content Include="SubModule.xml" />
     <Content Include="Txt\TODO.txt" />
   </ItemGroup>
   <ItemGroup>

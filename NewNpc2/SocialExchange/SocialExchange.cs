@@ -63,6 +63,16 @@ namespace NewNpc2
 
         }
 
+        public Dialog getResponse(float result)
+        {
+
+            if (result > type.upperThresh)
+                return type.getDialog(sentenceType.pResponse, result);
+            else if (result > type.lowerThresh)
+                return type.getDialog(sentenceType.normalResponse, result);
+            else return type.getDialog(sentenceType.nResponse, result);
+        }
+
         public void setOutcome(float v)
         {
             outcome = (v > type.upperThresh ? outcome.Positive : v > type.lowerThresh ? outcome.Neutral : outcome.Negative);

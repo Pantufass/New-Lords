@@ -18,6 +18,11 @@ namespace NewNpc2
             conditions = new List<Condition>();
         }
 
+        public InfluenceRule(string d, Func<List<dynamic>, float> dele) : base(d)
+        {
+            conditions = new List<Condition>();
+            del = dele;
+        }
 
         public void addCondition(Condition c)
         {

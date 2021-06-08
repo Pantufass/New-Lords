@@ -149,6 +149,11 @@ namespace NewNpc2
             d.cresponse = !player;
         }
 
+        public Dialog getDialog(sentenceType t, float v)
+        {
+            return getTheDialog(t, v);
+        }
+
         public void clearDialog()
         {
             foreach(Dialog d in sentences)

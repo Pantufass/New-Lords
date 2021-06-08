@@ -1,15 +1,15 @@
 ﻿<Module>
-  <Name value="NewNpc2 a Bannerlord Mod"/>
+  <Name value="NewNpc2"/>
   <Id value="NewNpc2"/>
   <Version value="v1.0.0"/>
   <SingleplayerModule value="true"/>
   <MultiplayerModule value="false"/>
   <DependedModules>
+    <DependedModule Id="Bannerlord.Harmony"/>
     <DependedModule Id="Native"/>
     <DependedModule Id="SandBoxCore"/>
     <DependedModule Id="Sandbox"/>
-    <DependedModule Id="StoryMode" />
-    <DependedModule Id="Bannerlord.Harmony" />
+    <DependedModule Id="StoryMode"/>
   </DependedModules>
   <SubModules>
     <SubModule>

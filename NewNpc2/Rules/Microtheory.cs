@@ -15,7 +15,10 @@ namespace NewNpc2
         //fix to use mobile party
         public static void FirstImpression(MobileParty mobile, Settlement set, Hero h )
         {
-            IEnumerable<LocationCharacter> l = (List<LocationCharacter>) LocationComplex.Current.GetLocationWithId("tavern").GetCharacterList();
+            IEnumerable<LocationCharacter> l = (List<LocationCharacter>) set.LocationComplex.GetLocationWithId("tavern").GetCharacterList();
+            IEnumerable<LocationCharacter> l2 = (List<LocationCharacter>) set.LocationComplex.GetLocationWithId(set.IsTown ? "center" : "village_center").GetCharacterList();
+
+
 
             List<Character> list = new List<Character>();
 
@@ -26,6 +29,14 @@ namespace NewNpc2
                 Character character = CharacterManager.findChar(lc.Character);
                 list.Add(character);
             }
+            foreach (LocationCharacter lc in l2)
+            {
+                Character character = CharacterManager.findChar(lc.Character);
+                list.Add(character);
+            }
+
+            //get a character list
+            SubModule.npc.updateCharacters(list);
 
             foreach (Character c1 in list)
             {
