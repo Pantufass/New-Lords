@@ -59,11 +59,6 @@ namespace NewNpc2
             r.setDel((List<dynamic> d) => (d[0] as Character).isFeared() ? 10 : 0);
             existing.Add(n, r);
 
-            n = "HasRumor";
-            r = new InfluenceRule(n);
-            r.setDel((List<dynamic> d) => (d[0] as Character).hasRumor() ? 5 : -15);
-            existing.Add(n, r);
-
             n = "Romantic";
             r = new InfluenceRule(n);
             r.setDel((List<dynamic> d) => d[2] as intent? == intent.Romantic ? 10 : 0);

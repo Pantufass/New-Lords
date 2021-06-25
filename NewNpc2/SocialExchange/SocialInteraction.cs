@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
+using TaleWorlds.Core;
 using TaleWorlds.TwoDimension;
 
 namespace NewNpc2
@@ -28,6 +29,9 @@ namespace NewNpc2
         protected List<InfluenceRule> initRules;
         protected List<InfluenceRule> respRules;
         protected List<InstRule> instRules;
+        protected List<Path> paths;
+
+        public bool hasPaths;
 
         public SocialInteraction(string n, float up, float low)
         {
@@ -38,11 +42,17 @@ namespace NewNpc2
             lowerThresh = low;
             addsentence("...");
             finish = false;
+            hasPaths = false;
 
             initRules = new List<InfluenceRule>();
             respRules = new List<InfluenceRule>();
             instRules = new List<InstRule>();
+            paths = new List<Path>();
+
+
         }
+
+
 
         public void addInitRule(InfluenceRule rule, bool b = true)
         {
@@ -58,6 +68,12 @@ namespace NewNpc2
         public void addInstRule(InstRule rule)
         {
             instRules.Add(rule);
+        }
+
+        public void addPath(Path p)
+        {
+            hasPaths = true;
+            paths.Add(p);
         }
 
         public List<InstRule> getInstRules()
@@ -79,7 +95,7 @@ namespace NewNpc2
         }
 
         //return a sum of the preconditions
-        public bool validate(CharacterObject c1, CharacterObject c2)
+        public bool validate(BasicCharacterObject c1, BasicCharacterObject c2)
         {
             List<dynamic> l = new List<dynamic>();
             l.Add(c1);
@@ -93,7 +109,6 @@ namespace NewNpc2
             return b;
         }
 
-        //TODO calc intent
         //return a sum of the influence rules
         public float calculateVolition(Character init, Character rec, intent intent)
         {
@@ -101,6 +116,7 @@ namespace NewNpc2
             l.Add(init);
             l.Add(rec);
             l.Add(intent);
+            l.Add(this);
 
             float res = 0;
             foreach (InfluenceRule r in initRules)
@@ -139,7 +155,7 @@ namespace NewNpc2
 
         public string getDialogLine(sentenceType t, float v)
         {
-            return getTheDialog(t,v).sentence;
+            return getTheDialog(t, v).sentence;
         }
 
         public void chooseDialog(sentenceType t, float v, bool player = false)
@@ -156,7 +172,7 @@ namespace NewNpc2
 
         public void clearDialog()
         {
-            foreach(Dialog d in sentences)
+            foreach (Dialog d in sentences)
             {
                 d.cresponse = false;
                 d.playera = false;
@@ -169,6 +185,42 @@ namespace NewNpc2
 
         }
 
+        public SocialInteraction(SocialInteraction si)
+        {
+            name = si.name + " changed";
+            preconditions = new List<Condition>();
+            sentences = new List<Dialog>();
+            upperThresh = si.upperThresh;
+            lowerThresh = si.lowerThresh;
+            addsentence("...");
+            finish = si.finish;
+
+            initRules = new List<InfluenceRule>();
+            respRules = new List<InfluenceRule>();
+            instRules = new List<InstRule>();
+
+            foreach (Condition c in si.preconditions) preconditions.Add(c);
+            foreach (Dialog c in si.sentences) sentences.Add(c);
+            foreach (InfluenceRule c in si.initRules) initRules.Add(c);
+            foreach (InfluenceRule c in si.respRules) respRules.Add(c);
+            foreach (InstRule c in si.instRules) instRules.Add(c);
+        }
+
+        public void setCultureSet(InteractionData id)
+        {
+            foreach (InfluenceRule ir in id.rules)
+            {
+                initRules.Add(ir);
+                respRules.Add(ir);
+            }
+            foreach (InstRule ir in id.inst) instRules.Add(ir);
+            foreach (Dialog d in id.dialog) sentences.Add(d);
+        }
+
+        public bool Equals(SocialInteraction obj)
+        {
+            return obj.name.Equals(this.name);
+        }
     }
 
 

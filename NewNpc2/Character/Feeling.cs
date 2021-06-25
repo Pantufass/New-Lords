@@ -54,4 +54,16 @@ namespace NewNpc2
             intensity += v;
         }
     }
+
+    public enum Notion
+    {
+        Violent,
+        Warmonger,
+        Peaceful,
+        Coward,
+        Womanizer,
+        Economist,
+        Talkative
+
+    }
 }

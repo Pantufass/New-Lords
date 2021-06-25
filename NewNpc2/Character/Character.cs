@@ -15,9 +15,9 @@ namespace NewNpc2
         #region Consts
 
         private const float FRIEND_STEP = 1;
-        private const float ENERGY_STEP = 0.05f;
-        private const float SPEND_ENERGY_STEP = 0.2f;
-        private const int INT_MAX_EXCHANGES = 3;
+        private const float ENERGY_STEP = 0.1f;
+        private const float SPEND_ENERGY_STEP = 0.5f;
+        private const int INT_MAX_EXCHANGES = 4;
         private const float CORDIAL_D = 0.1f;
         private const float CRUDE_D = 0.85f;
         private const float CHANCE_VALUE = 2;
@@ -26,6 +26,7 @@ namespace NewNpc2
         private const float NEGATIVE_THRESH = 0;
         private const float OWN_BELIEF_SURENESS = 1;
         private const float START_BASE_THRESH = 0.5f;
+        private const float MAX_BASE_THRESH = 0.95f;
         private const float PREVIOUS_TRAITS_WEIGHT = 0.5f;
 
 
@@ -41,7 +42,20 @@ namespace NewNpc2
         private float energy;
         private float threshold;
 
-        public CharacterObject characterObject;
+        public BasicCharacterObject _characterObject;
+        public Culture _culture;
+        public BasicCharacterObject characterObject
+        {
+            get
+            {
+                if (_characterObject == null) _characterObject = agent.Character;
+                return _characterObject;
+            }
+            set
+            {
+                _characterObject = value;
+            }
+        }
         public Agent agent;
 
         //social network
@@ -53,52 +67,45 @@ namespace NewNpc2
         //belief network
         private Dictionary<Character,List<Feeling>> beliefs;
 
+        private Dictionary<Character, List<Notion>> notions;
+
         private intent currIntent;
 
         //list of social exchanges known
         //each exchange is paired with the respective believability 
-        private Dictionary<SocialExchange, float> socialKnowledge;
+        private Dictionary<SocialExchange, float> memory;
 
-        //cultural knowledge TODO probably 
-        private Culture culture;
+        public Culture Culture
+        {
+            get
+            {
+                if (_culture == null) setCulture();
+                return _culture;
+            }
+        }
 
         private List<SocialInteraction> intendedSocialExchange;
         private SocialInteraction npcIntended;
 
-        //TODO rumor
-        private Rumor rumor;
-
-        //TODO influence rules
-        private List<InfluenceRule> influenceRules;
+        private List<SocialInteraction> last;
 
 
-        public Character(Culture culture,CharacterObject co)
+        public Character(BasicCultureObject c, CharacterObject co, CharacterTraits ct = null)
         {
-            personality = new Traits();
-            CreateChar(culture, co);
-        }
-
-        public Character(Culture culture, CharacterTraits characterTraits,CharacterObject co)
-        {
-            personality = new Traits(characterTraits);
-            CreateChar(culture, co);
+            if (ct == null)
+                personality = new Traits();
+            else personality = new Traits(ct);
+            characterObject = co;
+            setCulture(c);
+            CreateChar();
         }
 
         public Character(Agent a)
         {
             agent = a;
             personality = new Traits();
-            CreateChar(null, null);
-        }
-
-        public void setAgent(Agent a)
-        {
-            agent = a;
-        }
-
-        public void setCulture(Culture c)
-        {
-            culture = c;
+            if (a != null) characterObject = a.Character;
+            CreateChar();
         }
 
         public void setCharacterObject(CharacterObject co)
@@ -106,7 +113,7 @@ namespace NewNpc2
             characterObject = co;
         }
 
-        private void CreateChar(Culture culture, CharacterObject co)
+        private void CreateChar()
         {
             status = new List<Status>();
 
@@ -115,18 +122,39 @@ namespace NewNpc2
             admiration = new List<Feeling>();
 
             beliefs = new Dictionary<Character, List<Feeling>>();
-            socialKnowledge = new Dictionary<SocialExchange, float>();
+            notions = new Dictionary<Character, List<Notion>>();
+            memory = new Dictionary<SocialExchange, float>();
 
-            influenceRules = new List<InfluenceRule>();
             intendedSocialExchange = new List<SocialInteraction>();
-            rumor = null;
-            this.culture = culture;
-            characterObject = co;
             initialState();
 
             energy = InitialEnergy();
             threshold = exchangeThreshold();
 
+        }
+
+        public List<SocialInteraction> getLast()
+        {
+            return last;
+        }
+
+        private void setExchange(SocialInteraction si)
+        {
+            if (last.Count > 3) last[4] = last[3];
+            if (last.Count > 2) last[3] = last[2];
+            if (last.Count > 1) last[2] = last[1];
+            if(last.Count > 0) last[1] = last[0];
+            last[0] = si;
+        }
+
+        internal void setPattern(SocialInteraction si)
+        {
+            //TODO
+        }
+
+        public void concludeExchange(SocialInteraction si)
+        {
+            setExchange(si);
         }
 
         private float InitialEnergy()
@@ -142,6 +170,7 @@ namespace NewNpc2
             res += (personality.annoying * START_BASE_THRESH);
             res += (personality.calculating * START_BASE_THRESH * 0.3f);
 
+            if (res > MAX_BASE_THRESH) return MAX_BASE_THRESH;
             return res;
         }
 
@@ -153,10 +182,13 @@ namespace NewNpc2
             return l;
         }
 
-        public bool hasRumor()
+        internal List<Notion> getNotions(Character character)
         {
-            return rumor != null;
+            if(notions.TryGetValue(character, out List<Notion> notion))
+                return notion;
+            return new List<Notion>();
         }
+
 
         private void initialState()
         {
@@ -191,10 +223,6 @@ namespace NewNpc2
             return intendedSocialExchange;
         }
 
-        public void addInfluenceRule(InfluenceRule r)
-        {
-            influenceRules.Add(r);
-        }
         public float calcNpcVolition(Character r)
         {
             intent intent = calcIntent(r);
@@ -215,6 +243,47 @@ namespace NewNpc2
             return intent;
         }
 
+        private void setCulture()
+        {
+            setCulture(characterObject.Culture);
+            
+        }
+
+        private void setCulture(BasicCultureObject c)
+        {
+            string s = c.Name.ToString();
+            switch (s)
+            {
+                case "Empire":
+                    _culture = CultureManager.createEmpire();
+                    break;
+                case "Khuzaits":
+                    _culture = CultureManager.createKhuzaits();
+                    break;
+                default:
+                    _culture = CultureManager.createCultureX();
+                    break;
+            }
+        }
+
+        private void addCulture(List<SocialInteraction> interactions)
+        {
+            foreach(SocialInteraction i in interactions)
+            {
+                foreach(InteractionData id in Culture.getIntData())
+                {
+                    if(id.compare(i.name))
+                    {
+                        interactions.Remove(i);
+                        SocialInteraction si = new SocialInteraction(i);
+                        si.setCultureSet(id);
+                        interactions.Add(si);
+                        break;
+                    }
+                }
+            }
+        }
+
         private float calcNpcIntended(Character r, intent intent)
         {
             Random rand = new Random();
@@ -222,8 +291,9 @@ namespace NewNpc2
             KeyValuePair<float, SocialInteraction> d = new KeyValuePair<float, SocialInteraction>(0,new SocialInteraction("test",1,1));
 
             List<SocialInteraction> interactions = new List<SocialInteraction>();
-            interactions.AddRange(culture.CulturalExchanges());
+            interactions.AddRange(Culture.CulturalExchanges());
             interactions.AddRange(SubModule.existingExchanges.Values);
+            addCulture(interactions);
 
             foreach (SocialInteraction si in interactions)
             {
@@ -239,6 +309,7 @@ namespace NewNpc2
 
         public SocialInteraction getNpcIntended()
         {
+
             return npcIntended;
         }
 
@@ -249,8 +320,9 @@ namespace NewNpc2
             Dictionary<float, SocialInteraction> d = new Dictionary<float, SocialInteraction>();
 
             List<SocialInteraction> interactions = new List<SocialInteraction>();
-            interactions.AddRange(culture.CulturalExchanges());
+            interactions.AddRange(Culture.CulturalExchanges());
             interactions.AddRange(SubModule.existingExchanges.Values);
+            addCulture(interactions);
 
             foreach (SocialInteraction si in interactions)
             {
@@ -385,6 +457,13 @@ namespace NewNpc2
             currIntent = i;
         }
 
+        //TODO
+        internal bool isFalse(SocialExchange se)
+        {
+            if (memory.TryGetValue(se, out float v)) return true;
+            return false;
+        }
+
         public intent getIntent()
         {
             return currIntent;
@@ -392,22 +471,30 @@ namespace NewNpc2
 
         public void addExchange(SocialExchange se)
         {
-            socialKnowledge.Add(se, OWN_BELIEF_SURENESS);
+            memory.Add(se, OWN_BELIEF_SURENESS);
         }
 
         public List<InfluenceRule> getRules()
         {
-            return influenceRules;
+            return CharacterManager.generalRules();
         }
 
-        public void addRumor(Rumor r)
-        {
-            if (rumor.interest(this) > r.interest(this)) rumor = r;
-        }
-
+        //TODO
         public void hearRumor(Rumor r)
         {
-            addRumor(r);
+            //determine lie
+            //process beliefs
+            //process feelings
+            
+        }
+
+        internal float calcCharacterInterest(Character c)
+        {
+            float res = 0;
+            res += getFeeling(friendlyFeelings, c).getIntensity() * 0.8f;
+            res += getFeeling(romanticFeelings, c).getIntensity() * 2f;
+            res += getFeeling(admiration, c).getIntensity() * 0.5f;
+            return res;
         }
 
 
@@ -453,7 +540,6 @@ namespace NewNpc2
         {
             return status.Contains(Status.Bored);
         }
-
         public void notBored()
         {
             status.Remove(Status.Bored);
@@ -474,8 +560,14 @@ namespace NewNpc2
             return b >= 0;
         }
         
-
-
+        internal float getAnoy()
+        {
+            return personality.annoying;
+        }
+        internal float getCurious()
+        {
+            return personality.curious;
+        }
         internal float getSensitive()
         {
             return personality.sensitive;

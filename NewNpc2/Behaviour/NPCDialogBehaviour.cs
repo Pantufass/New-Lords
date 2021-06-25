@@ -55,6 +55,7 @@ namespace NewNpc2
             //Microtheory.FirstImpression(mission);
         }
 
+
         public void updateCharacters(List<Character> c)
         {
             currCharacters = c;
@@ -69,8 +70,22 @@ namespace NewNpc2
         public void NPCReady(Character character)
         {
             //pop up a sentence when ready
-            showDialog(new Dialog("Ready", 0, sentenceType.Normal),character);
-            //if(missionReady)  characterVolition(character);
+            //readyvol(character);
+            if(missionReady)  characterVolition(character);
+        }
+
+        private void readyvol(Character c)
+        {
+
+            if (missionReady)
+            {
+                foreach (MissionBehaviour mb in currentMission.MissionBehaviours)
+                {
+                    if (mb is MissionViewBehaviour)
+                        (mb as MissionViewBehaviour).dialog(new Dialog("Ready", 0, sentenceType.Normal), c);
+                }
+
+            }
         }
 
         private void characterVolition(Character character)
@@ -82,20 +97,28 @@ namespace NewNpc2
                 float r = character.calcNpcVolition(c);
                 if (r > pair.Key) pair = new KeyValuePair<float, Character>(r, c);
             }
-
             SocialInteraction si = character.getNpcIntended();
+
             moveTo(character, pair.Value);
 
-            Dialog d = si.getDialog(character.calcDialogType(),pair.Key);
-            showDialog(d, character);
+            showDialog(si.getDialog(character.calcDialogType(), pair.Key), character);
 
             calcCharacterResponse(character, pair.Value,si, character.getIntent());
 
+            
         }
 
         private void showDialog(Dialog d, Character c)
         {
-            //treat dialog
+            if (missionReady)
+            {
+                foreach (MissionBehaviour mb in currentMission.MissionBehaviours)
+                {
+                    if (mb is MissionViewBehaviour)
+                        (mb as MissionViewBehaviour).dialog(d, c);
+                }
+
+            }
         }
 
 
@@ -116,7 +139,6 @@ namespace NewNpc2
             //how to get agent
             //maybe replace object with agent
 
-            //DailyBehaviorGroup bg = mover.characterObject.HeroObject.
         }
         
     }

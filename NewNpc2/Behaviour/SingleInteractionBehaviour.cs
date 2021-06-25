@@ -56,17 +56,9 @@ namespace NewNpc2
 
         public void AfterGameLoad()
         {
-            CreateCharacter();
             loaded = true;
         }
 
-        private void CreateCharacter()
-        {
-            //create MH character
-            Character c = new Character(new CulturalKnowledge("MainHero"), Hero.MainHero.GetHeroTraits(), Hero.MainHero.CharacterObject);
-            CharacterManager.characters.Add(Hero.MainHero.CharacterObject, c);
-            CharacterManager.MainCharacter = c;
-        }
 
         private void startInterction(CampaignGameStarter campaign)
         {

@@ -41,16 +41,71 @@ namespace NewNpc2
         }
 
 
-        //TODO Information
-        public static void RelayRumor(List<dynamic> f)
-        {
 
+    }
+
+    public class Path : InstRule
+    {
+        protected int depth;
+        public Path(int d = 0) : base("path")
+        {
+            depth = d;
+            conditions = new List<Condition>();
         }
 
-        //TODO Information
-        public static void NextRelay(List<dynamic> f)
+        public int getDepth()
         {
+            return depth;
+        }
 
+        public string sentence(Rumor r)
+        {
+            if (r == null) return "I dont know anything special";
+            StringBuilder sb = new StringBuilder(" ", 50);
+            sb.Append("Have you heard, ");
+            if (r.info.getType() == Rumor.Information.type.Economic)
+            {
+                sb.Append("In ");
+                sb.Append(r.info.economic[0]);
+                sb.Append(", ");
+                sb.Append(r.info.economic[1]);
+                sb.Append("is at ");
+                sb.Append(r.info.economic[2]);
+
+            }
+            else
+            {
+                if (r.info.getType() == Rumor.Information.type.Warfare)
+                {
+                    if (r.info.war)
+                    {
+                        sb.Append(r.info.warfare[0]);
+                        sb.Append(" has declared war against ");
+                        sb.Append(r.info.warfare[1]);
+                    }
+                    else
+                    {
+                        sb.Append(r.exchange().getInitiator());
+                        sb.Append(" has won a battle agaisnt ");
+                        sb.Append(r.exchange().getReceiver());
+                    }
+                }
+                else if (r.info.getType() == Rumor.Information.type.Gossip)
+                {
+                    switch (r.exchange().type.name)
+                    {
+                        case "Flirt":
+                            break;
+                        case "Date":
+                            break;
+                        default :
+                            break;
+                    }
+                }
+            }
+
+
+            return sb.ToString();
         }
 
     }

@@ -13,3 +13,6 @@ Feared
 HasRumor
 Romantic
 Isliked
+
+C:\Program Files (x86)\Steam\steamapps\common\Mount & Blade II Bannerlord\Modules\SandBox\bin\Win64_Shipping_Client
+C:\Program Files (x86)\Steam\steamapps\common\Mount & Blade II Bannerlord\Modules\NewNpc2\bin\Win64_Shipping_Client

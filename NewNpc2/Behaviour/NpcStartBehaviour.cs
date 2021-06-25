@@ -27,18 +27,18 @@ namespace NewNpc2
 
         public void AfterGameLoad()
         {
-            CreateCharacter();
+            //CreateCharacter();
             loaded = true;
         }
-
+        /**
         private void CreateCharacter()
         {
             //create MH character
-            Character c = new Character(new CulturalKnowledge("MainHero"), Hero.MainHero.GetHeroTraits(), Hero.MainHero.CharacterObject);
+            Character c = new Character(new Culture("MainHero"), Hero.MainHero.GetHeroTraits(), Hero.MainHero.CharacterObject);
             CharacterManager.characters.Add(Hero.MainHero.CharacterObject, c);
             CharacterManager.MainCharacter = c;
         }
-
+        */
         private void startInterction(CampaignGameStarter campaign)
         {
             campaign.AddDialogLine(" start", "start", nextStep(), " ",
@@ -67,19 +67,6 @@ namespace NewNpc2
             if (!loaded) return;
 
             Character character = CharacterManager.findChar(c);
-            if (character == null)
-            {
-                if (c.IsHero)
-                {
-                    character = new Character(new CulturalKnowledge("a"), c.HeroObject.GetHeroTraits(), c);
-                    CharacterManager.characters.Add(c, character);
-                }
-                else
-                {
-                    character = new Character(new CulturalKnowledge("a"), c);
-                    CharacterManager.characters.Add(c, character);
-                }
-            }
 
             CharacterManager.MainCharacter.calcVolitions(character);
 
@@ -108,24 +95,7 @@ namespace NewNpc2
         }
 
         private void newInteraction(CampaignGameStarter campaign, SocialInteraction si)
-        {
-            CharacterObject c = CharacterObject.OneToOneConversationCharacter;
-            Character character = CharacterManager.findChar(c);
-            if (character == null)
-            {
-                if (c.IsHero)
-                {
-                    character = new Character(new CulturalKnowledge("a"), c.HeroObject.GetHeroTraits(), c);
-                    CharacterManager.characters.Add(c, character);
-                }
-                else
-                {
-                    character = new Character(new CulturalKnowledge("a"), c);
-                    CharacterManager.characters.Add(c, character);
-                }
-            }
-            step++;
-        }
+        { }
 
 
         private void makeExchange(SocialInteraction prev, outcome o, Character character)

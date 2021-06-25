@@ -10,23 +10,28 @@ namespace NewNpc2
 {
     public static class CharacterManager
     {
-        public static Dictionary<Agent, Character> characters2;
-        public static Dictionary<CharacterObject, Character> characters;
-        public static Character MainCharacter;
-        public static Dictionary<string, Culture> cultures;
-
-        public static void start(Culture ck)
+        private static Character _main;
+        public static Dictionary<Character, Agent> characters;
+        public static Dictionary<CharacterObject, Character> characters2;
+        public static Character MainCharacter
         {
-            //create a character for each hero
-            foreach (CharacterObject h in Campaign.Current.Characters)
+            get
             {
-                characters.Add(h, new Character(ck, h));
+                if (_main == null) _main = new Character(Agent.Main);
+                if (_main.agent == null) _main.agent = Agent.Main;
+                return _main;
+            }
+            set
+            {
+                _main = value;
             }
         }
+        public static Dictionary<string, Culture> cultures;
+
 
         public static void startAgents()
         {
-            characters2 = new Dictionary<Agent, Character>();
+            characters = new Dictionary<Character, Agent>();
         }
 
         public static void createCultures()
@@ -39,27 +44,68 @@ namespace NewNpc2
 
         }
 
-        public static Character findChar(CharacterObject h)
+        public static void main(Agent a)
         {
-            if (characters.TryGetValue(h, out Character c))
+            if (characters.TryGetValue(MainCharacter, out Agent agent))
             {
-                return c;
+                if (agent != null && agent != a) characters.Add(MainCharacter, a);
             }
-            Culture x;
-            cultures.TryGetValue("x",out x);
-            Character character;
-                if (h.IsHero)
+            else
+            {
+                characters.Add(MainCharacter, a);
+            }
+        }
+
+        public static Character findChar(Hero h)
+        {
+            foreach(KeyValuePair<Character, Agent> pair in characters)
+            {
+                if(pair.Value.IsHero && pair.Value.Character == h.CharacterObject)
                 {
-                    character = new Character(x, h.HeroObject.GetHeroTraits(), h);
-                    CharacterManager.characters.Add(h, character);
+                    return pair.Key;
                 }
-                else
+            }
+            foreach (KeyValuePair<CharacterObject, Character> pair in characters2)
+            {
+                if (pair.Key.IsHero && pair.Key == h.CharacterObject)
                 {
-                    character = new Character(x, h);
-                    CharacterManager.characters.Add(h, character);
+                    return pair.Value;
                 }
-            
-            return character;
+            }
+            Character c = new Character(h.Culture, h.CharacterObject);
+            characters.Add(c, null);
+            characters2.Add(h.CharacterObject,c);
+            return c;
+        }
+
+        public static Character findChar(CharacterObject c)
+        {
+            return new Character(null,c);
+        }
+
+        public static void addChar(Agent a)
+        {
+            Character c = new Character(a);
+            characters.Add(c, a);
+            characters2.Add((CharacterObject)a.Character, c);
+        }
+
+        private static Character getCharacter(Agent a)
+        {
+            Character c = new Character(a);
+            characters.Add(c, a);
+            characters2.Add((CharacterObject)a.Character, c);
+            return c;
+        }
+
+        public static Character findChar(Agent h)
+        {
+            foreach(KeyValuePair<Character,Agent> pair in characters)
+            {
+                if (h == pair.Value) return pair.Key;
+            }
+
+            return getCharacter(h);
         }
 
         public static List<InfluenceRule> generalRules()
@@ -68,7 +114,11 @@ namespace NewNpc2
 
 
             InfluenceRule r = new InfluenceRule("Shyness");
-            r.setDel((List<dynamic> d) => (d[0] as Character).getShy() * -5);
+            r.setDel((List<dynamic> d) => (d[0] as Character).getShy() * -3);
+            ir.Add(r);
+
+            r = new InfluenceRule("Repetition");
+            r.setDel((List<dynamic> d) => (d[0] as Character).getLast().Contains(d[3] as SocialInteraction) ? (d[0] as Character).getAnoy() * 3 - 3 : 0);
             ir.Add(r);
 
             return ir;
@@ -79,16 +129,24 @@ namespace NewNpc2
             List<Character> res = new List<Character>();
             foreach(Agent a in agents)
             {
-                Character c;
-                if (characters2.TryGetValue(a, out c)) res.Add(c);
-                else
+                bool found = false;
+                foreach (KeyValuePair<Character,Agent> pair in characters)
                 {
-                    c = new Character(a);
-                    if (a.Character is CharacterObject) c.setCharacterObject((CharacterObject) a.Character);
-
-                    characters2.Add(a, c);
+                    if (pair.Value == a)
+                    {
+                        found = true;
+                        res.Add(pair.Key);
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    Character c = new Character(a);
+                    characters.Add(c, a);
+                    characters2.Add((CharacterObject)a.Character, c);
                     res.Add(c);
                 }
+
             }
             return res;
         }

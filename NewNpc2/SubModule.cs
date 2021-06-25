@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using Module = TaleWorlds.MountAndBlade.Module;
 using HarmonyLib;
+using System;
 
 namespace NewNpc2
 {
@@ -14,11 +15,11 @@ namespace NewNpc2
 
     public class SubModule : MBSubModuleBase
     {
-        //TODO:
-        //find a way to attach Character to every CharacterObject / or extend CharacterObject -> harmony probably solves
-        //Create Social Exchanges
-        //deal with the problem "only load NPCs close to player"
-        //throw event when party reaches new settlement
+        #region Consts
+
+        private const int PATTERN_MIN = 5;
+
+        #endregion
 
         public static Dictionary<string, Condition> existingConditions;
         public static Dictionary<string, SocialInteraction> existingExchanges;
@@ -55,7 +56,7 @@ namespace NewNpc2
             triggerRules = TriggerRuleManager.createRules();
 
 
-            CharacterManager.characters = new Dictionary<CharacterObject, Character>();
+            CharacterManager.characters2 = new Dictionary<CharacterObject, Character>();
             CharacterManager.startAgents();
             
         }
@@ -72,16 +73,18 @@ namespace NewNpc2
                 //campaignGameStarter.AddBehavior(new SingleInteractionBehaviour());
                 campaignGameStarter.AddBehavior(new DialogMatrixBehaviour());
 
-                npc = new NPCDialogBehaviour();
-                campaignGameStarter.AddBehavior(npc);
+                campaignGameStarter.AddBehavior(new NPCDialogBehaviour());
+
+                campaignGameStarter.AddBehavior(new RumorBehaviour());
 
             }
         }
 
+
         public override void OnMissionBehaviourInitialize(Mission mission)
         {
             base.OnMissionBehaviourInitialize(mission);
-            mission.MissionBehaviours.Add(new OnTick());
+            mission.MissionBehaviours.Add(new MissionViewBehaviour());
         }
 
 
@@ -90,12 +93,28 @@ namespace NewNpc2
         {
             runTriggerRules(se.getInstRules(), se);
 
+            SocialFactsDatabase.Add(se);
             if (se.type.IsImportant)
             {
-                SocialFactsDatabase.Add(se);
                 se.setInCharacters();
+                se.spendEnergy();
                 //TODO spread exchange
                 //todo calc exchange interest
+            }
+        }
+
+        public static void findPatter()
+        {
+            Dictionary<Tuple<Character, SocialInteraction>, float> list = new Dictionary<Tuple<Character, SocialInteraction>, float>();
+            foreach(SocialExchange si in SocialFactsDatabase)
+            {
+                Tuple<Character,SocialInteraction> t = new Tuple<Character, SocialInteraction>(si.getInitiator(), si.type);
+                if (list.ContainsKey(t)) list[t]++;
+                else list.Add(t, 1);
+            }
+            foreach(KeyValuePair<Tuple<Character,SocialInteraction>,float> pair in list)
+            {
+                if (pair.Value > PATTERN_MIN) pair.Key.Item1.setPattern(pair.Key.Item2);
             }
         }
 

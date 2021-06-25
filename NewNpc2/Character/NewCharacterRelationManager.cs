@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using TaleWorlds.CampaignSystem;
+using TaleWorlds.Core;
 using TaleWorlds.ObjectSystem;
 using TaleWorlds.SaveSystem;
 
@@ -34,24 +35,24 @@ namespace NewNpc2
         }
 
         // Token: 0x0600093B RID: 2363 RVA: 0x0002C65F File Offset: 0x0002A85F
-        public static relation GetFriendship(CharacterObject Character1, CharacterObject Character2)
+        public static relation GetFriendship(BasicCharacterObject Character1, BasicCharacterObject Character2)
         {
             return (NewCharacterRelationManager.Instance).friendship.GetRelation(Character1, Character2);
         }
 
         // Token: 0x0600093C RID: 2364 RVA: 0x0002C672 File Offset: 0x0002A872
-        public static void SetFriendship(CharacterObject Character1, CharacterObject Character2, relation value)
+        public static void SetFriendship(BasicCharacterObject Character1, BasicCharacterObject Character2, relation value)
         {
             (NewCharacterRelationManager.Instance).friendship.SetRelation(Character1, Character2, value);
         }
 
-        public static relation GetRomantic(CharacterObject Character1, CharacterObject Character2)
+        public static relation GetRomantic(BasicCharacterObject Character1, BasicCharacterObject Character2)
         {
             return (NewCharacterRelationManager.Instance).romantic.GetRelation(Character1, Character2);
         }
 
         // Token: 0x0600093C RID: 2364 RVA: 0x0002C672 File Offset: 0x0002A872
-        public static void SetRomantic(CharacterObject Character1, CharacterObject Character2, relation value)
+        public static void SetRomantic(BasicCharacterObject Character1, BasicCharacterObject Character2, relation value)
         {
             (NewCharacterRelationManager.Instance).romantic.SetRelation(Character1, Character2, value);
         }
@@ -76,7 +77,7 @@ namespace NewNpc2
         {
 
             // Token: 0x0600332E RID: 13102 RVA: 0x000E748C File Offset: 0x000E568C
-            public virtual relation GetRelation(CharacterObject Character1, CharacterObject Character2)
+            public virtual relation GetRelation(BasicCharacterObject Character1, BasicCharacterObject Character2)
             {
                 long hash = MBGUID.GetHash2(Character1.Id, Character2.Id);
                 relation result;
@@ -88,7 +89,7 @@ namespace NewNpc2
             }
 
             // Token: 0x0600332F RID: 13103 RVA: 0x000E74C0 File Offset: 0x000E56C0
-            public virtual void SetRelation(CharacterObject Character1, CharacterObject Character2, relation v)
+            public virtual void SetRelation(BasicCharacterObject Character1, BasicCharacterObject Character2, relation v)
             {
                 long hash = MBGUID.GetHash2(Character1.Id, Character2.Id);
                 this._relations[hash] = v;

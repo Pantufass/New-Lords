@@ -23,7 +23,7 @@ namespace NewNpc2
         private outcome o;
 
         //other characters involved 
-        private List<Character> others;
+        public List<Character> others;
 
         //TODO other type of information possible in the exchange
         //private Information info;
@@ -94,6 +94,11 @@ namespace NewNpc2
         public Character getReceiver()
         {
             return receiver;
+        }
+
+        internal void spendEnergy()
+        {
+            initiator.spendEnergy();
         }
     }
 

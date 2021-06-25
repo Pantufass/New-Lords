@@ -12,38 +12,9 @@ namespace NewNpc2
 {
     public class OnTick : MissionView
     {
-        private Counter secCounter;
 
-        public OnTick()
-        {
-            secCounter = new Counter();
-        }
 
-        private void Tick()
-        {
-            characterEnergy();
-        }
-
-        private void characterEnergy()
-        {
-            foreach(KeyValuePair<CharacterObject, Character> c in CharacterManager.characters)
-            {
-                c.Value.raiseEnergy();
-            }
-        }
-
-        public override void OnMissionScreenTick(float dt)
-        {
-            base.OnMissionScreenTick(dt);
-            if (secCounter.second(dt))
-            {
-                //each second?
-
-                InformationManager.DisplayMessage(new InformationMessage("TICK"));
-
-                Tick();
-            }
-        }
+        
 
     }
 

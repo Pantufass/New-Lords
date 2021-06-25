@@ -9,8 +9,31 @@ namespace NewNpc2
 {
     public static class SocialInteractionManager
     {
+        public static SocialInteraction Embelish()
+        {
 
-        private static SocialInteraction Complain()
+            SocialInteraction si = new SocialInteraction("Embelish", 1, 1);
+            si.addInitRule(new InfluenceRule("a", ((List<dynamic> d) =>
+            {
+                return 15;
+            })));
+            si.addsentence("You are great");
+            return si;
+        }
+
+        public static SocialInteraction BadMouth()
+        {
+
+            SocialInteraction si = new SocialInteraction("BadMouth", 1, 1);
+            si.addInitRule(new InfluenceRule("a", ((List<dynamic> d) =>
+            {
+                return 15;
+            })));
+            si.addsentence("I hate him");
+            return si;
+        }
+
+        public static SocialInteraction Complain()
         {
 
             SocialInteraction si = new SocialInteraction("Complain", 1, 1);
@@ -209,8 +232,6 @@ namespace NewNpc2
             SocialInteraction t = new SocialInteraction(n, 10, 0);
 
             Condition c;
-            SubModule.existingConditions.TryGetValue("NotAvailable", out c);
-            t.addCondition(c);
 
             InfluenceRule r;
             SubModule.existingRules.TryGetValue("Bored", out r);
@@ -219,10 +240,7 @@ namespace NewNpc2
             SubModule.existingRules.TryGetValue("LikesToSpeak", out r);
             t.addInitRule(r);
 
-            SubModule.existingRules.TryGetValue("HasRumor", out r);
-            t.addInitRule(r);
-
-            t.addInstRule(new InstRule("Information", (List<dynamic> f) => InstRule.RelayRumor(f) ));
+            t.addPath(new Path());
 
             t.addsentence("I have to tell you something.");
 
@@ -249,9 +267,8 @@ namespace NewNpc2
             SubModule.existingRules.TryGetValue("LikesToSpeak", out r);
             t.addInitRule(r);
 
-            t.addInstRule(new InstRule("Information", (List<dynamic> f) => InstRule.NextRelay(f)));
 
-            t.addsentence("Please tell me something.");
+            t.addsentence("What can you tell me");
 
             t.addsentence("Sure", 1, sentenceType.pResponse);
             t.addsentence("Hm", 1, sentenceType.normalResponse);
@@ -265,6 +282,7 @@ namespace NewNpc2
         {
             string n = "Flirt";
             SocialInteraction t = new SocialInteraction(n, 10, 0);
+            t.IsImportant = true;
 
             Condition c;
             SubModule.existingConditions.TryGetValue("Adults", out c);
@@ -287,6 +305,7 @@ namespace NewNpc2
         {
             string n = "Date";
             SocialInteraction t = new SocialInteraction(n, 10, 0);
+            t.IsImportant = true;
             Condition c;
             SubModule.existingConditions.TryGetValue("Adults", out c);
             t.addCondition(c);
@@ -322,6 +341,7 @@ namespace NewNpc2
         {
             string n = "DeclareLove";
             SocialInteraction t = new SocialInteraction(n, 10, 0);
+            t.IsImportant = true;
             Condition c;
             SubModule.existingConditions.TryGetValue("Adults", out c);
             t.addCondition(c);
@@ -387,6 +407,14 @@ namespace NewNpc2
 
             t.addsentence("You are not allowed here anymore.");
             sc.Add(n, t);
+        }
+
+        public static SocialInteraction War()
+        {
+            string n = "War";
+            SocialInteraction t = new SocialInteraction(n, 0, 0);
+
+            return t;
         }
 
 

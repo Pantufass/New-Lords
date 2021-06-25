@@ -1,23 +1,338 @@
-﻿using SandBox.GauntletUI;
+﻿using SandBox.Source.Missions;
+using SandBox.Source.Objects.SettlementObjects;
+using SandBox.ViewModelCollection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaleWorlds.CampaignSystem;
+using TaleWorlds.Core;
+using TaleWorlds.Engine;
+using TaleWorlds.Library;
+using TaleWorlds.MountAndBlade;
 
 namespace NewNpc2
 {
-    public class DialogManager : MissionGauntletNameMarker
+    public class DialogManager : ViewModel
     {
-        public override void OnMissionScreenInitialize()
-        {
-            base.OnMissionScreenInitialize();
+        private Counter secCounter;
 
-            _dataSource = new CustomMissionNameMarkerVM(base.Mission, base.MissionScreen.CombatCamera);
-            this._gauntletLayer = new GauntletLayer(this.ViewOrderPriorty, "GauntletLayer");
-            this._gauntletLayer.LoadMovie("NameMarker", this._dataSource);
-            base.MissionScreen.AddLayer(this._gauntletLayer);
-            CampaignEvents.ConversationEnded.AddNonSerializedListener(this, new Action<CharacterObject>(this.OnConversationEnd));
+        public DialogManager(Mission mission, Camera c) 
+        {
+            this.Targets = new MBBindingList<DialogTarget>();
+            this._distanceComparer = new DialogManager.MarkerDistanceComparer();
+            this._missionCamera = c;
+            this._mission = mission;
+
+            secCounter = new Counter();
+
+        }
+
+        public void showDialog(Dialog d, Character c)
+        {
+            EnableTarget(d, c);
+
+        }
+        private void EnableTarget(Dialog d, Character c)
+        {
+            foreach(DialogTarget dt in Targets)
+            {
+                if (dt.TargetAgent == c.agent)
+                {
+                    dt.Name = d.sentence;
+                    dt.IsEnabled = true;
+                }
+            }
+        }
+
+        private void Tick()
+        {
+            characterEnergy();
+        }
+
+        private void characterEnergy()
+        {
+            foreach (Character c in CharacterManager.getCharacters(_mission.Agents))
+            {
+                c.raiseEnergy();
+            }
+        }
+
+        public void MissionTick(float dt)
+        {
+            if(_mission != null)
+            {
+                Tick(dt);
+                if (secCounter.second(dt))
+                {
+                    //each second?
+
+                    InformationManager.DisplayMessage(new InformationMessage("TICK"));
+
+                    Tick();
+                }
+            }
+            
+        }
+        private void RemoveAgentTarget(Agent agent)
+        {
+            if (this.Targets.SingleOrDefault((DialogTarget t) => t.TargetAgent == agent) != null)
+            {
+                this.Targets.Remove(this.Targets.Single((DialogTarget t) => t.TargetAgent == agent));
+            }
+        }
+
+        private void AddAgentTarget(Agent agent)
+        {
+            if (agent != Agent.Main && agent.Character != null && agent.IsActive() && !this.Targets.Any((DialogTarget t) => t.TargetAgent == agent))
+            {
+                bool flag = false;
+                if (agent.Character.IsHero)
+                {
+                    flag = true;
+                }
+                else
+                {
+                    Settlement currentSettlement = Settlement.CurrentSettlement;
+                    bool flag2;
+                    if (currentSettlement == null)
+                    {
+                        flag2 = false;
+                    }
+                    else
+                    {
+                        LocationCharacter locationCharacter = currentSettlement.LocationComplex.FindCharacter(agent);
+                        bool? flag3 = (locationCharacter != null) ? new bool?(locationCharacter.IsVisualTracked) : null;
+                        bool flag4 = true;
+                        flag2 = (flag3.GetValueOrDefault() == flag4 & flag3 != null);
+                    }
+                    CharacterObject characterObject;
+                    if (flag2)
+                    {
+                        flag = true;
+                    }
+                    else if ((characterObject = (agent.Character as CharacterObject)) != null && characterObject.Occupation == Occupation.RansomBroker)
+                    {
+                        flag = true;
+                    }
+                }
+                if (flag)
+                {
+                    DialogTarget item = new DialogTarget(agent);
+                    this.Targets.Add(item);
+                }
+            }
+        }
+
+        public void Tick(float dt)
+        {
+            if (this._firstTick)
+            {
+                if (this._mission.MainAgent != null)
+                {
+                    foreach (Agent agent in this._mission.Agents)
+                    {
+                        this.AddAgentTarget(agent);
+                    }
+                    if (Hero.MainHero.CurrentSettlement != null)
+                    {
+                        List<CommonAreaMarker> list = (from x in this._mission.ActiveMissionObjects.FindAllWithType<CommonAreaMarker>()
+                                                       where x.GameEntity.HasTag("common_area_marker")
+                                                       select x).ToList<CommonAreaMarker>();
+                        if (Hero.MainHero.CurrentSettlement.CommonAreas.Count > 0)
+                        {
+                            foreach (CommonAreaMarker commonAreaMarker in list)
+                            {
+                                CommonArea commonArea = Hero.MainHero.CurrentSettlement.CommonAreas[commonAreaMarker.AreaIndex - 1];
+                                CommonAreaPartyComponent commonAreaPartyComponent = commonArea.CommonAreaPartyComponent;
+                                if ((commonAreaPartyComponent != null && commonAreaPartyComponent.MobileParty.MemberRoster.TotalManCount > 0) || Campaign.Current.VisualTrackerManager.CheckTracked(commonArea))
+                                {
+                                    this.Targets.Add(new DialogTarget(commonAreaMarker));
+                                }
+                            }
+                        }
+                        foreach (PassageUsePoint passageUsePoint in from passage in this._mission.ActiveMissionObjects.FindAllWithType<PassageUsePoint>().ToList<PassageUsePoint>()
+                                                                    where passage.ToLocation != null && !this.PassagePointFilter.Exists((string s) => passage.ToLocation.Name.Contains(s))
+                                                                    select passage)
+                        {
+                            if (!passageUsePoint.ToLocation.CanBeReserved || passageUsePoint.ToLocation.IsReserved)
+                            {
+                                this.Targets.Add(new DialogTarget(passageUsePoint));
+                            }
+                        }
+                        if (this._mission.HasMissionBehaviour<WorkshopMissionHandler>())
+                        {
+                            foreach (Tuple<Workshop, GameEntity> tuple in from s in this._mission.GetMissionBehaviour<WorkshopMissionHandler>().WorkshopSignEntities.ToList<Tuple<Workshop, GameEntity>>()
+                                                                          where s.Item1.WorkshopType != null
+                                                                          select s)
+                            {
+                                this.Targets.Add(new DialogTarget(tuple.Item1.WorkshopType, tuple.Item2.GlobalPosition - this._heightOffset));
+                            }
+                        }
+                    }
+                }
+                this._firstTick = false;
+            }
+            if (this.IsEnabled)
+            {
+                this.UpdateTargetScreenPositions();
+                this._fadeOutTimerStarted = false;
+                this._fadeOutTimer = 0f;
+                this._prevEnabledState = this.IsEnabled;
+            }
+            else
+            {
+                if (this._prevEnabledState)
+                {
+                    this._fadeOutTimerStarted = true;
+                }
+                if (this._fadeOutTimerStarted)
+                {
+                    this._fadeOutTimer += dt;
+                }
+                if (this._fadeOutTimer < 2f)
+                {
+                    this.UpdateTargetScreenPositions();
+                }
+                else
+                {
+                    this._fadeOutTimerStarted = false;
+                }
+            }
+            this._prevEnabledState = this.IsEnabled;
+        }
+        public override void RefreshValues()
+        {
+            base.RefreshValues();
+            this.Targets.ApplyActionOnAllItems(delegate (DialogTarget x)
+            {
+                x.RefreshValues();
+            });
+        }
+
+        private void UpdateTargetScreenPositions()
+        {
+            foreach (DialogTarget dialogTarget in this.Targets)
+            {
+                float a = -100f;
+                float b = -100f;
+                float num = 0f;
+                MBWindowManager.WorldToScreenInsideUsableArea(this._missionCamera, dialogTarget.WorldPosition + this._heightOffset, ref a, ref b, ref num);
+                if (num > 0f){
+                    dialogTarget.ScreenPosition = new Vec2(a, b);
+                    dialogTarget.Distance = (int)(dialogTarget.WorldPosition - this._missionCamera.Position).Length;
+                }
+                else{
+                    dialogTarget.Distance = -1;
+                    dialogTarget.ScreenPosition = new Vec2(-100f, -100f);
+                }
+            }
+            this.Targets.Sort(this._distanceComparer);
+        }
+
+        public void OnConversationEnd()
+        {
+
+        }
+
+        public void OnAgentBuild(Agent agent)
+        {
+            this.AddAgentTarget(agent);
+        }
+
+        public void OnAgentRemoved(Agent agent)
+        {
+            this.RemoveAgentTarget(agent);
+        }
+
+        public void OnAgentDeleted(Agent agent)
+        {
+            this.RemoveAgentTarget(agent);
+        }
+
+        [DataSourceProperty]
+        public bool IsEnabled
+        {
+            get
+            {
+                return this._isEnabled;
+            }
+            set
+            {
+                if (value != this._isEnabled)
+                {
+                    this._isEnabled = value;
+                    base.OnPropertyChangedWithValue(value, "IsEnabled");
+                    this.UpdateTargetStates(value);
+                    Game.Current.EventManager.TriggerEvent<MissionNameMarkerToggleEvent>(new MissionNameMarkerToggleEvent(value));
+                }
+            }
+        }
+
+
+        private void UpdateTargetStates(bool state)
+        {
+            foreach (DialogTarget dialogt in this.Targets)
+            {
+                dialogt.IsEnabled = state;
+            }
+        }
+
+        [DataSourceProperty]
+        public MBBindingList<DialogTarget> Targets
+        {
+            get
+            {
+                return this._targets;
+            }
+            set
+            {
+                if (value != this._targets)
+                {
+                    this._targets = value;
+                    base.OnPropertyChangedWithValue(value, "Targets");
+                }
+            }
+        }
+        private readonly Camera _missionCamera;
+
+        // Token: 0x0400002C RID: 44
+        private bool _firstTick = true;
+
+        // Token: 0x0400002D RID: 45
+        private readonly Mission _mission;
+
+        // Token: 0x0400002E RID: 46
+        private Vec3 _heightOffset = new Vec3(0f, 0f, 2f, -1f);
+
+        // Token: 0x0400002F RID: 47
+        private bool _prevEnabledState;
+
+        // Token: 0x04000030 RID: 48
+        private bool _fadeOutTimerStarted;
+
+        // Token: 0x04000031 RID: 49
+        private float _fadeOutTimer;
+
+        private readonly DialogManager.MarkerDistanceComparer _distanceComparer;
+
+        // Token: 0x04000033 RID: 51
+        private readonly List<string> PassagePointFilter = new List<string>
+        {
+            "Empty Shop"
+        };
+
+        private MBBindingList<DialogTarget> _targets;
+
+        private bool _isEnabled;
+        private class MarkerDistanceComparer : IComparer<DialogTarget>
+        {
+            // Token: 0x060003A7 RID: 935 RVA: 0x0000FABC File Offset: 0x0000DCBC
+            public int Compare(DialogTarget x, DialogTarget y)
+            {
+                return y.Distance.CompareTo(x.Distance);
+            }
         }
     }
 }

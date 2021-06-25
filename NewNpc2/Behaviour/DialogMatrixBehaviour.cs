@@ -2,6 +2,7 @@
 using TaleWorlds.Core;
 using TaleWorlds.CampaignSystem;
 using System.Collections.Generic;
+using TaleWorlds.MountAndBlade;
 
 namespace NewNpc2
 {
@@ -11,7 +12,6 @@ namespace NewNpc2
         string playerInput = "player";
         string npcResponse = "response";
         string intentChoice = "intent";
-
         public override void RegisterEvents()
         {
             CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, new Action<CampaignGameStarter>(this.OnSessionLaunched));
@@ -47,6 +47,8 @@ namespace NewNpc2
 
         public void OnSessionLaunched(CampaignGameStarter starter)
         {
+            CharacterManager.MainCharacter = new Character(Agent.Main);
+
             CreateDialog(starter);
             this.startInterction(starter);
 
@@ -54,16 +56,9 @@ namespace NewNpc2
 
         public void AfterGameLoad()
         {
-            CreateCharacter();
+
         }
 
-        private void CreateCharacter()
-        {
-            //create MH character
-            Character c = new Character(new Culture("MainHero"), Hero.MainHero.GetHeroTraits(), Hero.MainHero.CharacterObject);
-            CharacterManager.characters.Add(Hero.MainHero.CharacterObject, c);
-            CharacterManager.MainCharacter = c;
-        }
 
         private void CreateDialog(CampaignGameStarter starter)
         {
@@ -75,10 +70,17 @@ namespace NewNpc2
         private void startInterction(CampaignGameStarter campaign)
         {
             campaign.AddDialogLine("starter", "start", intentChoice, " ",
-                null,
+                () => conversation(),
                 () => intentStep(),
                 1000, null);
 
+        }
+
+        private bool conversation()
+        {
+            bool b = false;
+            b = b && CharacterObject.OneToOneConversationCharacter.Occupation == Occupation.Bandit;
+            return !b;
         }
 
         private void AddIntentChoices( CampaignGameStarter campaign, string intoken, string outtoken)

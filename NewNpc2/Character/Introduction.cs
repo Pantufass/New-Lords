@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
+using TaleWorlds.Core;
 using TaleWorlds.ObjectSystem;
 
 namespace NewNpc2
@@ -17,14 +18,14 @@ namespace NewNpc2
 
         private static Dictionary<long,int> intro = new Dictionary<long, int>();
 
-        public static bool Introduce(CharacterObject c1, CharacterObject c2)
+        public static bool Introduce(BasicCharacterObject c1, BasicCharacterObject c2)
         {
             long hash = MBGUID.GetHash2(c1.Id, c2.Id);
             intro[hash] ++;
             return true;
         }
 
-        public static int Introduced(CharacterObject c1, CharacterObject c2)
+        public static int Introduced(BasicCharacterObject c1, BasicCharacterObject c2)
         {
             long hash = MBGUID.GetHash2(c1.Id, c2.Id);
             int result = 0;
