@@ -33,7 +33,6 @@ namespace NewNpc2
         private void OnSessionLaunched(CampaignGameStarter campaign)
         {
             currCharacters = new List<Character>();
-            addNPCDialog();
         }
 
         private void AfterGameLoad()
@@ -61,17 +60,13 @@ namespace NewNpc2
             currCharacters = c;
         }
 
-        private void addNPCDialog()
-        {
-            //no need probably, dynamic dialog
-            //xml maybe not dynamic
-        }
-
         public void NPCReady(Character character)
         {
+
+            InformationManager.DisplayMessage(new InformationMessage(character.agent.Name +" - " +character.getEnergy()));
             //pop up a sentence when ready
             //readyvol(character);
-            if(missionReady)  characterVolition(character);
+            if (missionReady)  characterVolition(character);
         }
 
         private void readyvol(Character c)
@@ -90,6 +85,7 @@ namespace NewNpc2
 
         private void characterVolition(Character character)
         {
+            character.spendEnergy();
             KeyValuePair<float, Character> pair = new KeyValuePair<float, Character>(-10,CharacterManager.MainCharacter);
             List<Character> availableCharacters = CharacterManager.getCharacters(currentMission.Agents);
             foreach(Character c in availableCharacters)
@@ -139,6 +135,15 @@ namespace NewNpc2
             //how to get agent
             //maybe replace object with agent
 
+            mover.OnExchange();
+            target.OnExchange();
+            if (mover.agent.GetComponent<CampaignAgentComponent>().AgentNavigator == null) return;
+            DailyBehaviorGroup bg = mover.agent.GetComponent<CampaignAgentComponent>().AgentNavigator.GetBehaviorGroup<DailyBehaviorGroup>();
+            bg.AddBehavior<FollowAgentBehavior>().SetTargetAgent(target.agent);
+            
+            bg.SetScriptedBehavior<FollowAgentBehavior>();
+
+            mover.agent.SetLookAgent(target.agent);
         }
         
     }

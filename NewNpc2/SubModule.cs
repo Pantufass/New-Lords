@@ -21,6 +21,8 @@ namespace NewNpc2
 
         #endregion
 
+        public static Random rand;
+
         public static Dictionary<string, Condition> existingConditions;
         public static Dictionary<string, SocialInteraction> existingExchanges;
         public static Dictionary<string, InfluenceRule> existingRules;
@@ -42,6 +44,9 @@ namespace NewNpc2
 
         protected override void OnSubModuleLoad()
         {
+
+            rand = new Random();
+
             SocialFactsDatabase = new List<SocialExchange>();
 
             newRelationManager = new NewCharacterRelationManager();
@@ -58,6 +63,8 @@ namespace NewNpc2
 
             CharacterManager.characters2 = new Dictionary<CharacterObject, Character>();
             CharacterManager.startAgents();
+
+
             
         }
 
@@ -73,7 +80,8 @@ namespace NewNpc2
                 //campaignGameStarter.AddBehavior(new SingleInteractionBehaviour());
                 campaignGameStarter.AddBehavior(new DialogMatrixBehaviour());
 
-                campaignGameStarter.AddBehavior(new NPCDialogBehaviour());
+                npc = new NPCDialogBehaviour();
+                campaignGameStarter.AddBehavior(npc);
 
                 campaignGameStarter.AddBehavior(new RumorBehaviour());
 
@@ -85,6 +93,8 @@ namespace NewNpc2
         {
             base.OnMissionBehaviourInitialize(mission);
             mission.MissionBehaviours.Add(new MissionViewBehaviour());
+            mission.MissionBehaviours.Add(new MissionDebug());
+
         }
 
 
@@ -94,10 +104,12 @@ namespace NewNpc2
             runTriggerRules(se.getInstRules(), se);
 
             SocialFactsDatabase.Add(se);
+
+            se.finish();
+
             if (se.type.IsImportant)
             {
                 se.setInCharacters();
-                se.spendEnergy();
                 //TODO spread exchange
                 //todo calc exchange interest
             }
@@ -147,45 +159,5 @@ namespace NewNpc2
 
         }
 
-        //update function
-        //TODO: run this every x 
-        private void update()
-        {
-            desireFormation();
-            intentFormation();
-            performExchanges();
-            exchangeEffects();
-        }
-
-        //TODO
-        private void desireFormation()
-        {
-
-        }
-
-        //maybe not this one /merge with up?
-        private void intentFormation()
-        {
-
-        }
-
-        //make each character perform their desired exchange
-        private void performExchanges()
-        {
-
-        }
-
-        //trigger rules and instantiations 
-        private void exchangeEffects()
-        {
-
-        }
-
-
-        //TODO
-        private void createMicroTheories()
-        {
-
-        }
     }
 }

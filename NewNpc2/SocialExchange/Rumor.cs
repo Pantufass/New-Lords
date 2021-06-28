@@ -20,7 +20,7 @@ namespace NewNpc2
         public Rumor(SocialExchange social)
         {
             s = social;
-            info = new Information(Information.type.Gossip);
+            info = new Information();
             value = 1f;
         }
 
@@ -81,7 +81,7 @@ namespace NewNpc2
             public List<string> warfare;
             public bool war;
 
-            public Information(type t)
+            public Information(type t = type.Gossip)
             {
                 infotype = t;
             }
@@ -106,12 +106,26 @@ namespace NewNpc2
             {
                 Gossip,
                 Warfare,
-                Economic,
-                Lie
+                Economic
             }
         }
+
     }
 
     
+    public class Lie : Rumor
+    {
+        protected Character origin;
+
+        public Lie(SocialExchange social, Character o) : base(social)
+        {
+            origin = o;
+        }
+
+        public Lie(Information i, Character o, float v = 0.8f, SocialExchange social = null) : base(i, v, social)
+        {
+            origin = o;
+        }
+    }
 
 }

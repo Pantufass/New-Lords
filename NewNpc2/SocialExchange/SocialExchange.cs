@@ -100,6 +100,13 @@ namespace NewNpc2
         {
             initiator.spendEnergy();
         }
+
+        internal void finish()
+        {
+            spendEnergy();
+            initiator.FinishedExchange();
+            receiver.FinishedExchange();
+        }
     }
 
 

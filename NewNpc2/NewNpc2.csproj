@@ -87,6 +87,7 @@
     <Compile Include="Character\Introduction.cs" />
     <Compile Include="Character\NewCharacterRelationManager.cs" />
     <Compile Include="Behaviour\PlayerStartBehaviour.cs" />
+    <Compile Include="Behaviour\MissionDebug.cs" />
     <Compile Include="Patch.cs" />
     <Compile Include="Rules\Condition.cs" />
     <Compile Include="Rules\ConditionManager.cs" />

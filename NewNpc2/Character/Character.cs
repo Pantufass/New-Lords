@@ -15,8 +15,8 @@ namespace NewNpc2
         #region Consts
 
         private const float FRIEND_STEP = 1;
-        private const float ENERGY_STEP = 0.1f;
-        private const float SPEND_ENERGY_STEP = 0.5f;
+        private const float ENERGY_STEP = 0.03f;
+        private const float SPEND_ENERGY_STEP = 0.6f;
         private const int INT_MAX_EXCHANGES = 4;
         private const float CORDIAL_D = 0.1f;
         private const float CRUDE_D = 0.85f;
@@ -26,7 +26,8 @@ namespace NewNpc2
         private const float NEGATIVE_THRESH = 0;
         private const float OWN_BELIEF_SURENESS = 1;
         private const float START_BASE_THRESH = 0.5f;
-        private const float MAX_BASE_THRESH = 0.95f;
+        private const float MAX_BASE_THRESH = 1.05f;
+        private const float MIN_BASE_THRESH = 0.35f;
         private const float PREVIOUS_TRAITS_WEIGHT = 0.5f;
 
 
@@ -87,6 +88,8 @@ namespace NewNpc2
         private List<SocialInteraction> intendedSocialExchange;
         private SocialInteraction npcIntended;
 
+        private bool performing;
+
         private List<SocialInteraction> last;
 
 
@@ -125,17 +128,24 @@ namespace NewNpc2
             notions = new Dictionary<Character, List<Notion>>();
             memory = new Dictionary<SocialExchange, float>();
 
+            last = new List<SocialInteraction>();
+
             intendedSocialExchange = new List<SocialInteraction>();
             initialState();
 
             energy = InitialEnergy();
             threshold = exchangeThreshold();
-
+            performing = false;
         }
 
         public List<SocialInteraction> getLast()
         {
             return last;
+        }
+
+        public bool hasLast()
+        {
+            return last.Count > 0;
         }
 
         private void setExchange(SocialInteraction si)
@@ -167,10 +177,11 @@ namespace NewNpc2
         {
             float res = START_BASE_THRESH;
 
-            res += (personality.annoying * START_BASE_THRESH);
-            res += (personality.calculating * START_BASE_THRESH * 0.3f);
+            res += (personality.annoying * START_BASE_THRESH * 0.5f);
+            res += (personality.calculating * START_BASE_THRESH * 0.2f);
 
             if (res > MAX_BASE_THRESH) return MAX_BASE_THRESH;
+            if (res < MIN_BASE_THRESH) return MIN_BASE_THRESH;
             return res;
         }
 
@@ -193,7 +204,7 @@ namespace NewNpc2
         private void initialState()
         {
 
-            var rand = new Random();
+            var rand = SubModule.rand;
             if (rand.NextDouble() > 0.5)
                 status.Add(Status.Happy);
             else
@@ -286,7 +297,7 @@ namespace NewNpc2
 
         private float calcNpcIntended(Character r, intent intent)
         {
-            Random rand = new Random();
+            Random rand = SubModule.rand;
 
             KeyValuePair<float, SocialInteraction> d = new KeyValuePair<float, SocialInteraction>(0,new SocialInteraction("test",1,1));
 
@@ -309,13 +320,12 @@ namespace NewNpc2
 
         public SocialInteraction getNpcIntended()
         {
-
             return npcIntended;
         }
 
         private void calcIntended(Character r, intent intent)
         {
-            Random rand = new Random();
+            Random rand = SubModule.rand;
 
             Dictionary<float, SocialInteraction> d = new Dictionary<float, SocialInteraction>();
 
@@ -347,7 +357,7 @@ namespace NewNpc2
 
         internal sentenceType calcDialogType()
         {
-            Random r = new Random();
+            Random r = SubModule.rand;
             float v = Mathf.Lerp(0,1,(personality.calculating + personality.careful + personality.honor + personality.shy) * ((float)r.NextDouble() * (2*CHANCE_VALUE2 - CHANCE_VALUE2)));
             if (v < CORDIAL_D) return sentenceType.Crude;
             else if (v > CRUDE_D) return sentenceType.Cordial;
@@ -415,7 +425,7 @@ namespace NewNpc2
 
         internal void raiseFriendly(Character c, float v = FRIEND_STEP)
         {
-            Random r = new Random();
+            Random r = SubModule.rand;
             float value = v - ((v / 4) * personality.stubborn *(float) r.NextDouble());
             Feeling f = null;
             for (int i = 0; i < friendlyFeelings.Count; i++)
@@ -497,9 +507,24 @@ namespace NewNpc2
             return res;
         }
 
+        internal void OnExchange()
+        {
+            performing = true;
+        }
+
+        internal void FinishedExchange()
+        {
+            performing = false;
+        }
+
+        internal float getEnergy()
+        {
+            return energy;
+        }
 
         internal void raiseEnergy(float e = ENERGY_STEP)
         {
+            if (performing) return;
             energy += e - e * (personality.stubborn * 0.05f) - 
                 e * (personality.calculating * 0.2f)+ 
                 e * (personality.curious * 0.3f) - 
@@ -507,6 +532,7 @@ namespace NewNpc2
             if(energy >= threshold) 
                 SubModule.npc.NPCReady(this);
             if (energy > 1) energy = 1;
+            //InformationManager.DisplayMessage(new InformationMessage(characterObject.Name + " - " +  energy));
         }
 
         internal void spendEnergy(float e = SPEND_ENERGY_STEP)
@@ -620,35 +646,35 @@ namespace NewNpc2
             internal Traits()
             {
 
-                var rand = new Random();
-                kind = (float) rand.NextDouble() * 2 - 1;
-                helpful = (float)rand.NextDouble() * 2 - 1;
-                sensitive = (float)rand.NextDouble() * 2 - 1;
-                honor = (float)rand.NextDouble() * 2 - 1;
-                calculating = (float)rand.NextDouble() * 2 - 1;
+                var r = SubModule.rand;
+                kind = (float) r.NextDouble() * 2 - 1;
+                helpful = (float)r.NextDouble() * 2 - 1;
+                sensitive = (float)r.NextDouble() * 2 - 1;
+                honor = (float)r.NextDouble() * 2 - 1;
+                calculating = (float)r.NextDouble() * 2 - 1;
 
-                normalTraits(rand);
+                normalTraits(r);
             }
 
             public Traits(CharacterTraits charaterTraits)
             {
-                
-                var rand = new Random();
-                
-                kind = (float)(rand.NextDouble()) + (charaterTraits.Generosity % 1 / PREVIOUS_TRAITS_WEIGHT); 
-                helpful = (float)rand.NextDouble() + (charaterTraits.Mercy % 1 / PREVIOUS_TRAITS_WEIGHT);
-                sensitive = (float)rand.NextDouble() - (charaterTraits.Valor % 1 / PREVIOUS_TRAITS_WEIGHT);
-                honor = (float)rand.NextDouble() + (charaterTraits.Honor % 1 / PREVIOUS_TRAITS_WEIGHT);
-                calculating = (float)rand.NextDouble() + (charaterTraits.Calculating % 1 / PREVIOUS_TRAITS_WEIGHT);
+
+                var r = SubModule.rand;
+
+                kind = (float)(r.NextDouble()) + (charaterTraits.Generosity % 1 / PREVIOUS_TRAITS_WEIGHT); 
+                helpful = (float)r.NextDouble() + (charaterTraits.Mercy % 1 / PREVIOUS_TRAITS_WEIGHT);
+                sensitive = (float)r.NextDouble() - (charaterTraits.Valor % 1 / PREVIOUS_TRAITS_WEIGHT);
+                honor = (float)r.NextDouble() + (charaterTraits.Honor % 1 / PREVIOUS_TRAITS_WEIGHT);
+                calculating = (float)r.NextDouble() + (charaterTraits.Calculating % 1 / PREVIOUS_TRAITS_WEIGHT);
 
 
-                if(kind == 0)  kind = (float)rand.NextDouble() * 2 - 1; ;
-                if(helpful == 0) helpful = (float)rand.NextDouble() * 2 - 1; ;
-                if(sensitive == 0) sensitive = (float)rand.NextDouble() * 2 - 1; ;
-                if(honor == 0) honor = (float)rand.NextDouble() * 2 - 1; ;
-                if(calculating == 0) calculating = (float)rand.NextDouble() * 2 - 1; ;
+                if(kind == 0)  kind = (float)r.NextDouble() * 2 - 1; ;
+                if(helpful == 0) helpful = (float)r.NextDouble() * 2 - 1; ;
+                if(sensitive == 0) sensitive = (float)r.NextDouble() * 2 - 1; ;
+                if(honor == 0) honor = (float)r.NextDouble() * 2 - 1; ;
+                if(calculating == 0) calculating = (float)r.NextDouble() * 2 - 1; ;
 
-                normalTraits(rand);
+                normalTraits(r);
             }
 
             private void normalTraits(Random rand)

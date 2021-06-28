@@ -18,7 +18,7 @@ namespace NewNpc2
 
     }
 
-    class Counter
+    public class Counter
     {
         private float counter;
 

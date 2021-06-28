@@ -78,14 +78,7 @@ namespace NewNpc2
 		public override void OnMissionScreenTick(float dt)
 		{
 			base.OnMissionScreenTick(dt);
-			if (base.Input.IsGameKeyDown(5))
-			{
-				this._dataSource.IsEnabled = false;
-			}
-			else
-			{
-				this._dataSource.IsEnabled = true;
-			}
+			this._dataSource.IsEnabled = true;
 			_dataSource.MissionTick(dt);
 		}
 

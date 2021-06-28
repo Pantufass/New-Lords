@@ -4,12 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
+using TaleWorlds.Library;
 
 namespace NewNpc2
 {
 
     public class RumorBehaviour : CampaignBehaviorBase
     {
+
+        protected const float CLOSE_DISTANCE = 30;
+
         public Dictionary<MobileParty, RumorParty> parties;
         public Dictionary<Settlement, RumorHolder> settlements;
         public RumorHolder currentSet;
@@ -30,13 +34,15 @@ namespace NewNpc2
             CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, new Action(this.WeeklyTick));
             CampaignEvents.WarDeclared.AddNonSerializedListener(this, new Action<IFaction, IFaction>(this.OnWarDeclared));
             CampaignEvents.OnGameLoadFinishedEvent.AddNonSerializedListener(this, new Action(this.OnLoad));
+
+            CampaignEvents.CharacterDefeated.AddNonSerializedListener(this, new Action<Hero, Hero>(this.OnDefeat));
         }
 
         private void OnLoad()
         {
             foreach (Settlement s in Settlement.All)
             {
-
+                settlements.Add(s, new RumorHolder());
             }
 
         }
@@ -47,7 +53,7 @@ namespace NewNpc2
             RumorParty party;
             if (!parties.TryGetValue(mp, out party))
             {
-                party = new RumorParty(mp.LeaderHero);
+                party = new RumorParty(mp.Leader);
                 parties.Add(mp, party);
             }
             RumorHolder curr;
@@ -76,7 +82,7 @@ namespace NewNpc2
         {
             if (!parties.TryGetValue(mp, out RumorParty party))
             {
-                party = new RumorParty(mp.LeaderHero);
+                party = new RumorParty(mp.Leader);
                 parties.Add(mp, party);
             }
         }
@@ -90,7 +96,7 @@ namespace NewNpc2
         {
             if (!parties.TryGetValue(mp, out RumorParty party))
             {
-                party = new RumorParty(mp.LeaderHero);
+                party = new RumorParty(mp.Leader);
                 parties.Add(mp, party);
             }
             if (!settlements.TryGetValue(s, out RumorHolder curr))
@@ -118,11 +124,30 @@ namespace NewNpc2
             WorldEvent(r);
         }
 
+        private void OnDefeat(Hero winner, Hero loser)
+        {
+            SocialExchange se = new SocialExchange(CharacterManager.findChar(winner.CharacterObject), CharacterManager.findChar(loser.CharacterObject), SocialInteractionManager.Battle(), intent.Neutral);
+            Rumor r = new Rumor(new Rumor.Information(Rumor.Information.type.Warfare), se);
+
+            
+            CloseWorldEvent(r, winner.GetPosition());
+        }
+
+        public void CloseWorldEvent(Rumor r, Vec3 pos)
+        {
+            foreach (KeyValuePair<Settlement,RumorHolder> rh in settlements)
+            {
+                if(rh.Key.GetPosition().Distance(pos) < CLOSE_DISTANCE)
+                    rh.Value.addRumor(r);
+            }
+
+        }
+
         public void WorldEvent(Rumor r)
         {
             foreach(RumorHolder rh in settlements.Values)
             {
-
+                rh.addRumor(r);
             }
         }
 

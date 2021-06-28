@@ -58,9 +58,9 @@ namespace NewNpc2
             return depth;
         }
 
-        public string sentence(Rumor r)
+        public Dialog sentence(Rumor r)
         {
-            if (r == null) return "I dont know anything special";
+            if (r == null) return new Dialog("I dont know anything special",0,sentenceType.Normal);
             StringBuilder sb = new StringBuilder(" ", 50);
             sb.Append("Have you heard, ");
             if (r.info.getType() == Rumor.Information.type.Economic)
@@ -95,8 +95,10 @@ namespace NewNpc2
                     switch (r.exchange().type.name)
                     {
                         case "Flirt":
+                            sb.Append("They flirting");
                             break;
                         case "Date":
+                            sb.Append("They dating");
                             break;
                         default :
                             break;
@@ -105,7 +107,7 @@ namespace NewNpc2
             }
 
 
-            return sb.ToString();
+            return new Dialog(sb.ToString(),0,sentenceType.Normal);
         }
 
     }

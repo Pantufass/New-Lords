@@ -27,7 +27,7 @@ namespace NewNpc2
                 rumor.lowerValue();
             }
             holding.AddRange(r);
-            holding.OrderBy(rumor => rumor.getValue());
+            holding.OrderByDescending(rumor => rumor.getValue());
             for (int i = 0; i < (holding.Count - max); i++)
             {
                 holding.Remove(holding.Last());
@@ -48,13 +48,20 @@ namespace NewNpc2
             }
             return res;
         }
+
+        internal void addRumor(Rumor r)
+        {
+            holding.Add(r);
+            holding.OrderByDescending(rumor => rumor.getValue());
+            if(holding.Count > max) holding.Remove(holding.Last());
+        }
     }
 
     public class RumorParty : RumorHolder
     {
         protected Rumor.Information.type preference;
 
-        public RumorParty(Hero h, int m = 3) : base(m)
+        public RumorParty(CharacterObject h, int m = 3) : base(m)
         {
             Character c = CharacterManager.findChar(h);
             //calc preference

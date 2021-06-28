@@ -34,6 +34,7 @@ namespace NewNpc2
             EnableTarget(d, c);
 
         }
+
         private void EnableTarget(Dialog d, Character c)
         {
             foreach(DialogTarget dt in Targets)
@@ -42,6 +43,7 @@ namespace NewNpc2
                 {
                     dt.Name = d.sentence;
                     dt.IsEnabled = true;
+                    break;
                 }
             }
         }
@@ -66,11 +68,11 @@ namespace NewNpc2
                 Tick(dt);
                 if (secCounter.second(dt))
                 {
-                    //each second?
-
-                    InformationManager.DisplayMessage(new InformationMessage("TICK"));
-
                     Tick();
+                }
+                foreach (DialogTarget dialog in Targets)
+                {
+                    dialog.Tick(dt);
                 }
             }
             

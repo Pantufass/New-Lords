@@ -417,7 +417,14 @@ namespace NewNpc2
             return t;
         }
 
+        public static SocialInteraction Battle()
+        {
 
+            string n = "Battle";
+            SocialInteraction t = new SocialInteraction(n, 0, 0);
+
+            return t;
+        }
         public static Dictionary<string, SocialInteraction> createSocialExchanges()
         {
             Dictionary<string, SocialInteraction> existingExchanges = new Dictionary<string, SocialInteraction>();

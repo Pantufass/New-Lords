@@ -60,7 +60,7 @@ namespace NewNpc2
         {
             foreach(KeyValuePair<Character, Agent> pair in characters)
             {
-                if(pair.Value.IsHero && pair.Value.Character == h.CharacterObject)
+                if(pair.Value != null && pair.Value.IsHero && pair.Value.Character == h.CharacterObject)
                 {
                     return pair.Key;
                 }
@@ -80,7 +80,18 @@ namespace NewNpc2
 
         public static Character findChar(CharacterObject c)
         {
-            return new Character(null,c);
+            foreach (KeyValuePair<Character, Agent> pair in characters)
+            {
+                if (pair.Value != null && pair.Value.Character == c)
+                {
+                    return pair.Key;
+                }
+            }
+            if (characters2.TryGetValue(c, out Character res)) return res;
+            Character cha = new Character(c.Culture, c);
+            characters.Add(cha, null);
+            characters2.Add(c, cha);
+            return cha;
         }
 
         public static void addChar(Agent a)
@@ -118,7 +129,7 @@ namespace NewNpc2
             ir.Add(r);
 
             r = new InfluenceRule("Repetition");
-            r.setDel((List<dynamic> d) => (d[0] as Character).getLast().Contains(d[3] as SocialInteraction) ? (d[0] as Character).getAnoy() * 3 - 3 : 0);
+            r.setDel((List<dynamic> d) => (d[0] as Character).hasLast() ? (d[0] as Character).getLast().Contains(d[3] as SocialInteraction) ? (d[0] as Character).getAnoy() * 4 - 4 : 0 : 0);
             ir.Add(r);
 
             return ir;
@@ -143,7 +154,7 @@ namespace NewNpc2
                 {
                     Character c = new Character(a);
                     characters.Add(c, a);
-                    characters2.Add((CharacterObject)a.Character, c);
+                    if(!characters2.ContainsKey((CharacterObject)a.Character)) characters2.Add((CharacterObject)a.Character, c);
                     res.Add(c);
                 }
 

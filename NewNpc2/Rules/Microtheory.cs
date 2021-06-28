@@ -10,7 +10,7 @@ namespace NewNpc2
 {
     public static class Microtheory
     {
-        private static Random r = new Random();
+        private static Random r = SubModule.rand;
 
         //fix to use mobile party
         public static void FirstImpression(MobileParty mobile, Settlement set, Hero h )

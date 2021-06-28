@@ -107,3 +107,7 @@ adicionar penalty a exchanges ocorridas ha pouco?
 ----------------------------------
 
 adicionar textos diferentes as culturas
+desbloquear a conversa em batalhas
+dialogo seguido
+rumor interessante para a propria personagem
+usar distancia para volitions

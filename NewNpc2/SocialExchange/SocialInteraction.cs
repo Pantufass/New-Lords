@@ -165,8 +165,9 @@ namespace NewNpc2
             d.cresponse = !player;
         }
 
-        public Dialog getDialog(sentenceType t, float v)
+        public Dialog getDialog(sentenceType t, float v, Rumor r = null)
         {
+            if (hasPaths) return paths.First().sentence(r);
             return getTheDialog(t, v);
         }
 

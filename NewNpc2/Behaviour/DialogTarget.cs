@@ -20,6 +20,8 @@ namespace NewNpc2
         public PassageUsePoint TargetPassageUsePoint { get; }
         public Vec3 TargetWorkshopPosition { get; private set; }
 
+		protected Counter counter;
+
 		[DataSourceProperty]
 		public string Name
 		{
@@ -101,7 +103,19 @@ namespace NewNpc2
 				}
 			}
 		}
-		[DataSourceProperty]
+
+        internal void Tick(float dt)
+        {
+            if (IsEnabled)
+            {
+                if (counter.severalSeconds(dt,4))
+                {
+					IsEnabled = false;
+                }
+            }
+        }
+
+        [DataSourceProperty]
 		public bool IsEnabled
 		{
 			get
@@ -208,6 +222,7 @@ namespace NewNpc2
 				this.MarkerType = 3;
 			}
 			this.QuestMarkerType = (Campaign.Current.VisualTrackerManager.CheckTracked(this.TargetCommonArea) ? 2 : 0);
+			counter = new Counter();
 		}
 		public DialogTarget(WorkshopType workshopType, Vec3 signPosition)
 		{
@@ -219,9 +234,11 @@ namespace NewNpc2
 			this.IssueMarkerType = 0;
 			this.MarkerType = 22;
 			this.QuestMarkerType = 0;
+			counter = new Counter();
 		}
 		public DialogTarget(PassageUsePoint passageUsePoint)
 		{
+			counter = new Counter();
 			this.TargetPassageUsePoint = passageUsePoint;
 			this.IsAgentInPrison = false;
 			this.IsMovingTarget = false;
@@ -318,9 +335,10 @@ namespace NewNpc2
 
 		public DialogTarget(Agent agent)
 		{
+			counter = new Counter();
 			this.IsMovingTarget = true;
 			this.TargetAgent = agent;
-			this.Name = agent.Name.ToString();
+			this.Name = " ";
 			this.MarkerType = 1;
 			this.QuestMarkerType = 0;
 			this.IssueMarkerType = 0;
