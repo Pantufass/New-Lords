@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
+using TaleWorlds.Core;
 using TaleWorlds.Library;
 
 namespace NewNpc2
@@ -12,7 +13,7 @@ namespace NewNpc2
     public class RumorBehaviour : CampaignBehaviorBase
     {
 
-        protected const float CLOSE_DISTANCE = 30;
+        protected const float CLOSE_DISTANCE = 55;
 
         public Dictionary<MobileParty, RumorParty> parties;
         public Dictionary<Settlement, RumorHolder> settlements;
@@ -34,8 +35,9 @@ namespace NewNpc2
             CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, new Action(this.WeeklyTick));
             CampaignEvents.WarDeclared.AddNonSerializedListener(this, new Action<IFaction, IFaction>(this.OnWarDeclared));
             CampaignEvents.OnGameLoadFinishedEvent.AddNonSerializedListener(this, new Action(this.OnLoad));
-
             CampaignEvents.CharacterDefeated.AddNonSerializedListener(this, new Action<Hero, Hero>(this.OnDefeat));
+
+            CampaignEvents.TickEvent.AddNonSerializedListener(this, new Action<float>(this.OnTick));
         }
 
         private void OnLoad()
@@ -47,13 +49,20 @@ namespace NewNpc2
 
         }
 
+        private void OnTick(float dt)
+        {
+
+            //InformationManager.DisplayMessage(new InformationMessage(Settlement.GetFirst.GetPosition().Distance(Hero.MainHero.GetPosition()).ToString()));
+        }
+
         private void OnSettlement(MobileParty mp, Settlement s, Hero h)
         {
+            if (mp == null|| s == null) return;
             if (h == Hero.MainHero) MainHeroOnSet(s);
             RumorParty party;
             if (!parties.TryGetValue(mp, out party))
             {
-                party = new RumorParty(mp.Leader);
+                party = new RumorParty(mp);
                 parties.Add(mp, party);
             }
             RumorHolder curr;
@@ -66,6 +75,7 @@ namespace NewNpc2
             curr.setRumors(party.getRumors());
         }
 
+        
         private void MainHeroOnSet(Settlement s)
         {
             RumorHolder holder;
@@ -82,7 +92,7 @@ namespace NewNpc2
         {
             if (!parties.TryGetValue(mp, out RumorParty party))
             {
-                party = new RumorParty(mp.Leader);
+                party = new RumorParty(mp);
                 parties.Add(mp, party);
             }
         }
@@ -96,7 +106,7 @@ namespace NewNpc2
         {
             if (!parties.TryGetValue(mp, out RumorParty party))
             {
-                party = new RumorParty(mp.Leader);
+                party = new RumorParty(mp);
                 parties.Add(mp, party);
             }
             if (!settlements.TryGetValue(s, out RumorHolder curr))
@@ -129,15 +139,18 @@ namespace NewNpc2
             SocialExchange se = new SocialExchange(CharacterManager.findChar(winner.CharacterObject), CharacterManager.findChar(loser.CharacterObject), SocialInteractionManager.Battle(), intent.Neutral);
             Rumor r = new Rumor(new Rumor.Information(Rumor.Information.type.Warfare), se);
 
-            
-            CloseWorldEvent(r, winner.GetPosition());
+            if (winner == Hero.MainHero) CloseWorldEvent(r, winner.GetPosition(), true);
+            else CloseWorldEvent(r, winner.GetPosition());
         }
 
-        public void CloseWorldEvent(Rumor r, Vec3 pos)
+        public void CloseWorldEvent(Rumor r, Vec3 pos, bool isMain = false)
         {
+            float d = CLOSE_DISTANCE;
+            if (isMain) d *= 2;
+            InformationManager.DisplayMessage(new InformationMessage("new close rumor pos - " + pos));
             foreach (KeyValuePair<Settlement,RumorHolder> rh in settlements)
             {
-                if(rh.Key.GetPosition().Distance(pos) < CLOSE_DISTANCE)
+                if(rh.Key.GetPosition().Distance(pos) < d)
                     rh.Value.addRumor(r);
             }
 
@@ -145,7 +158,8 @@ namespace NewNpc2
 
         public void WorldEvent(Rumor r)
         {
-            foreach(RumorHolder rh in settlements.Values)
+            InformationManager.DisplayMessage(new InformationMessage("new rumor"));
+            foreach (RumorHolder rh in settlements.Values)
             {
                 rh.addRumor(r);
             }

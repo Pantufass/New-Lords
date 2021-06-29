@@ -93,7 +93,6 @@ namespace NewNpc2
         {
             base.OnMissionBehaviourInitialize(mission);
             mission.MissionBehaviours.Add(new MissionViewBehaviour());
-            mission.MissionBehaviours.Add(new MissionDebug());
 
         }
 

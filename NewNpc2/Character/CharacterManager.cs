@@ -48,7 +48,11 @@ namespace NewNpc2
         {
             if (characters.TryGetValue(MainCharacter, out Agent agent))
             {
-                if (agent != null && agent != a) characters.Add(MainCharacter, a);
+                if (agent != a)
+                {
+                    MainCharacter.setAgent(a);
+                    characters.Add(MainCharacter, a);
+                }
             }
             else
             {
@@ -60,7 +64,7 @@ namespace NewNpc2
         {
             foreach(KeyValuePair<Character, Agent> pair in characters)
             {
-                if(pair.Value != null && pair.Value.IsHero && pair.Value.Character == h.CharacterObject)
+                if(pair.Key.characterObject == h.CharacterObject)
                 {
                     return pair.Key;
                 }
@@ -82,7 +86,7 @@ namespace NewNpc2
         {
             foreach (KeyValuePair<Character, Agent> pair in characters)
             {
-                if (pair.Value != null && pair.Value.Character == c)
+                if (pair.Key.characterObject == c)
                 {
                     return pair.Key;
                 }

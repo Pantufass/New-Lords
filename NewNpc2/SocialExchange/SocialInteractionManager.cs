@@ -251,6 +251,7 @@ namespace NewNpc2
             sc.Add(n, t);
         }
 
+
         private static void Gossip(Dictionary<string, SocialInteraction> sc)
         {
             string n = "Gossip";

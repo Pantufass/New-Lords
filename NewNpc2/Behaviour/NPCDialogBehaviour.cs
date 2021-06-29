@@ -86,6 +86,7 @@ namespace NewNpc2
         private void characterVolition(Character character)
         {
             character.spendEnergy();
+            character.getRumor();
             KeyValuePair<float, Character> pair = new KeyValuePair<float, Character>(-10,CharacterManager.MainCharacter);
             List<Character> availableCharacters = CharacterManager.getCharacters(currentMission.Agents);
             foreach(Character c in availableCharacters)

@@ -29,7 +29,7 @@ namespace NewNpc2
         private const float MAX_BASE_THRESH = 1.05f;
         private const float MIN_BASE_THRESH = 0.35f;
         private const float PREVIOUS_TRAITS_WEIGHT = 0.5f;
-
+        private const float BORED_TIMER = 10f;
 
         #endregion
 
@@ -63,6 +63,12 @@ namespace NewNpc2
         //3 unidirectional relations between this and other characters
         private List<Feeling> friendlyFeelings;
         private List<Feeling> romanticFeelings;
+
+        internal float hasRumor()
+        {
+            throw new NotImplementedException();
+        }
+
         private List<Feeling> admiration;
 
         //belief network
@@ -92,6 +98,26 @@ namespace NewNpc2
 
         private List<SocialInteraction> last;
 
+        protected Tuple<Rumor,float> rumor;
+
+        protected float timeSinceLast;
+
+
+        public Rumor.Information.type preference
+        {
+            get
+            {
+                float cur = personality.curious;
+                float calc = personality.calculating;
+                float car = personality.careful;
+
+                if (personality.curious > 0.7f) return Rumor.Information.type.Gossip;
+                if (agent != null && agent.IsHero) car += 0.3f;
+                if(cur > calc && cur > car) return Rumor.Information.type.Gossip;
+                if(calc > car) return Rumor.Information.type.Economic;
+                return Rumor.Information.type.Warfare;
+            }
+        }
 
         public Character(BasicCultureObject c, CharacterObject co, CharacterTraits ct = null)
         {
@@ -111,9 +137,10 @@ namespace NewNpc2
             CreateChar();
         }
 
-        public void setCharacterObject(CharacterObject co)
+
+        public void setAgent(Agent a)
         {
-            characterObject = co;
+            agent = a;
         }
 
         private void CreateChar()
@@ -136,6 +163,8 @@ namespace NewNpc2
             energy = InitialEnergy();
             threshold = exchangeThreshold();
             performing = false;
+
+            timeSinceLast = 0;
         }
 
         public List<SocialInteraction> getLast()
@@ -146,6 +175,11 @@ namespace NewNpc2
         public bool hasLast()
         {
             return last.Count > 0;
+        }
+
+        public void Tick(float dt)
+        {
+
         }
 
         private void setExchange(SocialInteraction si)
@@ -160,6 +194,11 @@ namespace NewNpc2
         internal void setPattern(SocialInteraction si)
         {
             //TODO
+        }
+
+        public void getRumor()
+        {
+
         }
 
         public void concludeExchange(SocialInteraction si)

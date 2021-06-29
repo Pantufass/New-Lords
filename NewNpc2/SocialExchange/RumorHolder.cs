@@ -60,13 +60,16 @@ namespace NewNpc2
     public class RumorParty : RumorHolder
     {
         protected Rumor.Information.type preference;
+        protected MobileParty party;
 
-        public RumorParty(CharacterObject h, int m = 3) : base(m)
+        public RumorParty(MobileParty mp, int m = 3) : base(m)
         {
-            Character c = CharacterManager.findChar(h);
+            party = mp;
+            //Character c = CharacterManager.findChar(h);
             //calc preference
             preference = Rumor.Information.type.Warfare;
         }
+
 
         public override void setRumors(List<Rumor> r)
         {

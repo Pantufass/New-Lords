@@ -85,14 +85,14 @@ namespace NewNpc2
         {
             TriggerRule t = new TriggerRule("UnBored", (List<dynamic> d) =>
             {
-                if (d.Count < 5) return;
+                if (d.Count < 2) return;
 
                 Character c1 = d[0] as Character;
                 Character c2 = d[1] as Character;
 
                 //TODO check for entertain exchanges
                 c1.notBored();
-
+                c2.notBored();
             });
 
             Condition c;
@@ -137,6 +137,8 @@ namespace NewNpc2
             list.Add(FriendlyExchange());
 
             list.Add(NoIntroduction());
+
+            list.Add(UnBored());
 
             return list;
         }
