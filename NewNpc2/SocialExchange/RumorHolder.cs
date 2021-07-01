@@ -34,6 +34,18 @@ namespace NewNpc2
             }
         }
 
+        public virtual Tuple<Rumor, float> getRumor(Character c)
+        {
+            if (holding.Count < 1) return null;
+            Tuple<Rumor, float> res = new Tuple<Rumor, float>(holding[0], holding[0].interest(c));
+            foreach(Rumor r in holding)
+            {
+                float v = r.interest(c);
+                if ( v > res.Item2) res = new Tuple<Rumor, float>(r, v);
+            }
+            return res;
+        }
+
         internal List<Rumor> getRumors()
         {
             return holding;

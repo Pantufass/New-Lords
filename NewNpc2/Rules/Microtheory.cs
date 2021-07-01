@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
 using HarmonyLib;
+using TaleWorlds.MountAndBlade;
+using TaleWorlds.Core;
 
 namespace NewNpc2
 {
@@ -13,34 +15,13 @@ namespace NewNpc2
         private static Random r = SubModule.rand;
 
         //fix to use mobile party
-        public static void FirstImpression(MobileParty mobile, Settlement set, Hero h )
+        public static void FirstImpression(List<Character> list)
         {
-            IEnumerable<LocationCharacter> l = (List<LocationCharacter>) set.LocationComplex.GetLocationWithId("tavern").GetCharacterList();
-            IEnumerable<LocationCharacter> l2 = (List<LocationCharacter>) set.LocationComplex.GetLocationWithId(set.IsTown ? "center" : "village_center").GetCharacterList();
-
-
-
-            List<Character> list = new List<Character>();
-
-            list.Add(CharacterManager.MainCharacter);
-
-            foreach(LocationCharacter lc in l)
-            {
-                Character character = CharacterManager.findChar(lc.Character);
-                list.Add(character);
-            }
-            foreach (LocationCharacter lc in l2)
-            {
-                Character character = CharacterManager.findChar(lc.Character);
-                list.Add(character);
-            }
-
-            //get a character list
-            SubModule.npc.updateCharacters(list);
 
             foreach (Character c1 in list)
             {
-                foreach(Character c2 in list)
+                if(c1.agent == Agent.Main)  InformationManager.DisplayMessage(new InformationMessage("THERE IS A MAIN IN LIST" ));
+                foreach (Character c2 in list)
                 {
                     FirstImpression(c1, c2);
                 }
@@ -97,8 +78,8 @@ namespace NewNpc2
 
         public static void Defeat(Hero w, Hero l)
         {
-            Character w1 = CharacterManager.findChar(w.CharacterObject);
-            Character l1 = CharacterManager.findChar(l.CharacterObject);
+            Character w1 = CharacterManager.findChar(w);
+            Character l1 = CharacterManager.findChar(l);
             l1.overpowered(w1);
         }
 

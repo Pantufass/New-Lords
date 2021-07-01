@@ -76,7 +76,7 @@ namespace NewNpc2
                     return pair.Value;
                 }
             }
-            Character c = new Character(h.Culture, h.CharacterObject);
+            Character c = new Character(h);
             characters.Add(c, null);
             characters2.Add(h.CharacterObject,c);
             return c;
@@ -92,7 +92,7 @@ namespace NewNpc2
                 }
             }
             if (characters2.TryGetValue(c, out Character res)) return res;
-            Character cha = new Character(c.Culture, c);
+            Character cha = new Character(c);
             characters.Add(cha, null);
             characters2.Add(c, cha);
             return cha;
@@ -144,22 +144,17 @@ namespace NewNpc2
             List<Character> res = new List<Character>();
             foreach(Agent a in agents)
             {
-                bool found = false;
-                foreach (KeyValuePair<Character,Agent> pair in characters)
-                {
-                    if (pair.Value == a)
-                    {
-                        found = true;
-                        res.Add(pair.Key);
-                        break;
-                    }
-                }
-                if (!found)
-                {
-                    Character c = new Character(a);
-                    characters.Add(c, a);
-                    if(!characters2.ContainsKey((CharacterObject)a.Character)) characters2.Add((CharacterObject)a.Character, c);
+                if (characters2.TryGetValue((CharacterObject)a.Character, out Character c)) {
                     res.Add(c);
+                    c.setAgent(a);
+                    characters[c] = a;
+                }
+                else
+                {
+                    Character character = new Character(a);
+                    characters.Add(character, a);
+                    if(!characters2.ContainsKey((CharacterObject)a.Character)) characters2.Add((CharacterObject)a.Character, character);
+                    res.Add(character);
                 }
 
             }

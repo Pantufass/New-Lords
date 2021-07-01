@@ -32,6 +32,7 @@ namespace NewNpc2
         public static List<SocialExchange> SocialFactsDatabase;
 
         public static NPCDialogBehaviour npc;
+        public static RumorBehaviour rb;
 
         //Relationships in the world
         public static NewCharacterRelationManager newRelationManager;
@@ -83,7 +84,8 @@ namespace NewNpc2
                 npc = new NPCDialogBehaviour();
                 campaignGameStarter.AddBehavior(npc);
 
-                campaignGameStarter.AddBehavior(new RumorBehaviour());
+                rb = new RumorBehaviour();
+                campaignGameStarter.AddBehavior(rb);
 
             }
         }
@@ -125,7 +127,7 @@ namespace NewNpc2
             }
             foreach(KeyValuePair<Tuple<Character,SocialInteraction>,float> pair in list)
             {
-                if (pair.Value > PATTERN_MIN) pair.Key.Item1.setPattern(pair.Key.Item2);
+                if (pair.Value > PATTERN_MIN) RumorBehaviour.setPattern(pair.Key.Item1,pair.Key.Item2);
             }
         }
 

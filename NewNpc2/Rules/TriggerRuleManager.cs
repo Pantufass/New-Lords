@@ -92,7 +92,10 @@ namespace NewNpc2
 
                 //TODO check for entertain exchanges
                 c1.notBored();
+                c1.timeSinceLast = 0;
+
                 c2.notBored();
+                c2.timeSinceLast = 0;
             });
 
             Condition c;

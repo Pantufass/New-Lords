@@ -9,7 +9,8 @@ namespace NewNpc2
 {
     public class Rumor
     {
-        private float INTEREST_VALUE = 0.5f;
+        private const float INTEREST_VALUE = 0.5f;
+        private const float I = 0.5f;
 
         private float value;
 
@@ -23,14 +24,7 @@ namespace NewNpc2
             info = new Information();
             value = 1f;
         }
-
-        public Rumor(Information i,SocialExchange social = null)
-        {
-            info = i;
-            value = 1f;
-            s = social;
-        }
-        public Rumor(Information i, float v = 1f, SocialExchange social = null)
+        public Rumor(Information i, SocialExchange social = null, float v = 1f)
         {
             info = i;
             value = v;
@@ -48,18 +42,27 @@ namespace NewNpc2
             float res = INTEREST_VALUE;
             res += INTEREST_VALUE * c.getCurious() / 2;
             List<Character> involved = new List<Character>();
-            involved.Add(s.getInitiator());
-            involved.Add(s.getReceiver());
-            involved.AddRange(s.others);
 
-            foreach(Character inv in involved)
+            if(s != null)
             {
-                
-                if (inv == c && c.isFalse(s)) return 0;
-                res += c.calcCharacterInterest(inv);
-            }
+                involved.Add(s.getInitiator());
+                involved.Add(s.getReceiver());
+                involved.AddRange(s.others);
 
-            if (res > 0.95f) res = 0.95f;
+                foreach (Character inv in involved)
+                {
+
+                    if (inv == c && c.isFalse(s))
+                    {
+                        //lie found
+                        return 0;
+                    }
+                    res += c.calcCharacterInterest(inv) * 0.1f;
+                }
+            }
+            
+            if (info.getType() == c.preference) res *= 1.3f;
+            if (res > 5) res = 5;
             else if (res < 0) res = 0;
             return res * c.Culture.interestMod;
         }
@@ -77,8 +80,7 @@ namespace NewNpc2
         public class Information
         {
             protected type infotype;
-            public List<string> economic;
-            public List<string> warfare;
+            public List<string> values;
             public bool war;
 
             public Information(type t = type.Gossip)
@@ -88,12 +90,12 @@ namespace NewNpc2
             public Information(List<string> list, type t = type.Economic)
             {
                 infotype = t;
-                economic = list;
+                values = list;
             }
             public Information(List<string> list, bool w = true, type t = type.Warfare)
             {
                 infotype = t;
-                warfare = list;
+                values = list;
                 war = w;
             }
 
@@ -122,7 +124,7 @@ namespace NewNpc2
             origin = o;
         }
 
-        public Lie(Information i, Character o, float v = 0.8f, SocialExchange social = null) : base(i, v, social)
+        public Lie(Information i, Character o, float v = 0.8f, SocialExchange social = null) : base(i, social, v)
         {
             origin = o;
         }

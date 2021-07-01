@@ -15,7 +15,7 @@ namespace NewNpc2
         #region Consts
 
         private const float FRIEND_STEP = 1;
-        private const float ENERGY_STEP = 0.03f;
+        private const float ENERGY_STEP = 0.01f;
         private const float SPEND_ENERGY_STEP = 0.6f;
         private const int INT_MAX_EXCHANGES = 4;
         private const float CORDIAL_D = 0.1f;
@@ -44,12 +44,12 @@ namespace NewNpc2
         private float threshold;
 
         public BasicCharacterObject _characterObject;
-        public Culture _culture;
         public BasicCharacterObject characterObject
         {
             get
             {
-                if (_characterObject == null) _characterObject = agent.Character;
+                if (_characterObject == null && agent != null) _characterObject = agent.Character;
+                if (_characterObject == null && hero != null) _characterObject = hero.CharacterObject;
                 return _characterObject;
             }
             set
@@ -57,18 +57,15 @@ namespace NewNpc2
                 _characterObject = value;
             }
         }
+
+
         public Agent agent;
+        public Hero hero;
 
         //social network
         //3 unidirectional relations between this and other characters
         private List<Feeling> friendlyFeelings;
         private List<Feeling> romanticFeelings;
-
-        internal float hasRumor()
-        {
-            throw new NotImplementedException();
-        }
-
         private List<Feeling> admiration;
 
         //belief network
@@ -82,6 +79,7 @@ namespace NewNpc2
         //each exchange is paired with the respective believability 
         private Dictionary<SocialExchange, float> memory;
 
+        public Culture _culture;
         public Culture Culture
         {
             get
@@ -94,14 +92,17 @@ namespace NewNpc2
         private List<SocialInteraction> intendedSocialExchange;
         private SocialInteraction npcIntended;
 
+
         private bool performing;
 
         private List<SocialInteraction> last;
 
         protected Tuple<Rumor,float> rumor;
 
-        protected float timeSinceLast;
+        public float timeSinceLast;
 
+        public Settlement lastLocation;
+        public bool hasRumor;
 
         public Rumor.Information.type preference
         {
@@ -118,14 +119,20 @@ namespace NewNpc2
                 return Rumor.Information.type.Warfare;
             }
         }
-
-        public Character(BasicCultureObject c, CharacterObject co, CharacterTraits ct = null)
+        public Character(Hero h)
         {
-            if (ct == null)
-                personality = new Traits();
-            else personality = new Traits(ct);
+            hero = h;
+            personality = new Traits(h.GetHeroTraits());
+            characterObject = h.CharacterObject;
+            setCulture(h.Culture);
+            CreateChar();
+        }
+
+        public Character(CharacterObject co)
+        {
+            personality = new Traits();
             characterObject = co;
-            setCulture(c);
+            setCulture(co.Culture);
             CreateChar();
         }
 
@@ -141,6 +148,16 @@ namespace NewNpc2
         public void setAgent(Agent a)
         {
             agent = a;
+        }
+
+        public void setHero(Hero h)
+        {
+            hero = h;
+        }
+
+        public void setSet(Settlement s)
+        {
+            lastLocation = s;
         }
 
         private void CreateChar()
@@ -179,7 +196,8 @@ namespace NewNpc2
 
         public void Tick(float dt)
         {
-
+            if (timeSinceLast > BORED_TIMER && !isBored()) status.Add(Status.Bored);
+            else timeSinceLast += dt;
         }
 
         private void setExchange(SocialInteraction si)
@@ -191,15 +209,28 @@ namespace NewNpc2
             last[0] = si;
         }
 
-        internal void setPattern(SocialInteraction si)
+
+        public void calcRumor()
         {
-            //TODO
+            Settlement s = Settlement.CurrentSettlement;
+            if (s == null) throw new ArgumentException();
+
+            RumorHolder rh = SubModule.rb.findSettlement(s);
+            
+            rumor = rh.getRumor(this);
+            if (rumor != null) hasRumor = true;
         }
 
-        public void getRumor()
+        public Rumor getRumor()
         {
-
+            return rumor.Item1;
         }
+
+        public float getRumorValue()
+        {
+            return rumor.Item2;
+        }
+        
 
         public void concludeExchange(SocialInteraction si)
         {
@@ -209,7 +240,7 @@ namespace NewNpc2
         private float InitialEnergy()
         {
 
-            return 0;
+            return threshold / 2;
         }
 
         private float exchangeThreshold()
@@ -244,6 +275,10 @@ namespace NewNpc2
         {
 
             var rand = SubModule.rand;
+            var match = Enum.GetValues(typeof(Status)).Cast<Status>().ToArray();
+            //one random status
+            status.Add(match[rand.Next(match.Length)]);
+
             if (rand.NextDouble() > 0.5)
                 status.Add(Status.Happy);
             else
@@ -506,6 +541,8 @@ namespace NewNpc2
             currIntent = i;
         }
 
+
+
         //TODO
         internal bool isFalse(SocialExchange se)
         {
@@ -620,9 +657,27 @@ namespace NewNpc2
             int b = 0;
             foreach(Status s in status)
             {
+                if (s == Status.Normal) continue;
                 b += (int) s / Math.Abs((int)s);
             }
             return b >= 0;
+        }
+
+        public Status getRandStatus()
+        {
+            if (status.Count > 0)
+                return status[SubModule.rand.Next(status.Count - 1)];
+            else return Status.Normal;
+        }
+
+        public bool hasStatus()
+        {
+            return status.Count > 0;
+        }
+
+        internal float getCalc()
+        {
+            return personality.calculating;
         }
         
         internal float getAnoy()
@@ -659,6 +714,11 @@ namespace NewNpc2
         internal float getHonor()
         {
             return personality.honor;
+        }
+
+        internal float getHelp()
+        {
+            return personality.helpful;
         }
 
         #endregion
@@ -741,20 +801,18 @@ namespace NewNpc2
             Wounded=-10,
             Bored=-9,
             Tired=-8,
-            Hungry=-7,
 
             Angry=-6,
             Feared=-5,
             Sad = -4,
             Confident =2,
             Happy=3,
-            Surprised=4,
 
             Ashamed=-3,
-            Resented = -2,
+
             Gloated =4,
-            Pity = 5,
-            HappyFor =6
+
+            Normal = 0
         }
     }
 

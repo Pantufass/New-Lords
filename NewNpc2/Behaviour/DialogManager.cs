@@ -89,37 +89,7 @@ namespace NewNpc2
         {
             if (agent != Agent.Main && agent.Character != null && agent.IsActive() && !this.Targets.Any((DialogTarget t) => t.TargetAgent == agent))
             {
-                bool flag = false;
-                if (agent.Character.IsHero)
-                {
-                    flag = true;
-                }
-                else
-                {
-                    Settlement currentSettlement = Settlement.CurrentSettlement;
-                    bool flag2;
-                    if (currentSettlement == null)
-                    {
-                        flag2 = false;
-                    }
-                    else
-                    {
-                        LocationCharacter locationCharacter = currentSettlement.LocationComplex.FindCharacter(agent);
-                        bool? flag3 = (locationCharacter != null) ? new bool?(locationCharacter.IsVisualTracked) : null;
-                        bool flag4 = true;
-                        flag2 = (flag3.GetValueOrDefault() == flag4 & flag3 != null);
-                    }
-                    CharacterObject characterObject;
-                    if (flag2)
-                    {
-                        flag = true;
-                    }
-                    else if ((characterObject = (agent.Character as CharacterObject)) != null && characterObject.Occupation == Occupation.RansomBroker)
-                    {
-                        flag = true;
-                    }
-                }
-                if (flag)
+                if (agent.IsHuman)
                 {
                     DialogTarget item = new DialogTarget(agent);
                     this.Targets.Add(item);
@@ -136,42 +106,6 @@ namespace NewNpc2
                     foreach (Agent agent in this._mission.Agents)
                     {
                         this.AddAgentTarget(agent);
-                    }
-                    if (Hero.MainHero.CurrentSettlement != null)
-                    {
-                        List<CommonAreaMarker> list = (from x in this._mission.ActiveMissionObjects.FindAllWithType<CommonAreaMarker>()
-                                                       where x.GameEntity.HasTag("common_area_marker")
-                                                       select x).ToList<CommonAreaMarker>();
-                        if (Hero.MainHero.CurrentSettlement.CommonAreas.Count > 0)
-                        {
-                            foreach (CommonAreaMarker commonAreaMarker in list)
-                            {
-                                CommonArea commonArea = Hero.MainHero.CurrentSettlement.CommonAreas[commonAreaMarker.AreaIndex - 1];
-                                CommonAreaPartyComponent commonAreaPartyComponent = commonArea.CommonAreaPartyComponent;
-                                if ((commonAreaPartyComponent != null && commonAreaPartyComponent.MobileParty.MemberRoster.TotalManCount > 0) || Campaign.Current.VisualTrackerManager.CheckTracked(commonArea))
-                                {
-                                    this.Targets.Add(new DialogTarget(commonAreaMarker));
-                                }
-                            }
-                        }
-                        foreach (PassageUsePoint passageUsePoint in from passage in this._mission.ActiveMissionObjects.FindAllWithType<PassageUsePoint>().ToList<PassageUsePoint>()
-                                                                    where passage.ToLocation != null && !this.PassagePointFilter.Exists((string s) => passage.ToLocation.Name.Contains(s))
-                                                                    select passage)
-                        {
-                            if (!passageUsePoint.ToLocation.CanBeReserved || passageUsePoint.ToLocation.IsReserved)
-                            {
-                                this.Targets.Add(new DialogTarget(passageUsePoint));
-                            }
-                        }
-                        if (this._mission.HasMissionBehaviour<WorkshopMissionHandler>())
-                        {
-                            foreach (Tuple<Workshop, GameEntity> tuple in from s in this._mission.GetMissionBehaviour<WorkshopMissionHandler>().WorkshopSignEntities.ToList<Tuple<Workshop, GameEntity>>()
-                                                                          where s.Item1.WorkshopType != null
-                                                                          select s)
-                            {
-                                this.Targets.Add(new DialogTarget(tuple.Item1.WorkshopType, tuple.Item2.GlobalPosition - this._heightOffset));
-                            }
-                        }
                     }
                 }
                 this._firstTick = false;

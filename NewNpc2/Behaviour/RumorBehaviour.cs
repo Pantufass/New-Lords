@@ -19,6 +19,8 @@ namespace NewNpc2
         public Dictionary<Settlement, RumorHolder> settlements;
         public RumorHolder currentSet;
 
+        private bool init = false;
+
         public RumorBehaviour()
         {
             parties = new Dictionary<MobileParty, RumorParty>();
@@ -57,7 +59,9 @@ namespace NewNpc2
 
         private void OnSettlement(MobileParty mp, Settlement s, Hero h)
         {
-            if (mp == null|| s == null) return;
+            if (mp == null || s == null || h == null) return;
+            Character c = CharacterManager.findChar(h);
+            c.setSet(s);
             if (h == Hero.MainHero) MainHeroOnSet(s);
             RumorParty party;
             if (!parties.TryGetValue(mp, out party))
@@ -72,7 +76,17 @@ namespace NewNpc2
                 settlements.Add(s, curr);
             }
 
+            initSet(curr);
             curr.setRumors(party.getRumors());
+        }
+
+        private void initSet(RumorHolder rh)
+        {
+            List<string> l = new List<string>();
+            l.Add("asdrubal");
+            l.Add("letirio");
+
+            rh.addRumor(new Rumor(new Rumor.Information(l,true)));
         }
 
         
@@ -90,11 +104,7 @@ namespace NewNpc2
 
         private void OnPartyCreated(MobileParty mp)
         {
-            if (!parties.TryGetValue(mp, out RumorParty party))
-            {
-                party = new RumorParty(mp);
-                parties.Add(mp, party);
-            }
+            findParty(mp);
         }
 
         private void PartyDestroyed(MobileParty mp)
@@ -102,24 +112,41 @@ namespace NewNpc2
             parties.Remove(mp);
         }
 
-        private void PartyLeave(MobileParty mp, Settlement s)
+        public RumorHolder findSettlement(Settlement s)
+        {
+            if (!settlements.TryGetValue(s, out RumorHolder curr))
+            {
+                curr = new RumorHolder();
+                settlements.Add(s, curr);
+            }
+            return curr;
+        }
+
+        public RumorParty findParty(MobileParty mp)
         {
             if (!parties.TryGetValue(mp, out RumorParty party))
             {
                 party = new RumorParty(mp);
                 parties.Add(mp, party);
             }
-            if (!settlements.TryGetValue(s, out RumorHolder curr))
-            {
-                curr = new RumorHolder();
-                settlements.Add(s, curr);
-            }
+            return party;
+        }
+
+        private void PartyLeave(MobileParty mp, Settlement s)
+        {
+            RumorParty party = findParty(mp);
+            RumorHolder curr = findSettlement(s);
             party.setRumors(curr.getRumors());
         }
 
         private void WeeklyTick()
         {
             SubModule.findPatter();
+        }
+
+        public static void setPattern(Character c, SocialInteraction si)
+        {
+            
         }
 
         private void OnWarDeclared(IFaction declarer, IFaction declared)
@@ -129,7 +156,7 @@ namespace NewNpc2
             List<string> l = new List<string>();
             l.Add(declarer.Name.ToString());
             l.Add(declared.Name.ToString());
-            Rumor r = new Rumor(new Rumor.Information(l, true), 0.7f, se);
+            Rumor r = new Rumor(new Rumor.Information(l, true), se, 0.7f);
 
             WorldEvent(r);
         }

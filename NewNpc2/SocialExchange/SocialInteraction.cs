@@ -29,6 +29,7 @@ namespace NewNpc2
         protected List<InfluenceRule> initRules;
         protected List<InfluenceRule> respRules;
         protected List<InstRule> instRules;
+
         protected List<Path> paths;
 
         public bool hasPaths;
@@ -165,7 +166,7 @@ namespace NewNpc2
             d.cresponse = !player;
         }
 
-        public Dialog getDialog(sentenceType t, float v, Rumor r = null)
+        public Dialog getDialog(sentenceType t, float v, Character r = null)
         {
             if (hasPaths) return paths.First().sentence(r);
             return getTheDialog(t, v);

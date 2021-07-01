@@ -47,10 +47,13 @@ namespace NewNpc2
     public class Path : InstRule
     {
         protected int depth;
-        public Path(int d = 0) : base("path")
+        protected string sent;
+        protected SocialInteraction si;
+        public Path(string s = null, int d = 0) : base("path")
         {
             depth = d;
             conditions = new List<Condition>();
+            sent = s;
         }
 
         public int getDepth()
@@ -58,7 +61,23 @@ namespace NewNpc2
             return depth;
         }
 
-        public Dialog sentence(Rumor r)
+        public Dialog sentence(Character c)
+        {
+            if (si.name.Equals("ConveyStatus")) return sentence(c.getRandStatus());
+            if (si.name.Equals("RelayInformation")) return sentence(c.getRumor());
+            if (sent != null) return new Dialog(sent, 0, sentenceType.Normal);
+            else return new Dialog(" ", 0, sentenceType.Normal);
+        }
+
+        private Dialog sentence(Character.Status s)
+        {
+            StringBuilder sb = new StringBuilder(" ", 30);
+            sb.Append("I am ");
+            sb.Append(s.ToString());
+            return new Dialog(sb.ToString(), 0, sentenceType.Normal);
+        }
+
+        private Dialog sentence(Rumor r)
         {
             if (r == null) return new Dialog("I dont know anything special",0,sentenceType.Normal);
             StringBuilder sb = new StringBuilder(" ", 50);
@@ -66,11 +85,11 @@ namespace NewNpc2
             if (r.info.getType() == Rumor.Information.type.Economic)
             {
                 sb.Append("In ");
-                sb.Append(r.info.economic[0]);
+                sb.Append(r.info.values[0]);
                 sb.Append(", ");
-                sb.Append(r.info.economic[1]);
+                sb.Append(r.info.values[1]);
                 sb.Append("is at ");
-                sb.Append(r.info.economic[2]);
+                sb.Append(r.info.values[2]);
 
             }
             else
@@ -79,9 +98,9 @@ namespace NewNpc2
                 {
                     if (r.info.war)
                     {
-                        sb.Append(r.info.warfare[0]);
+                        sb.Append(r.info.values[0]);
                         sb.Append(" has declared war against ");
-                        sb.Append(r.info.warfare[1]);
+                        sb.Append(r.info.values[1]);
                     }
                     else
                     {
