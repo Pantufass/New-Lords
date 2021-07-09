@@ -21,7 +21,9 @@ namespace NewNpc2
         public static bool Introduce(BasicCharacterObject c1, BasicCharacterObject c2)
         {
             long hash = MBGUID.GetHash2(c1.Id, c2.Id);
-            intro[hash] ++;
+            if (intro.ContainsKey(hash))
+                intro[hash]++;
+            else intro.Add(hash,1);
             return true;
         }
 

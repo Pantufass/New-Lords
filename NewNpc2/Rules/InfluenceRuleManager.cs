@@ -26,17 +26,22 @@ namespace NewNpc2
 
             n = "IsNice";
             r = new InfluenceRule(n);
-            r.setDel((List<dynamic> d) => (d[0] as Character).getKind() * 5);
+            r.setDel((List<dynamic> d) => (d[0] as Character).getKind() * 4 + 2);
             existing.Add(n, r);
 
             n = "BeingNice";
             r = new InfluenceRule(n);
-            r.setDel((List<dynamic> d) => (d[0] as Character).isHappy() ? (d[0] as Character).getKind() * 10 : 0);
+            r.setDel((List<dynamic> d) => (d[0] as Character).isHappy() ? (d[0] as Character).getKind() * 5 + 4 : 0);
             existing.Add(n, r);
 
             n = "Hurtful";
             r = new InfluenceRule(n);
-            r.setDel((List<dynamic> d) => (d[0] as Character).isGood() ? -2 : (d[0] as Character).getHonor() * 8 + 4);
+            r.setDel((List<dynamic> d) => (d[0] as Character).isGood() ? -5 : (d[0] as Character).getHonor() * 8 + (d[0] as Character).getCare() * -4 + 2);
+            existing.Add(n, r);
+
+            n = "NotGood";
+            r = new InfluenceRule(n);
+            r.setDel((List<dynamic> d) => (d[0] as Character).isGood() ? -3 : 5);
             existing.Add(n, r);
 
             n = "Gloated";
@@ -46,12 +51,17 @@ namespace NewNpc2
 
             n = "Bored";
             r = new InfluenceRule(n);
-            r.setDel((List<dynamic> d) => (d[0] as Character).isBored() ? 8 : 0);
+            r.setDel((List<dynamic> d) => (d[0] as Character).isBored() ? 4 : 0);
             existing.Add(n, r);
 
             n = "LikesToSpeak";
             r = new InfluenceRule(n);
             r.setDel((List<dynamic> d) => 4);
+            existing.Add(n, r);
+
+            n = "EnjoySpeaking";
+            r = new InfluenceRule(n);
+            r.setDel((List<dynamic> d) => (d[0] as Character).getShy() * -3 + (d[0] as Character).getCurious() * 2 + (d[0] as Character).getKind() );
             existing.Add(n, r);
 
             n = "Feared";
@@ -87,17 +97,19 @@ namespace NewNpc2
 
             n = "InterestRumor";
             r = new InfluenceRule(n);
-            r.setDel((List<dynamic> d) =>(d[0] as Character).hasRumor ? (d[0] as Character).getRumorValue() * 2.2f : -5);
+            r.setDel((List<dynamic> d) =>(d[0] as Character).hasRumor ? (d[0] as Character).getRumorValue() * 6f : -5);
             existing.Add(n, r);
+
 
             n = "LowHonor";
             r = new InfluenceRule(n);
-            r.setDel((List<dynamic> d) => (d[0] as Character).getHonor() < 0.3f ? 6 : -4);
+            r.setDel((List<dynamic> d) => (d[0] as Character).getHonor() < -0.5f ? 8 : -4);
             existing.Add(n, r);
+
 
             n = "NotHonor";
             r = new InfluenceRule(n);
-            r.setDel((List<dynamic> d) => (d[0] as Character).getHonor() * - 10);
+            r.setDel((List<dynamic> d) => (d[0] as Character).getHonor() * - 4);
             existing.Add(n, r);
 
 
@@ -112,10 +124,18 @@ namespace NewNpc2
             r.setDel((List<dynamic> d) => (d[0] as Character).hasStatus() ? 8 : -2);
             existing.Add(n, r);
 
+
             n = "SuckUp";
             r = new InfluenceRule(n);
             r.setDel((List<dynamic> d) => (d[0] as Character).getCalc() * 3 + (d[0] as Character).getHonor() * - 3);
             existing.Add(n, r);
+
+
+            n = "LowerRel";
+            r = new InfluenceRule(n);
+            r.setDel((List<dynamic> d) => 6 * (d[2] as intent? == intent.Negative ? 1 : -0.5f));
+            existing.Add(n, r);
+
 
 
             return existing;

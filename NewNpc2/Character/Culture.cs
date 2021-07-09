@@ -12,8 +12,8 @@ namespace NewNpc2
         protected List<InfluenceRule> culturalRules;
         protected List<SocialInteraction> culturalExchanges;
         protected List<InteractionData> newData;
-        public float energyMod = 0;
-        public float interestMod = 0;
+        public float energyMod;
+        public float interestMod;
 
         public Culture(string n)
         {
@@ -21,6 +21,8 @@ namespace NewNpc2
             culturalExchanges = new List<SocialInteraction>();
             culturalRules = new List<InfluenceRule>();
             newData = new List<InteractionData>();
+            energyMod = 1;
+            interestMod = 1;
         }
 
         public void addRule(InfluenceRule ir)
@@ -107,12 +109,13 @@ namespace NewNpc2
             khu.addExchange(SocialInteractionManager.Complain());
             khu.addExchange(SocialInteractionManager.Embelish());
 
-            khu.energyMod = -0.5f;
-            khu.interestMod = -0.4f;
+            khu.energyMod = 0.5f;
+            khu.interestMod = 0.5f;
 
 
             return khu;
         }
+
 
     }
 }

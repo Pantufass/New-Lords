@@ -9,7 +9,7 @@ namespace NewNpc2
 {
     public class Rumor
     {
-        private const float INTEREST_VALUE = 0.5f;
+        private const float INTEREST_VALUE = 1f;
         private const float I = 0.5f;
 
         private float value;

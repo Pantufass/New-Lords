@@ -111,3 +111,11 @@ desbloquear a conversa em batalhas
 dialogo seguido
 rumor interessante para a propria personagem
 usar distancia para volitions
+
+
+---------------------------------
+
+dialogos longos
+dialogs back and forth
+gerar mais rumores
+fix player dialog

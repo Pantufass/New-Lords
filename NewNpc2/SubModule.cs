@@ -73,12 +73,14 @@ namespace NewNpc2
         {
             if (game.GameType is Campaign campaign && gameStarter is CampaignGameStarter campaignGameStarter)
             {
-         
+
+                //campaignGameStarter.AddBehavior(new TestBehaviour());
                 //campaignGameStarter.AddBehavior(new NewConvoBehaviour());
                 //campaignGameStarter.AddBehavior(new PlayerStartBehaviour());
                 //campaignGameStarter.AddBehavior(new NpcStartBehaviour());
                 //campaignGameStarter.AddBehavior(new DialogFlowBehaviour());
                 //campaignGameStarter.AddBehavior(new SingleInteractionBehaviour());
+
                 campaignGameStarter.AddBehavior(new DialogMatrixBehaviour());
 
                 npc = new NPCDialogBehaviour();
@@ -147,6 +149,7 @@ namespace NewNpc2
             l.Add(se.getIntent());
             l.Add(se.outcome);
             l.Add(se.type);
+            l.Add(se.rumor);
 
             foreach (InstRule r in interactionRules)
             {

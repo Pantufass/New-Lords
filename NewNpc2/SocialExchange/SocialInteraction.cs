@@ -24,7 +24,7 @@ namespace NewNpc2
 
         public bool IsImportant = false;
 
-        public List<Dialog> sentences;
+        public List<Tuple<Dialog,Dialog>> sentences;
 
         protected List<InfluenceRule> initRules;
         protected List<InfluenceRule> respRules;
@@ -38,10 +38,14 @@ namespace NewNpc2
         {
             name = n;
             preconditions = new List<Condition>();
-            sentences = new List<Dialog>();
+            sentences = new List<Tuple<Dialog, Dialog>>();
             upperThresh = up;
             lowerThresh = low;
-            addsentence("...");
+
+            addsentence("Okay", 0, sentenceType.normalResponse);
+            addsentence("Hm", 0, sentenceType.normalResponse);
+            addsentence("I don't care", 0, sentenceType.nResponse);
+
             finish = false;
             hasPaths = false;
 
@@ -82,14 +86,51 @@ namespace NewNpc2
             return instRules;
         }
 
-        public void addsentence(string sentence)
+        public void followUp(Dialog d, CampaignGameStarter c,string token)
         {
-            sentences.Add(new Dialog(sentence, 0, sentenceType.Normal));
+            //TODO
+            Dialog res = findResponse(d);
+            if(res != null)
+            {
+                res.cresponse = true;
+                c.AddDialogLine(name+"followUp", token, "npcfollowup" , res.sentence,
+                        () => res.cresponse,
+                        () => {
+                            res.cresponse = false;
+                            nextFollowUp();
+                        },
+                        1001, null);
+            }
         }
-        public void addsentence(string sentence, float v, sentenceType t)
+
+        private void nextFollowUp()
         {
-            sentences.Add(new Dialog(sentence, v, t));
+
         }
+
+        private Dialog findResponse(Dialog d)
+        {
+            foreach(Tuple<Dialog,Dialog> pair in sentences)
+            {
+                if (pair.Item1 == d) return pair.Item2;
+            }
+            return null;
+        }
+
+
+        public void addsentence(string sentence, string sentence2 = null)
+        {
+            Dialog d = null;
+            if (sentence2 != null) d = new Dialog(sentence2, 0, sentenceType.normalResponse);
+            sentences.Add(new Tuple<Dialog, Dialog> (new Dialog(sentence, 0, sentenceType.Normal),d));
+        }
+        public void addsentence(string sentence, float v, sentenceType t, string sentence2 = null, float v2 = 0, sentenceType t2 = sentenceType.normalResponse)
+        {
+            Dialog d = null;
+            if (sentence2 != null) d = new Dialog(sentence2, v2, t2);
+            sentences.Add(new Tuple<Dialog,Dialog>(new Dialog(sentence, v, t),d));
+        }
+
         public void addCondition(Condition c)
         {
             preconditions.Add(c);
@@ -140,16 +181,21 @@ namespace NewNpc2
 
         private Dialog getTheDialog(sentenceType t, float v)
         {
-            Dialog res = sentences[0];
-            IEnumerable<Dialog> l = from d in sentences
-                                    where d.type == t
-                                    orderby d.value descending
-                                    select d;
+            Dialog res = sentences[0].Item1;
+
+            IEnumerable<Dialog> l = (from d in sentences
+                                    where d.Item1.type == t
+                                    orderby d.Item1.value descending
+                                    select d.Item1);
+
             if (l.Count() > 0)
             {
-                if (Mathf.Lerp(0, 1, v) > 0.5) res = l.Last();
-                else res = l.First();
+                int index = SubModule.rand.Next(0, l.Count());
+                res = l.ElementAt(index);
             }
+
+            else if (t == sentenceType.Cordial || t == sentenceType.Crude)
+                return getTheDialog(sentenceType.Normal, v);
 
             return res;
         }
@@ -162,27 +208,49 @@ namespace NewNpc2
         public void chooseDialog(sentenceType t, float v, bool player = false)
         {
             Dialog d = getTheDialog(t, v);
-            d.playera = player;
-            d.cresponse = !player;
+            foreach(Tuple<Dialog,Dialog> dd in sentences)
+            {
+                if(d == dd.Item1)
+                {
+                    dd.Item1.playera = player; 
+                    dd.Item1.cresponse = !player;
+                }
+            }
+        }
+
+        public Dialog chooseDialog(sentenceType t, Character r = null)
+        {
+            if(hasPaths) return paths.First().sentence(r);
+            return getTheDialog(t, 0);
         }
 
         public Dialog getDialog(sentenceType t, float v, Character r = null)
         {
-            if (hasPaths) return paths.First().sentence(r);
+
+            if (hasPaths)
+            {
+                Dialog d = paths.First().sentence(r);
+                if (d != null) return d;
+            }
             return getTheDialog(t, v);
         }
 
         public void clearDialog()
         {
-            foreach (Dialog d in sentences)
+            foreach (Tuple<Dialog,Dialog> d in sentences)
             {
-                d.cresponse = false;
-                d.playera = false;
+                d.Item1.cresponse = false;
+                d.Item1.playera = false;
             }
         }
 
-        public string getResponse(float v)
+        public string getResponse(float v,Character c = null)
         {
+            if (hasPaths && paths.Count > 1)
+            {
+                Dialog d = paths[1].sentence(c);
+                if (d != null) return d.sentence;
+            }
             return (v > upperThresh ? getDialogLine(sentenceType.pResponse, v) : v > lowerThresh ? getDialogLine(sentenceType.normalResponse, v) : getDialogLine(sentenceType.nResponse, v));
 
         }
@@ -191,7 +259,7 @@ namespace NewNpc2
         {
             name = si.name + " changed";
             preconditions = new List<Condition>();
-            sentences = new List<Dialog>();
+            sentences = new List<Tuple<Dialog, Dialog>>();
             upperThresh = si.upperThresh;
             lowerThresh = si.lowerThresh;
             addsentence("...");
@@ -202,7 +270,7 @@ namespace NewNpc2
             instRules = new List<InstRule>();
 
             foreach (Condition c in si.preconditions) preconditions.Add(c);
-            foreach (Dialog c in si.sentences) sentences.Add(c);
+            foreach (Tuple<Dialog, Dialog> c in si.sentences) sentences.Add(c);
             foreach (InfluenceRule c in si.initRules) initRules.Add(c);
             foreach (InfluenceRule c in si.respRules) respRules.Add(c);
             foreach (InstRule c in si.instRules) instRules.Add(c);
@@ -216,8 +284,9 @@ namespace NewNpc2
                 respRules.Add(ir);
             }
             foreach (InstRule ir in id.inst) instRules.Add(ir);
-            foreach (Dialog d in id.dialog) sentences.Add(d);
+            foreach (Dialog d in id.dialog) sentences.Add(new Tuple<Dialog,Dialog>(d,null));
         }
+
 
         public bool Equals(SocialInteraction obj)
         {

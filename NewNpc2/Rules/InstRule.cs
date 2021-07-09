@@ -49,11 +49,13 @@ namespace NewNpc2
         protected int depth;
         protected string sent;
         protected SocialInteraction si;
-        public Path(string s = null, int d = 0) : base("path")
+
+        public Path(SocialInteraction si, string s = null, int d = 0) : base("path")
         {
             depth = d;
             conditions = new List<Condition>();
             sent = s;
+            this.si = si;
         }
 
         public int getDepth()
@@ -63,17 +65,26 @@ namespace NewNpc2
 
         public Dialog sentence(Character c)
         {
-            if (si.name.Equals("ConveyStatus")) return sentence(c.getRandStatus());
-            if (si.name.Equals("RelayInformation")) return sentence(c.getRumor());
+            if (si.name.Equals("ConveyStatus"))
+            {
+                if (c != null) return sentence(c.getRandStatus());
+                else return null;
+            }
+            if (si.name.Equals("RelayInformation"))
+            {
+                if (c != null) return sentence(c.getRumor());
+                else return null;
+            }
             if (sent != null) return new Dialog(sent, 0, sentenceType.Normal);
-            else return new Dialog(" ", 0, sentenceType.Normal);
+            else return null;
         }
 
         private Dialog sentence(Character.Status s)
         {
             StringBuilder sb = new StringBuilder(" ", 30);
             sb.Append("I am ");
-            sb.Append(s.ToString());
+            if (s != Character.Status.Normal) sb.Append(s.ToString()); 
+            else sb.Append("okay");
             return new Dialog(sb.ToString(), 0, sentenceType.Normal);
         }
 
@@ -81,7 +92,7 @@ namespace NewNpc2
         {
             if (r == null) return new Dialog("I dont know anything special",0,sentenceType.Normal);
             StringBuilder sb = new StringBuilder(" ", 50);
-            sb.Append("Have you heard, ");
+            if(SubModule.rand.Next(5) < 3)  sb.Append("Have you heard, ");
             if (r.info.getType() == Rumor.Information.type.Economic)
             {
                 sb.Append("In ");

@@ -25,6 +25,12 @@ namespace NewNpc2
         //other characters involved 
         public List<Character> others;
 
+        public Rumor rumor;
+
+        public Dialog resp;
+
+        public static SocialExchange Last;
+
         //TODO other type of information possible in the exchange
         //private Information info;
 
@@ -35,6 +41,7 @@ namespace NewNpc2
 
             receiver = r;
             base.intent = i;
+            rumor = null;
         }
 
         //TODO calculate the receiver's response
@@ -56,10 +63,10 @@ namespace NewNpc2
         public void chooseResponse(float result)
         {
             if (result > type.upperThresh)
-                type.chooseDialog(sentenceType.pResponse, result);
+                resp = type.chooseDialog(sentenceType.pResponse);
             else if (result > type.lowerThresh)
-                type.chooseDialog(sentenceType.normalResponse, result);
-            else type.chooseDialog(sentenceType.nResponse, result);
+                resp = type.chooseDialog(sentenceType.normalResponse);
+            else resp = type.chooseDialog(sentenceType.nResponse);
 
         }
 
@@ -104,7 +111,7 @@ namespace NewNpc2
         internal void finish()
         {
             spendEnergy();
-            initiator.FinishedExchange();
+            initiator.FinishedExchange(type);
             receiver.FinishedExchange();
         }
     }

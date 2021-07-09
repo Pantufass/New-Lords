@@ -87,6 +87,7 @@ namespace NewNpc2
             l.Add("letirio");
 
             rh.addRumor(new Rumor(new Rumor.Information(l,true)));
+
         }
 
         
@@ -98,6 +99,7 @@ namespace NewNpc2
             {
                 holder = new RumorHolder();
                 settlements.Add(s, holder);
+                currentSet = holder;
             }
 
         }

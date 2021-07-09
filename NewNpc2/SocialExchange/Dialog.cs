@@ -8,6 +8,7 @@ namespace NewNpc2
 {
     public class Dialog
     {
+        public double id;
         public string sentence;
 
         //more value means more confidence
@@ -15,9 +16,18 @@ namespace NewNpc2
 
         public sentenceType type;
 
-        public bool playera;
-        public bool cresponse;
-
+        private bool _playera;
+        public bool playera
+        {
+            get { return _playera; }
+            set { _playera = value; }
+        }
+        private bool _cresponse;
+        public bool cresponse
+        {
+            get { return _cresponse; }
+            set { _cresponse = value; }
+        }
         public Dialog(string s, float v, sentenceType t, bool c = false)
         {
             sentence = s;
@@ -25,6 +35,7 @@ namespace NewNpc2
             this.type = t;
             playera = false;
             cresponse = false;
+            id = SubModule.rand.NextDouble();
         }
 
         public void updateValue(float v)
@@ -34,22 +45,32 @@ namespace NewNpc2
 
         public bool validateNpcLine()
         {
+            if (SocialExchange.Last.resp == this) return true;
+            if (SocialExchange.Last.resp.id == id) return true;
+            if (SocialExchange.Last.resp.sentence == sentence)
+            {
+                return true;
+            }
             return cresponse;
         }
 
         public bool validatePlayerLine()
         {
+            foreach(Dialog d in CharacterManager.MainCharacter.dialogs)
+            {
+                if (d.sentence == this.sentence) return true;
+            }
             return playera;
         }
     }
 
     public enum sentenceType
     {
-        Cordial = 1,
+        Cordial = 3,
         Normal = 1,
-        Crude = 1,
-        pResponse = -1,
-        nResponse = -1,
+        Crude = 2,
+        pResponse = -2,
+        nResponse = -3,
         normalResponse = -1
     }
 }

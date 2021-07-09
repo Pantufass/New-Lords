@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.Core;
+using TaleWorlds.Library.EventSystem;
 using TaleWorlds.MountAndBlade;
 
 namespace NewNpc2
@@ -15,6 +16,7 @@ namespace NewNpc2
 
         private Mission currentMission;
         private bool missionReady = false;
+        private bool firstDone = false;
 
         public override void RegisterEvents()
         {
@@ -22,7 +24,6 @@ namespace NewNpc2
             CampaignEvents.OnGameLoadFinishedEvent.AddNonSerializedListener(this, new Action(this.AfterGameLoad));
             CampaignEvents.AfterMissionStarted.AddNonSerializedListener(this, new Action<IMission>(this.OnMissionStart));
             CampaignEvents.OnMissionEndedEvent.AddNonSerializedListener(this, new Action<IMission>(this.OnMissionEnd));
-            CampaignEvents.TickEvent.AddNonSerializedListener(this, new Action<float>(this.OnTick));
         }
 
         public override void SyncData(IDataStore dataStore)
@@ -54,17 +55,6 @@ namespace NewNpc2
             Microtheory.FirstImpression(CharacterManager.getCharacters(currentMission.Agents));
         }
 
-        private void OnTick(float dt)
-        {
-            if(missionReady)
-            {
-                foreach (Character c in CharacterManager.getCharacters(currentMission.Agents))
-                {
-                    c.Tick(dt);
-                }
-            }
-        }
-
 
         public void NPCReady(Character character)
         {
@@ -77,7 +67,16 @@ namespace NewNpc2
 
         private void characterVolition(Character character)
         {
+            if (character.hero == Hero.MainHero || character.agent == Agent.Main) return;
+
             character.calcRumor();
+
+            if (character.characterObject.Occupation == Occupation.Tavernkeeper || character.characterObject.Occupation == Occupation.Guard || character.characterObject.Occupation == Occupation.PrisonGuard)
+            {
+                stayVolition(character);
+                return;
+            }
+
             Tuple<float, Character, SocialInteraction> pair = new Tuple<float, Character, SocialInteraction>(-10,CharacterManager.MainCharacter,null);
             foreach(Character c in CharacterManager.getCharacters(currentMission.Agents))
             {
@@ -87,28 +86,25 @@ namespace NewNpc2
                     pair = new Tuple<float, Character, SocialInteraction>(r, c, character.getNpcIntended());
             }
 
+            /*
             moveTo(character, pair.Item2);
 
             if(pair.Item3.hasPaths) showDialog(pair.Item3.getDialog(character.calcDialogType(), pair.Item1, character), character);
             else showDialog(pair.Item3.getDialog(character.calcDialogType(), pair.Item1), character);
 
-            calcCharacterResponse(character, pair.Item2, pair.Item3, character.getIntent());
+            */
 
-            
+
+            character.exchange(pair.Item2, pair.Item3);
+
+
         }
 
-        private void showDialog(Dialog d, Character c)
+        private void stayVolition(Character character)
         {
-            if (missionReady)
-            {
-                foreach (MissionBehaviour mb in currentMission.MissionBehaviours)
-                {
-                    if (mb is MissionViewBehaviour)
-                        (mb as MissionViewBehaviour).dialog(d, c);
-                }
 
-            }
         }
+
 
 
         private void calcCharacterResponse(Character init, Character res, SocialInteraction si, intent i)
@@ -116,27 +112,43 @@ namespace NewNpc2
             SocialExchange se = new SocialExchange(init, res, si, i);
             float result = se.calculateResponse();
             Dialog d = se.getResponse(result);
-            showDialog(d, res);
+            res.showDialog(d);
 
             SubModule.makeExchange(se);
-            SubModule.endInteraction();
         }
 
 
-        public static void moveTo(Character mover, Character target)
+        public static bool moveTo(Character mover, Character target)
         {
             //how to get agent
             //maybe replace object with agent
+            if (mover.agent.Position.Distance(target.agent.Position) < 2.5f)
+            {
+                if (mover.performing)
+                {
+                    
+                }
+                mover.agent.SetLookAgent(target.agent);
+                return true;
+            }
 
-            mover.OnExchange();
-            target.OnExchange();
-            if (mover.agent.GetComponent<CampaignAgentComponent>().AgentNavigator == null) return;
-            DailyBehaviorGroup bg = mover.agent.GetComponent<CampaignAgentComponent>().AgentNavigator.GetBehaviorGroup<DailyBehaviorGroup>();
-            bg.AddBehavior<FollowAgentBehavior>().SetTargetAgent(target.agent);
-            
-            bg.SetScriptedBehavior<FollowAgentBehavior>();
+            if (!mover.performing)
+            {
+                if (mover.agent.GetComponent<CampaignAgentComponent>().AgentNavigator == null) return false;
 
-            mover.agent.SetLookAgent(target.agent);
+
+                DailyBehaviorGroup bg = mover.agent.GetComponent<CampaignAgentComponent>().AgentNavigator.GetBehaviorGroup<DailyBehaviorGroup>();
+                bg.AddBehavior<FollowAgentBehavior>().SetTargetAgent(target.agent);
+
+                bg.SetScriptedBehavior<FollowAgentBehavior>();
+
+                mover.agent.SetLookAgent(target.agent);
+            }
+
+
+
+            return true;
+
         }
         
     }

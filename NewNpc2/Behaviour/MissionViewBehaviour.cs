@@ -80,6 +80,10 @@ namespace NewNpc2
 			base.OnMissionScreenTick(dt);
 			this._dataSource.IsEnabled = true;
 			_dataSource.MissionTick(dt);
+			foreach (Character c in CharacterManager.getCharacters(Mission.Current.Agents))
+			{
+				c.Tick(dt);
+			}
 		}
 
 		// Token: 0x060000E4 RID: 228 RVA: 0x000077B2 File Offset: 0x000059B2

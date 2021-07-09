@@ -31,18 +31,20 @@ namespace NewNpc2
         public static SocialInteraction BadMouth()
         {
 
-            SocialInteraction t = new SocialInteraction("BadMouth", 1, 1);
-            t.addInitRule(new InfluenceRule("a", ((List<dynamic> d) =>
-            {
-                return 5;
-            })));
+            SocialInteraction t = new SocialInteraction("BadMouth", 10, 2);
 
             InfluenceRule r;
-            SubModule.existingRules.TryGetValue("NotHonor", out r);
+            SubModule.existingRules.TryGetValue("LowHonor", out r);
+            t.addInitRule(r);
+            SubModule.existingRules.TryGetValue("NotGood", out r);
             t.addInitRule(r);
 
+            //TODO set paths
 
             t.addsentence("Ugh my boss is killing me");
+
+
+            t.addsentence("Really?", 1, sentenceType.pResponse);
 
             return t;
         }
@@ -50,24 +52,48 @@ namespace NewNpc2
         public static SocialInteraction Complain()
         {
 
-            SocialInteraction t = new SocialInteraction("Complain", 1, 1);
+            SocialInteraction t = new SocialInteraction("Complain", 10, 2);
             t.addInitRule(new InfluenceRule("a", ((List<dynamic> d) =>
             {
                 return 8;
             })));
 
             InfluenceRule r;
-            SubModule.existingRules.TryGetValue("LowHonor", out r);
+            SubModule.existingRules.TryGetValue("NotHonor", out r);
+            t.addInitRule(r);
+            SubModule.existingRules.TryGetValue("LikesToSpeak", out r);
+            t.addInitRule(r);
+            SubModule.existingRules.TryGetValue("EnjoySpeaking", out r);
             t.addInitRule(r);
 
             t.addsentence("Im so tired, I can't even");
             t.addsentence("I hate what they are doing to the town");
             t.addsentence("Back in my days things were better");
             t.addsentence("I am always hungry");
-            t.addsentence("I see of outsiders around these parts");
+            t.addsentence("I see too many outsiders around these parts");
             t.addsentence("The security in this town is terrible");
             t.addsentence("The nobles are so lazy, they do nothing all day");
 
+
+            t.addsentence("That is interesting", 1, sentenceType.pResponse);
+            t.addsentence("I agree", 1, sentenceType.pResponse);
+            t.addsentence("Totally", 1, sentenceType.pResponse);
+            t.addsentence("I see", 1, sentenceType.normalResponse);
+            t.addsentence("I feel bad for you", 1, sentenceType.pResponse);
+            t.addsentence("Okay", 1, sentenceType.normalResponse);
+            t.addsentence("What makes you think i would care", 1, sentenceType.nResponse);
+
+            return t;
+        }
+
+        public static SocialInteraction InviteParty()
+        {
+
+            SocialInteraction t = new SocialInteraction("InviteParty", 10, 0);
+
+            InfluenceRule r;
+
+            //TODO set paths
 
             return t;
         }
@@ -112,10 +138,16 @@ namespace NewNpc2
             t.addInitRule(r);
 
             SubModule.existingRules.TryGetValue("BeingNice", out r);
-            t.addInitRule(r);
+            t.addInitRule(r,false);
+
+            SubModule.existingRules.TryGetValue("Charming", out r);
+            t.addRespRule(r);
+
 
             t.addsentence("You look good.");
-            t.addsentence("You look wonderfuly", 1, sentenceType.Cordial);
+            t.addsentence("I like that hairstyle");
+            t.addsentence("You seem fit");
+            t.addsentence("You look wonderful", 1, sentenceType.Cordial);
             t.addsentence("You look okay", 1, sentenceType.Crude);
 
             t.addsentence("Thank you so much", 1, sentenceType.pResponse);
@@ -132,17 +164,18 @@ namespace NewNpc2
             InfluenceRule r;
             SubModule.existingRules.TryGetValue("Hurtful", out r);
             t.addInitRule(r);
-            SubModule.existingRules.TryGetValue("Hurtful", out r);
+            SubModule.existingRules.TryGetValue("LowerRel", out r);
             t.addInitRule(r);
 
 
             t.addsentence("You look ugly.");
-            t.addsentence("You should dedicate yourself to just fighting.", 1, sentenceType.Cordial);
-            t.addsentence("You stupid", 1, sentenceType.Crude);
+            t.addsentence("You dont look that clever.");
+            t.addsentence("I have seen better looking crabs than you.", 1, sentenceType.Cordial);
+            t.addsentence("You are stupid", 1, sentenceType.Crude);
 
 
+            t.addsentence("That is interesting", 1, sentenceType.pResponse);
             t.addsentence("Uh", 1, sentenceType.pResponse);
-            t.addsentence(" ", 1, sentenceType.normalResponse);
             t.addsentence("No", 2, sentenceType.nResponse);
             sc.Add(n, t);
         }
@@ -154,6 +187,8 @@ namespace NewNpc2
 
             InfluenceRule r;
             SubModule.existingRules.TryGetValue("Hurtful", out r);
+            t.addInitRule(r);
+            SubModule.existingRules.TryGetValue("LowerRel", out r);
             t.addInitRule(r);
 
 
@@ -177,9 +212,11 @@ namespace NewNpc2
             t.addInitRule(r);
 
             t.addsentence("I am the best.");
+            t.addsentence("I am really smart.");
             t.addsentence("I can be anything i want.", 1, sentenceType.Cordial);
             t.addsentence("I am better than you", 1, sentenceType.Crude);
 
+            t.addsentence("That is interesting", 1, sentenceType.pResponse);
             t.addsentence("Yes", 1, sentenceType.pResponse);
             t.addsentence("Uh okay", 1, sentenceType.normalResponse);
             t.addsentence("Not really", 2, sentenceType.nResponse);
@@ -191,12 +228,19 @@ namespace NewNpc2
             string n = "ConveyStatus";
             SocialInteraction t = new SocialInteraction(n, 10, 0);
 
+            Condition c = new Condition("NotMain",(List<dynamic> d) => (d[0] as Character) != CharacterManager.MainCharacter);
+            t.addCondition(c);
+
             InfluenceRule r;
 
             SubModule.existingRules.TryGetValue("HasStatus", out r);
             t.addInitRule(r,false);
+            SubModule.existingRules.TryGetValue("EnjoySpeaking", out r);
+            t.addInitRule(r);
 
-            t.addPath(new Path());
+            t.addPath(new Path(t));
+
+            t.addsentence("That is interesting", 1, sentenceType.pResponse);
 
             sc.Add(n, t);
         }
@@ -213,6 +257,8 @@ namespace NewNpc2
 
             SubModule.existingRules.TryGetValue("LikesToSpeak", out r);
             t.addInitRule(r);
+            SubModule.existingRules.TryGetValue("EnjoySpeaking", out r);
+            t.addInitRule(r);
 
             t.addsentence("I like pudding.");
             t.addsentence("I prefer books, not interested in those pesky wars");
@@ -220,8 +266,10 @@ namespace NewNpc2
             t.addsentence("Can you buy me food?", 1, sentenceType.Crude);
 
             t.addsentence("Oh really", 1, sentenceType.pResponse);
+            t.addsentence("That is interesting", 1, sentenceType.pResponse);
             t.addsentence("Okay", 1, sentenceType.normalResponse);
-            t.addsentence("Dont care", 2, sentenceType.nResponse);
+            t.addsentence("Tell me more", 1, sentenceType.pResponse);
+
             sc.Add(n, t);
         }
         private static void RunAway(Dictionary<string, SocialInteraction> sc)
@@ -229,6 +277,10 @@ namespace NewNpc2
             string n = "RunAway";
             SocialInteraction t = new SocialInteraction(n, 10, 0);
             t.finish = true;
+
+            Condition c;
+            SubModule.existingConditions.TryGetValue("NotAvailable", out c);
+            t.addCondition(c);
 
             InfluenceRule r;
             SubModule.existingRules.TryGetValue("Hurtful", out r);
@@ -286,11 +338,17 @@ namespace NewNpc2
             SubModule.existingRules.TryGetValue("Helpful", out r);
             t.addInitRule(r);
 
-            t.addPath(new Path("I have to tell you something."));
+            t.addPath(new Path(t,"I have to tell you something."));
+            t.addPath(new Path(t,"That is really interesting.", 1));
+
+            t.addInstRule(new InstRule("Hear", (List<dynamic> d) =>
+            {
+                if (d.Count < 5) return;
+                (d[0] as Character).hearRumor(d[4] as Rumor);
+            }));
 
 
             t.addsentence("I see", 1, sentenceType.pResponse);
-            t.addsentence(" ", 1, sentenceType.normalResponse);
             t.addsentence("Hm", 2, sentenceType.nResponse);
 
             sc.Add(n, t);
@@ -316,9 +374,6 @@ namespace NewNpc2
 
             t.addsentence("What can you tell me");
 
-            t.addsentence("Sure", 1, sentenceType.pResponse);
-            t.addsentence("Hm", 1, sentenceType.normalResponse);
-            t.addsentence("No", 2, sentenceType.nResponse);
             sc.Add(n, t);
         }
 
@@ -481,6 +536,22 @@ namespace NewNpc2
 
             return t;
         }
+
+        public static List<SocialInteraction> allInteractions()
+        {
+            List<SocialInteraction> l = new List<SocialInteraction>();
+
+            l.AddRange(createSocialExchanges().Values);
+
+            l.Add(BadMouth());
+            l.Add(Embelish());
+            l.Add(Complain());
+            l.Add(InviteParty());
+
+            return l;
+
+        }
+
         public static Dictionary<string, SocialInteraction> createSocialExchanges()
         {
             Dictionary<string, SocialInteraction> existingExchanges = new Dictionary<string, SocialInteraction>();

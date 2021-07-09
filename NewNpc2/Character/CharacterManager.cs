@@ -132,9 +132,34 @@ namespace NewNpc2
             r.setDel((List<dynamic> d) => (d[0] as Character).getShy() * -3);
             ir.Add(r);
 
+
             r = new InfluenceRule("Repetition");
             r.setDel((List<dynamic> d) => (d[0] as Character).hasLast() ? (d[0] as Character).getLast().Contains(d[3] as SocialInteraction) ? (d[0] as Character).getAnoy() * 4 - 4 : 0 : 0);
             ir.Add(r);
+
+
+            r = new InfluenceRule("LikesThem", (List<dynamic> d) => 
+            {
+                if (d.Count < 2) return 0;
+                Feeling f = (d[0] as Character).getStrongestFeeling(d[1] as Character);
+                if (f == null) return 0;
+                return f.getIntent() == intent.Romantic ? f.getIntensity() * 1.5f : f.getIntensity() / 2;
+                }
+            );
+            ir.Add(r);
+
+            r = new InfluenceRule("Proximity", (List<dynamic> d) => {
+                if (d.Count < 2) return 0;
+                if ((d[0] as Character).agent != null && (d[1] as Character).agent != null)
+                {
+                    float dist = (d[0] as Character).agent.Position.Distance((d[1] as Character).agent.Position);
+                    if (dist < 3) dist = 3;
+                    return 30 / (dist * dist);
+                }
+                return 0;
+            });
+            ir.Add(r);
+
 
             return ir;
         }

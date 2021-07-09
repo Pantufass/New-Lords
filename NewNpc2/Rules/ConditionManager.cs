@@ -15,7 +15,7 @@ namespace NewNpc2
             Condition c = new Condition("NotIntroduced", (List<dynamic> d) => {
                 if (d.Count < 2) return false;
                 if (d[0] is Character && d[1] is Character)
-                    return Introduction.Introduced(((d[0] as Character).characterObject as CharacterObject), ((d[1] as Character).characterObject as CharacterObject)) > 2;
+                    return Introduction.Introduced(((d[0] as Character).characterObject as CharacterObject), ((d[1] as Character).characterObject as CharacterObject)) < 2;
                 else return false;
                 });
             return c;
