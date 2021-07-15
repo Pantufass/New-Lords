@@ -16,13 +16,37 @@ namespace NewNpc2
 
             string n = "NeedToIntroduce";
             InfluenceRule r = new InfluenceRule(n); 
-            r.setDel((List<dynamic> d) => (d[0] as Character).getKind() * 5 + 12);
+            r.setDel((List<dynamic> d) => (d[0] as Character).getKind() * 5 + 15);
             existing.Add(n, r);
 
-            n = "ImproveRel";
+            n = "Positive";
             r = new InfluenceRule(n);
-            r.setDel((List<dynamic> d) => 5 * (d[2] as intent? == intent.Positive ? 1 : -0.5f));
+            r.setDel((List<dynamic> d) => 5 * (d[2] as intent? == intent.Positive ? 3 : -0.5f));
             existing.Add(n, r);
+
+
+            n = "Negative";
+            r = new InfluenceRule(n, (List<dynamic> d) => 5 * (d[2] as intent? == intent.Negative ? 3 : -0.5f));
+            existing.Add(n, r);
+
+            n = "LikesThem";
+            r = new InfluenceRule(n, (List<dynamic> d) =>
+            {
+                Feeling f = (d[0] as Character).getStrongestFeeling(d[1] as Character);
+                if(f != null) return f.getIntensity();
+                return 0;
+            });
+            existing.Add(n, r);
+
+            n = "DislikesThem";
+            r = new InfluenceRule(n, (List<dynamic> d) =>
+            {
+                Feeling f = (d[0] as Character).getLowestFeeling(d[1] as Character);
+                if (f == null) return 0;
+                return (f.getIntensity() < 0) ? -5 < f.getIntensity() ? -5 : f.getIntensity() : 0;
+            });
+            existing.Add(n, r);
+
 
             n = "IsNice";
             r = new InfluenceRule(n);

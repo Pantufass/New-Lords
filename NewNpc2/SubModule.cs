@@ -113,8 +113,7 @@ namespace NewNpc2
             if (se.type.IsImportant)
             {
                 se.setInCharacters();
-                //TODO spread exchange
-                //todo calc exchange interest
+                RumorBehaviour.CreateGossip(se);
             }
         }
 

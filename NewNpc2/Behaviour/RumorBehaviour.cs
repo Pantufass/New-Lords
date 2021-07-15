@@ -13,7 +13,7 @@ namespace NewNpc2
     public class RumorBehaviour : CampaignBehaviorBase
     {
 
-        protected const float CLOSE_DISTANCE = 55;
+        protected const float CLOSE_DISTANCE = 40;
 
         public Dictionary<MobileParty, RumorParty> parties;
         public Dictionary<Settlement, RumorHolder> settlements;
@@ -35,10 +35,13 @@ namespace NewNpc2
             CampaignEvents.OnPartyDisbandedEvent.AddNonSerializedListener(this, new Action<MobileParty>(this.PartyDestroyed));
             CampaignEvents.OnSettlementLeftEvent.AddNonSerializedListener(this, new Action<MobileParty, Settlement>(this.PartyLeave));
             CampaignEvents.WeeklyTickEvent.AddNonSerializedListener(this, new Action(this.WeeklyTick));
+            CampaignEvents.DailyTickEvent.AddNonSerializedListener(this, new Action(this.DailyTick));
             CampaignEvents.WarDeclared.AddNonSerializedListener(this, new Action<IFaction, IFaction>(this.OnWarDeclared));
             CampaignEvents.OnGameLoadFinishedEvent.AddNonSerializedListener(this, new Action(this.OnLoad));
-            CampaignEvents.CharacterDefeated.AddNonSerializedListener(this, new Action<Hero, Hero>(this.OnDefeat));
 
+            //CampaignEvents.CharacterDefeated.AddNonSerializedListener(this, new Action<Hero, Hero>(this.OnDefeat));
+
+            CampaignEvents.MapEventEnded.AddNonSerializedListener(this, new Action<MapEvent>(OnMapEvent));
             CampaignEvents.TickEvent.AddNonSerializedListener(this, new Action<float>(this.OnTick));
         }
 
@@ -50,6 +53,7 @@ namespace NewNpc2
             }
 
         }
+
 
         private void OnTick(float dt)
         {
@@ -163,6 +167,20 @@ namespace NewNpc2
             WorldEvent(r);
         }
 
+
+        private void OnMapEvent(MapEvent me)
+        {
+            if (me.Winner.LeaderParty.LeaderHero == null) return;
+            Character winner = CharacterManager.findChar(me.Winner.LeaderParty.LeaderHero);
+            Character loser = CharacterManager.findChar(me.GetLeaderParty(me.DefeatedSide));
+
+
+            SocialExchange se = new SocialExchange(winner, loser, SocialInteractionManager.Battle(), intent.Neutral);
+            Rumor r = new Rumor(new Rumor.Information(Rumor.Information.type.Warfare), se);
+
+            CloseWorldEvent(r, me.Winner.LeaderParty.LeaderHero.GetPosition(), winner.hero == Hero.MainHero);
+        }
+
         private void OnDefeat(Hero winner, Hero loser)
         {
             SocialExchange se = new SocialExchange(CharacterManager.findChar(winner.CharacterObject), CharacterManager.findChar(loser.CharacterObject), SocialInteractionManager.Battle(), intent.Neutral);
@@ -170,6 +188,29 @@ namespace NewNpc2
 
             if (winner == Hero.MainHero) CloseWorldEvent(r, winner.GetPosition(), true);
             else CloseWorldEvent(r, winner.GetPosition());
+        }
+
+        private void DailyTick()
+        {
+            Settlement s = Settlement.All[SubModule.rand.Next(Settlement.All.Count)];
+            CreateGossip(settlements[s],s);
+        }
+
+        private void CreateGossip(RumorHolder rh, Settlement s)
+        {
+
+        }
+
+        public static void CreateGossip(SocialExchange se)
+        {
+            if (se.getInitiator().agent != null)
+            {
+
+            }
+            else if (se.getReceiver().agent != null)
+            {
+
+            }
         }
 
         public void CloseWorldEvent(Rumor r, Vec3 pos, bool isMain = false)
@@ -196,7 +237,7 @@ namespace NewNpc2
 
         public override void SyncData(IDataStore dataStore)
         {
-            throw new NotImplementedException();
+           
         }
     }
 }

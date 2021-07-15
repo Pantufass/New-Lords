@@ -15,11 +15,13 @@ namespace NewNpc2
             SocialInteraction t = new SocialInteraction("Embelish", 1, 1);
             t.addInitRule(new InfluenceRule("a", ((List<dynamic> d) =>
             {
-                return 10;
+                return 2;
             })));
 
             InfluenceRule r;
             SubModule.existingRules.TryGetValue("SuckUp", out r);
+            t.addInitRule(r);
+            SubModule.existingRules.TryGetValue("Positive", out r);
             t.addInitRule(r);
 
             t.addsentence("You are great");
@@ -38,10 +40,12 @@ namespace NewNpc2
             t.addInitRule(r);
             SubModule.existingRules.TryGetValue("NotGood", out r);
             t.addInitRule(r);
+            SubModule.existingRules.TryGetValue("Negative", out r);
+            t.addInitRule(r);
 
-            //TODO set paths
+            t.addPath(new Path(t,"They are terrible."));
 
-            t.addsentence("Ugh my boss is killing me");
+            t.addsentence("My parents kicked me out of the house when i was young. They are terrible");
 
 
             t.addsentence("Really?", 1, sentenceType.pResponse);
@@ -66,7 +70,7 @@ namespace NewNpc2
             SubModule.existingRules.TryGetValue("EnjoySpeaking", out r);
             t.addInitRule(r);
 
-            t.addsentence("Im so tired, I can't even");
+            t.addsentence("Im so tired, I can't even","Same, so relatable");
             t.addsentence("I hate what they are doing to the town");
             t.addsentence("Back in my days things were better");
             t.addsentence("I am always hungry");
@@ -86,14 +90,59 @@ namespace NewNpc2
             return t;
         }
 
+        public static SocialInteraction AskAbout()
+        {
+
+            SocialInteraction t = new SocialInteraction("AskAbout", 10, 0);
+
+            Condition c = new Condition("HasSomethingToSay", new Func<List<dynamic>, bool>((List<dynamic> d) =>
+            {
+
+                return DialogMatrixBehaviour.conversation_wanderer_on_condition();
+            }));
+            t.addCondition(c);
+
+            InfluenceRule r = new InfluenceRule("bonus",new Func<List<dynamic>, float>((List<dynamic> d) => 8));
+            t.addInitRule(r);
+            SubModule.existingRules.TryGetValue("Positive", out r);
+            t.addInitRule(r);
+
+
+            t.addsentence("Tell me about yourself.");
+            t.addsentence("What have you been through", 0,sentenceType.Cordial);
+            t.addsentence("What's up", 0,sentenceType.Crude);
+
+            return t;
+        }
+
         public static SocialInteraction InviteParty()
         {
 
             SocialInteraction t = new SocialInteraction("InviteParty", 10, 0);
 
-            InfluenceRule r;
 
-            //TODO set paths
+            Condition c = new Condition("InviteCondition", new Func<List<dynamic>, bool>((List<dynamic> d) =>
+            {
+
+                return Hero.OneToOneConversationHero != null && !Hero.OneToOneConversationHero.IsPlayerCompanion && DialogMatrixBehaviour.conversation_wanderer_on_condition() && Hero.OneToOneConversationHero.PartyBelongedTo == null;
+            }));
+            t.addCondition(c);
+
+            InfluenceRule r = new InfluenceRule("bonus", new Func<List<dynamic>, float>((List<dynamic> d) => 5));
+            t.addInitRule(r);
+            SubModule.existingRules.TryGetValue("Positive", out r);
+            t.addInitRule(r);
+            SubModule.existingRules.TryGetValue("LikesThem", out r);
+            t.addInitRule(r);
+
+            t.addInstRule(new InstRule("turnoff", (List<dynamic> d) => {
+                if((d[3] as outcome?) == outcome.Positive)
+                t.turnOff = false;
+                }));
+
+            t.addsentence("I could use someone like you");
+            t.addsentence("You prove to be useful", 0, sentenceType.Cordial);
+            t.addsentence("Join me", 0, sentenceType.Crude);
 
             return t;
         }
@@ -106,6 +155,8 @@ namespace NewNpc2
             Condition c;
             SubModule.existingConditions.TryGetValue("NotIntroduced", out c);
             t.addCondition(c);
+            SubModule.existingConditions.TryGetValue("NotAvailable", out c);
+            t.addCondition(c);
 
             InfluenceRule r;
             SubModule.existingRules.TryGetValue("NeedToIntroduce", out r);
@@ -113,6 +164,7 @@ namespace NewNpc2
 
             t.addInstRule(new InstRule("Introduced", (List<dynamic> d) => Introduction.Introduce((d[0] as Character).characterObject, (d[1] as Character).characterObject)));
 
+            t.addInstRule(new InstRule("turnoff", (List<dynamic> d) => t.turnOff = false));
 
             t.addsentence("Hello.", 1, sentenceType.Normal);
             t.addsentence("Good Evening.", 1, sentenceType.Cordial);
@@ -131,10 +183,13 @@ namespace NewNpc2
 
 
             InfluenceRule r;
-            SubModule.existingRules.TryGetValue("ImproveRel", out r);
+            SubModule.existingRules.TryGetValue("Positive", out r);
             t.addInitRule(r);
 
             SubModule.existingRules.TryGetValue("IsNice", out r);
+            t.addInitRule(r);
+
+            SubModule.existingRules.TryGetValue("LikesThem", out r);
             t.addInitRule(r);
 
             SubModule.existingRules.TryGetValue("BeingNice", out r);
@@ -147,6 +202,9 @@ namespace NewNpc2
             t.addsentence("You look good.");
             t.addsentence("I like that hairstyle");
             t.addsentence("You seem fit");
+            t.addsentence("You light up the room.");
+            t.addsentence("You have a great sense of humor.");
+            t.addsentence("Your smile is contagious");
             t.addsentence("You look wonderful", 1, sentenceType.Cordial);
             t.addsentence("You look okay", 1, sentenceType.Crude);
 
@@ -166,15 +224,27 @@ namespace NewNpc2
             t.addInitRule(r);
             SubModule.existingRules.TryGetValue("LowerRel", out r);
             t.addInitRule(r);
+            SubModule.existingRules.TryGetValue("Negative", out r);
+            t.addInitRule(r);
+            SubModule.existingRules.TryGetValue("DislikesThem", out r);
+            t.addInitRule(r);
 
 
-            t.addsentence("You look ugly.");
-            t.addsentence("You dont look that clever.");
-            t.addsentence("I have seen better looking crabs than you.", 1, sentenceType.Cordial);
-            t.addsentence("You are stupid", 1, sentenceType.Crude);
+            t.addsentence("You look ugly.", 0, sentenceType.Crude);
+            t.addsentence("If you look up gullible in the dictionary, there is a picture of you", 0, sentenceType.Cordial, "At least my dictionary doesn't have pictures");
+            t.addsentence("I know 5 fat people and you are 3 of them");
+            t.addsentence("I'm not insulting you. I'm describing you.");
+            t.addsentence("I'm jealous of all the people that haven't met you!");
+            t.addsentence("I may love to shop but I'm not buying your bullshit.");
+            t.addsentence("Stupidity is not a crime so you are free to go.");
+            t.addsentence("I would ask you how old you are but I know you can't count that high.");
+            t.addsentence("I don't engage in mental combat with the unarmed.", 0, sentenceType.Cordial);
+            t.addsentence("So, a thought crossed your mind? Must have been a long and lonely journey.", 0, sentenceType.Cordial);
+            t.addsentence("I have seen better looking crabs than you.", 0, sentenceType.Cordial);
+            t.addsentence("You are stupid", 0, sentenceType.Crude);
 
 
-            t.addsentence("That is interesting", 1, sentenceType.pResponse);
+            t.addsentence("That is a good one", 1, sentenceType.pResponse);
             t.addsentence("Uh", 1, sentenceType.pResponse);
             t.addsentence("No", 2, sentenceType.nResponse);
             sc.Add(n, t);
@@ -189,6 +259,8 @@ namespace NewNpc2
             SubModule.existingRules.TryGetValue("Hurtful", out r);
             t.addInitRule(r);
             SubModule.existingRules.TryGetValue("LowerRel", out r);
+            t.addInitRule(r);
+            SubModule.existingRules.TryGetValue("DislikesThem", out r);
             t.addInitRule(r);
 
 
@@ -335,7 +407,7 @@ namespace NewNpc2
             SubModule.existingRules.TryGetValue("InterestRumor", out r);
             t.addInitRule(r);
 
-            SubModule.existingRules.TryGetValue("Helpful", out r);
+            SubModule.existingRules.TryGetValue("Positive", out r);
             t.addInitRule(r);
 
             t.addPath(new Path(t,"I have to tell you something."));
@@ -344,12 +416,11 @@ namespace NewNpc2
             t.addInstRule(new InstRule("Hear", (List<dynamic> d) =>
             {
                 if (d.Count < 5) return;
-                (d[0] as Character).hearRumor(d[4] as Rumor);
+                (d[1] as Character).hearRumor(d[4] as Rumor);
             }));
 
 
             t.addsentence("I see", 1, sentenceType.pResponse);
-            t.addsentence("Hm", 2, sentenceType.nResponse);
 
             sc.Add(n, t);
         }
@@ -373,6 +444,7 @@ namespace NewNpc2
 
 
             t.addsentence("What can you tell me");
+            t.addsentence("What is new in these parts");
 
             sc.Add(n, t);
         }
@@ -393,11 +465,18 @@ namespace NewNpc2
             InfluenceRule r;
             SubModule.existingRules.TryGetValue("Romantic", out r);
             t.addInitRule(r);
+            SubModule.existingRules.TryGetValue("LikesThem", out r);
+            t.addInitRule(r);
 
             SubModule.existingRules.TryGetValue("Charming", out r);
             t.addRespRule(r);
 
-            t.addsentence("Do you want to hang out?");
+            t.addsentence("I am fond of you");
+            t.addsentence("Colors seem brighter when you're around");
+            t.addsentence("You're like sunshine on a rainy day.");
+            t.addsentence("You're a candle in the darkness.");
+            t.addsentence("You're someone's reason to smile.");
+            t.addsentence("Being around you is like a happy little vacation.");
             t.addsentence("Either you're naked or I'm drunk, possibly both");
 
             t.addsentence("Yes", 1, sentenceType.pResponse);
@@ -418,7 +497,7 @@ namespace NewNpc2
             t.addCondition(c);
 
             InfluenceRule r;
-            SubModule.existingRules.TryGetValue("Romantic", out r);
+            SubModule.existingRules.TryGetValue("LikesThem", out r);
             t.addInitRule(r);
 
             SubModule.existingRules.TryGetValue("Charming", out r);
@@ -457,6 +536,10 @@ namespace NewNpc2
             t.addCondition(c);
 
             InfluenceRule r;
+            SubModule.existingRules.TryGetValue("Romantic", out r);
+            t.addInitRule(r);
+            SubModule.existingRules.TryGetValue("LikesThem", out r);
+            t.addInitRule(r);
             SubModule.existingRules.TryGetValue("Charming", out r);
             t.addRespRule(r);
 
@@ -547,6 +630,7 @@ namespace NewNpc2
             l.Add(Embelish());
             l.Add(Complain());
             l.Add(InviteParty());
+            l.Add(AskAbout());
 
             return l;
 

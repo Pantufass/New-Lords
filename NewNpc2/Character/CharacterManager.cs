@@ -10,14 +10,19 @@ namespace NewNpc2
 {
     public static class CharacterManager
     {
-        private static Character _main;
+        private static MainCharacter _main;
         public static Dictionary<Character, Agent> characters;
         public static Dictionary<CharacterObject, Character> characters2;
-        public static Character MainCharacter
+        public static MainCharacter MainCharacter
         {
             get
             {
-                if (_main == null) _main = new Character(Agent.Main);
+                if (_main == null)
+                {
+                    if(Agent.Main == null)
+                        _main = new MainCharacter(Hero.MainHero);
+                    else _main = new MainCharacter(Agent.Main);
+                }
                 if (_main.agent == null) _main.agent = Agent.Main;
                 return _main;
             }
@@ -51,7 +56,7 @@ namespace NewNpc2
                 if (agent != a)
                 {
                     MainCharacter.setAgent(a);
-                    characters.Add(MainCharacter, a);
+                    characters[MainCharacter] = a;
                 }
             }
             else
@@ -62,6 +67,7 @@ namespace NewNpc2
 
         public static Character findChar(Hero h)
         {
+            if (h == Hero.MainHero) return MainCharacter;
             foreach(KeyValuePair<Character, Agent> pair in characters)
             {
                 if(pair.Key.characterObject == h.CharacterObject)
@@ -84,6 +90,7 @@ namespace NewNpc2
 
         public static Character findChar(CharacterObject c)
         {
+            if (c.IsHero && c == Hero.MainHero.CharacterObject) return MainCharacter;
             foreach (KeyValuePair<Character, Agent> pair in characters)
             {
                 if (pair.Key.characterObject == c)
@@ -115,7 +122,8 @@ namespace NewNpc2
 
         public static Character findChar(Agent h)
         {
-            foreach(KeyValuePair<Character,Agent> pair in characters)
+            if (h == Agent.Main) return MainCharacter;
+            foreach (KeyValuePair<Character,Agent> pair in characters)
             {
                 if (h == pair.Value) return pair.Key;
             }
@@ -169,7 +177,13 @@ namespace NewNpc2
             List<Character> res = new List<Character>();
             foreach(Agent a in agents)
             {
-                if (characters2.TryGetValue((CharacterObject)a.Character, out Character c)) {
+                if (a.Character == null)
+                    continue;
+                if (a == Agent.Main)
+                {
+                    res.Add(MainCharacter);
+                }
+                else if (a.Character != null && characters2.TryGetValue((CharacterObject)a.Character, out Character c)) {
                     res.Add(c);
                     c.setAgent(a);
                     characters[c] = a;
@@ -178,12 +192,17 @@ namespace NewNpc2
                 {
                     Character character = new Character(a);
                     characters.Add(character, a);
-                    if(!characters2.ContainsKey((CharacterObject)a.Character)) characters2.Add((CharacterObject)a.Character, character);
+                    if(a.Character != null && !characters2.ContainsKey((CharacterObject)a.Character)) characters2.Add((CharacterObject)a.Character, character);
                     res.Add(character);
                 }
 
             }
             return res;
+        }
+
+        internal static Character findChar(PartyBase partyBase)
+        {
+            throw new NotImplementedException();
         }
     }
 }

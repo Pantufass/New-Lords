@@ -8,8 +8,6 @@ using TaleWorlds.SaveSystem;
 
 namespace NewNpc2
 {
-
-    [SaveableClass(200180)]
     public class NewCharacterRelationManager
     {
 
@@ -57,10 +55,8 @@ namespace NewNpc2
             (NewCharacterRelationManager.Instance).romantic.SetRelation(Character1, Character2, value);
         }
 
-        [SaveableClass(200182)]
         internal class Friendship : Relations { }
 
-        [SaveableClass(200183)]
         internal class Romantic : Relations { }
 
         public enum relation
@@ -72,7 +68,6 @@ namespace NewNpc2
             Terrible=1
         }
 
-        [SaveableClass(200181)]
         internal class Relations
         {
 

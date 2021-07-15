@@ -3,6 +3,9 @@ using TaleWorlds.Core;
 using TaleWorlds.CampaignSystem;
 using System.Collections.Generic;
 using TaleWorlds.MountAndBlade;
+using Helpers;
+using TaleWorlds.CampaignSystem.Actions;
+using TaleWorlds.Localization;
 
 namespace NewNpc2
 {
@@ -14,6 +17,7 @@ namespace NewNpc2
         string npcResponse = "response";
         string intentChoice = "intent";
         string fightChoice = "fight";
+        string start = "startnode";
         public override void RegisterEvents()
         {
             CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, new Action<CampaignGameStarter>(this.OnSessionLaunched));
@@ -49,10 +53,9 @@ namespace NewNpc2
 
         public void OnSessionLaunched(CampaignGameStarter starter)
         {
-            CharacterManager.MainCharacter = new Character(Agent.Main);
+            CharacterManager.MainCharacter = new MainCharacter(Hero.MainHero);
 
             CreateDialog(starter);
-            this.startInterction(starter);
 
         }
 
@@ -64,21 +67,101 @@ namespace NewNpc2
 
         private void CreateDialog(CampaignGameStarter starter)
         {
+            AddStartConv(starter, start, intentChoice);
             AddIntentChoices(starter, intentChoice, playerInput);
             CreatePlayerDialog(starter, playerInput, npcResponse);
             CreateNPCResponse(starter, npcResponse, intentChoice);
         }
 
-        private void startInterction(CampaignGameStarter campaign)
+
+        private void AddStartConv(CampaignGameStarter starter, string intoken, string outtoken)
         {
-            campaign.AddDialogLine("starter", "start", intentChoice, " ",
-                () => conversation(),
-                () => intentStep(),
-                1000, null);
+            string buffer = "bufferstart";
+            /*
+            starter.AddDialogLine("set_vars", "start", "lord_intro", "{=IWKmmImm}Never see this", new ConversationSentence.OnConditionDelegate(this.conversation_set_first_on_condition), null, 1000, null);
+            starter.AddDialogLine("parley", "start", "lord_intro", "{=!}{STR_PARLEY_COMMENT}", new ConversationSentence.OnConditionDelegate(this.conversation_siege_parley_unmet_on_condition), null, 1000, null);
+            starter.AddDialogLine("parley", "start", "lord_start", "{=!}{STR_PARLEY_COMMENT}", new ConversationSentence.OnConditionDelegate(this.conversation_siege_parley_met_on_condition), null, 1000, null);
+            starter.AddDialogLine("start_attacking_unmet", "start", "lord_meet_player_response", "{=EPpTmCXw}{VOICED_LINE}", new ConversationSentence.OnConditionDelegate(this.conversation_attacking_lord_set_meeting_meet_on_condition), null, 100, null);
+            starter.AddDialogLine("start_lord_unmet", "start", "lord_meet_player_response", "{=EPpTmCXw}{VOICED_LINE}", new ConversationSentence.OnConditionDelegate(this.conversation_lord_meet_on_condition), null, 1100, null);
+            starter.AddDialogLine("unmet_in_main_mobile_party", "start", "lord_meet_in_main_party_player_response", "{=EPpTmCXw}{VOICED_LINE}", new ConversationSentence.OnConditionDelegate(this.conversation_unmet_lord_main_party_on_condition), null, 110, null);
+            starter.AddDialogLine("start_wanderer_unmet", "start", "wanderer_meet_player_response", "{=EPpTmCXw}{VOICED_LINE}", new ConversationSentence.OnConditionDelegate(this.conversation_wanderer_meet_on_condition), null, 1100, null);
+            starter.AddDialogLine("start_default_under_24_hours", "start", "lord_start", "{=!}{SHORT_ABSENCE_GREETING}", new ConversationSentence.OnConditionDelegate(this.conversation_lord_greets_under_24_hours_on_condition), null, 1000, null);
+            */
+            starter.AddDialogLine("start_wanderer_unmet", "start", "wanderer_meet_player_response2", "{=EPpTmCXw}{VOICED_LINE}", new ConversationSentence.OnConditionDelegate(this.conversation_wanderer_meet_on_condition), null, 1100, null);
+            starter.AddDialogLine("town_or_village_start", "start", "town_or_village_talk2", "Hello, Can i help you?", new ConversationSentence.OnConditionDelegate(this.conversation_town_or_village_start_on_condition), null, 1000, null);
+
+            starter.AddPlayerLine("tavernmaid_order_food", "taverngamehost_talk", buffer, "Converse", null, null, 1000, null, null);
+            starter.AddPlayerLine("tavernmaid_order_food", "tavernmaid_talk", buffer, "Converse", null, null, 1000, null, null);
+            starter.AddPlayerLine("talk_bard_player_leave", "talk_bard_player", buffer, "Converse", null, null, 1000, null, null);
+
+            starter.AddPlayerLine("town_or_village_player", "hero_main_options", buffer, "Converse", null, null, 1000, null, null);
+            
+            /*
+            starter.AddPlayerLine("town_or_village_player", "lord_start", buffer, "Converse", null, null, 1000, null, null);
+            starter.AddPlayerLine("town_or_village_player", "lord_meet_player_response", buffer, "Converse", null, null, 1000, null, null);
+            starter.AddPlayerLine("town_or_village_player", "lord_meet_in_main_party_player_response", buffer, "Converse", null, null, 1000, null, null);
+            */
+
+            starter.AddPlayerLine("town_or_village_player", "wanderer_meet_player_response2", buffer, "Converse", null, null, 1000, null, null);
+
+            starter.AddPlayerLine("town_or_village_player", "town_or_village_talk2", buffer, "Converse", null, null, 1000, null, null);
+
+            starter.AddDialogLine("town_or_village_player", buffer, outtoken, " ", null, null, 1000, null);
 
 
+            starter.AddPlayerLine("player_is_leaving_neutral_or_friendly", "town_or_village_talk2", "hero_leave", "{=9mBy0qNW}I must leave now.", new ConversationSentence.OnConditionDelegate(this.conversation_player_is_leaving_neutral_or_friendly_on_condition), null, 1, null, null);
+            starter.AddPlayerLine("player_is_leaving_neutral_or_friendly", "wanderer_meet_player_response2", "hero_leave", "{=9mBy0qNW}I must leave now.", new ConversationSentence.OnConditionDelegate(this.conversation_player_is_leaving_neutral_or_friendly_on_condition), null, 1, null, null);
         }
 
+        private bool conversation_town_or_village_start_on_condition()
+        {
+            return (CharacterObject.OneToOneConversationCharacter.Occupation == Occupation.Villager || CharacterObject.OneToOneConversationCharacter.Occupation == Occupation.Townsfolk) && PlayerEncounter.Current != null && PlayerEncounter.InsideSettlement;
+
+        }
+        private bool conversation_wanderer_meet_on_condition()
+        {
+            return conversation_wanderer_on_condition() && conversationUseMeetingDialogs();
+        }
+        private bool conversationUseMeetingDialogs()
+        {
+            if (Hero.OneToOneConversationHero != null)
+            {
+                StringHelpers.SetCharacterProperties("CONVERSATION_NPC", Hero.OneToOneConversationHero.CharacterObject, null);
+            }
+            if (Campaign.Current.CurrentConversationContext == ConversationContext.FreedLord || Campaign.Current.CurrentConversationContext == ConversationContext.CapturedLord)
+            {
+                return false;
+            }
+            if (Hero.OneToOneConversationHero == null)
+            {
+                return false;
+            }
+            if (Hero.OneToOneConversationHero.HasMet)
+            {
+                Campaign.Current.ConversationManager.CurrentConversationIsFirst = false;
+                return false;
+            }
+            Campaign.Current.ConversationManager.CurrentConversationIsFirst = true;
+            Hero.OneToOneConversationHero.HasMet = true;
+            if (Campaign.Current.CurrentConversationContext != ConversationContext.Default && Campaign.Current.CurrentConversationContext != ConversationContext.PartyEncounter)
+            {
+                return false;
+            }
+            return true;
+        }
+        public static bool conversation_wanderer_on_condition()
+        {
+            return CharacterObject.OneToOneConversationCharacter != null && CharacterObject.OneToOneConversationCharacter.IsHero && CharacterObject.OneToOneConversationCharacter.Occupation == Occupation.Wanderer && CharacterObject.OneToOneConversationCharacter.HeroObject.HeroState != Hero.CharacterStates.Prisoner;
+        }
+        public bool conversation_player_is_leaving_enemy_on_condition()
+        {
+            return Hero.OneToOneConversationHero != null && FactionManager.IsAtWarAgainstFaction(Hero.OneToOneConversationHero.MapFaction, Hero.MainHero.MapFaction);
+        }
+
+        public bool conversation_player_is_leaving_neutral_or_friendly_on_condition()
+        {
+            return Hero.OneToOneConversationHero != null && !FactionManager.IsAtWarAgainstFaction(Hero.OneToOneConversationHero.MapFaction, Hero.MainHero.MapFaction);
+        }
         private bool conversation()
         {
             bool b = false;
@@ -110,7 +193,7 @@ namespace NewNpc2
                             runPlayerLine(intent.Neutral);
                             playerChoice(intent.Neutral);
                         },
-                        1000, null);
+                        1001, null);
 
             campaign.AddPlayerLine("negative", intoken, buffer, "Negative",
                         null,
@@ -126,7 +209,7 @@ namespace NewNpc2
                             playerChoice(intent.Romantic);
                         },
                         1000, null);
-            campaign.AddPlayerLine("End", intoken, leave, "Leave",
+            campaign.AddPlayerLine("End", intoken, "hero_leave", "Leave",
                         null,
                         () => {
                             SubModule.endInteraction();
@@ -136,30 +219,24 @@ namespace NewNpc2
                 null,
                 () => { },
                 1000, null);
-            campaign.AddDialogLine("buffer", leave, "NOTHINGHERE", " ",
-               null,
-               () => {
-                   SubModule.endInteraction();
-               },
-               1000, null);
 
         }
 
         public void CreateNPCResponse(CampaignGameStarter campaign, string intoken, string outtoken)
         {
-            foreach (KeyValuePair<string, SocialInteraction> sipair in SubModule.existingExchanges)
+            foreach (SocialInteraction si in SocialInteractionManager.allInteractions())
             {
                 int i = 0;
-                foreach (Tuple<Dialog, Dialog> d in sipair.Value.sentences)
+                foreach (Tuple<Dialog, Dialog> d in si.sentences)
                 {
-                    campaign.AddDialogLine((sipair.Value.name + d.Item1.type + i), intoken, outtoken, d.Item1.sentence,
+                    campaign.AddDialogLine((si.name + d.Item1.type + i), intoken, outtoken, d.Item1.sentence,
                         () => d.Item1.validateNpcLine(),
                         () => {
                             d.Item1.cresponse = false;
                         },
                         1000, null); 
                     if(d.Item2 != null)
-                        campaign.AddDialogLine((sipair.Value.name + d.Item2.type + i + 2), intoken, outtoken, d.Item2.sentence,
+                        campaign.AddDialogLine((si.name + d.Item2.type + i + 2), intoken, outtoken, d.Item2.sentence,
                          () => d.Item2.validateNpcLine(),
                          () => {
                              d.Item2.cresponse = false;
@@ -174,19 +251,56 @@ namespace NewNpc2
         {
             foreach (SocialInteraction si in SocialInteractionManager.allInteractions())
             {
-                int i = 0;
-                foreach (Tuple<Dialog,Dialog> d in si.sentences)
+                if (si.name == "AskAbout")
                 {
-                    campaign.AddPlayerLine((si.name + d.Item1.type + i), intoken, outtoken, d.Item1.sentence,
-                        () => d.Item1.validatePlayerLine(),
-                        () => {
-                            runNpcResponse(si);
-                            playerChoice(si);
+                    int i = 0;
+                    foreach (Tuple<Dialog, Dialog> d in si.sentences)
+                    {
+                        campaign.AddPlayerLine((si.name + d.Item1.type + i), intoken, "wanderer_preintroduction", d.Item1.sentence,
+                            () => d.Item1.validatePlayerLine(),
+                            () =>
+                            {
+                                clearIntended();
+                                playerChoice(si);
+                            },
+                            1000, null);
+                        i++;
+                    }
+                }
+                else if(si.name == "InviteParty")
+                {
+                    int i = 0;
+                    foreach (Tuple<Dialog, Dialog> d in si.sentences)
+                    {
+                        campaign.AddPlayerLine((si.name + d.Item1.type + i), intoken, "companion_hire", d.Item1.sentence,
+                            () => d.Item1.validatePlayerLine(),
+                            () =>
+                            {
+                                clearIntended();
+                                playerChoice(si);
+                            },
+                            1000, null);
+                        i++;
+                    }
+                }
+                else
+                {
+                    int i = 0;
+                    foreach (Tuple<Dialog, Dialog> d in si.sentences)
+                    {
+
+                        campaign.AddPlayerLine((si.name + d.Item1.type + i), intoken, outtoken, d.Item1.sentence,
+                            () => d.Item1.validatePlayerLine(),
+                            () =>
+                            {
+                                runNpcResponse(si);
+                                playerChoice(si);
                             //turnalloff();
-                            //si.followUp(d,campaign,outtoken);
-                        }, 
-                        1000, null);
-                    i++;
+                            //si.followUp(d.Item1,campaign,outtoken);
+                        },
+                            1000, null);
+                        i++;
+                    }
                 }
             }
         }
@@ -202,10 +316,21 @@ namespace NewNpc2
             }
         }
 
+        private void clearIntended()
+        {
+            CharacterManager.MainCharacter.clearIntented();
+        }
         private void intentStep()
         {
 
             
+        }
+        //TODO give gold gifts
+        public static void giftMoney(Character c, Character c2)
+        {
+            int price = 100;
+            GiveGoldAction.ApplyBetweenCharacters(c.hero, c2.hero, price, false);
+            //this._hasBoughtTunToParty = true;
         }
 
         private void playerChoice(SocialInteraction si)
@@ -258,8 +383,8 @@ namespace NewNpc2
 
 
 
-        
 
-        
+
+
     }
 }

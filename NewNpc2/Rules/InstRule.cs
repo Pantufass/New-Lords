@@ -75,8 +75,38 @@ namespace NewNpc2
                 if (c != null) return sentence(c.getRumor());
                 else return null;
             }
+            if (si.name.Equals("BadMouth"))
+            {
+                if (c != null) return sentenceUnlicked(c.getUnliked());
+                else return null;
+            }
             if (sent != null) return new Dialog(sent, 0, sentenceType.Normal);
             else return null;
+        }
+
+        private Dialog sentenceUnlicked(Character c)
+        {
+            StringBuilder sb = new StringBuilder(" ", 30);
+            switch (SubModule.rand.Next(2))
+            {
+                case 0:
+                    sb.Append("I really dont like ");
+                    sb.Append(c.characterObject.Name);
+                    break;
+                case 1:
+                    sb.Append(c.characterObject.Name);
+                    sb.Append(" irritates me so much");
+                    break;
+                case 2:
+                    break;
+                case 3:
+                    break;
+                default:
+                    sb.Append("I really dont like ");
+                    sb.Append(c.characterObject.Name);
+                    break;
+            }
+            return new Dialog(sb.ToString(), 0, sentenceType.Normal);
         }
 
         private Dialog sentence(Character.Status s)
@@ -109,9 +139,25 @@ namespace NewNpc2
                 {
                     if (r.info.war)
                     {
-                        sb.Append(r.info.values[0]);
-                        sb.Append(" has declared war against ");
-                        sb.Append(r.info.values[1]);
+                        switch (SubModule.rand.Next(2))
+                        {
+                            case 0:
+                                sb.Append(r.info.values[0]);
+                                sb.Append(" has declared war against ");
+                                sb.Append(r.info.values[1]);
+                                break;
+                            case 1:
+                                sb.Append(r.info.values[0]);
+                                sb.Append(" and ");
+                                sb.Append(r.info.values[1]);
+                                sb.Append("have waged war against each other");
+                                break;
+                            default:
+                                sb.Append(r.info.values[0]);
+                                sb.Append(" has declared war against ");
+                                sb.Append(r.info.values[1]);
+                                break;
+                        }
                     }
                     else
                     {
@@ -125,10 +171,16 @@ namespace NewNpc2
                     switch (r.exchange().type.name)
                     {
                         case "Flirt":
-                            sb.Append("They flirting");
+                            sb.Append(r.exchange().getInitiator());
+                            sb.Append(" and ");
+                            sb.Append(r.exchange().getReceiver());
+                            sb.Append(", they flirting");
                             break;
                         case "Date":
-                            sb.Append("They dating");
+                            sb.Append(r.exchange().getInitiator());
+                            sb.Append(" and ");
+                            sb.Append(r.exchange().getReceiver());
+                            sb.Append(", they dating");
                             break;
                         default :
                             break;

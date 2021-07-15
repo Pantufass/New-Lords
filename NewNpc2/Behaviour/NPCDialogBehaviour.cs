@@ -64,10 +64,16 @@ namespace NewNpc2
             if (missionReady)  characterVolition(character);
         }
 
-
+        private bool notIntoExchange(Character character)
+        {
+            return character.hero == Hero.MainHero || character.agent == Agent.Main ||
+                character.agent.Character != null && character.agent.Character.Name.ToString() == "Training Master";
+        }
         private void characterVolition(Character character)
         {
-            if (character.hero == Hero.MainHero || character.agent == Agent.Main) return;
+            if (notIntoExchange(character)) 
+                
+                return;
 
             character.calcRumor();
 
@@ -105,7 +111,10 @@ namespace NewNpc2
 
         }
 
-
+        private bool isHostile()
+        {
+            return false;
+        }
 
         private void calcCharacterResponse(Character init, Character res, SocialInteraction si, intent i)
         {

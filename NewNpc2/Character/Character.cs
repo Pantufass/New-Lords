@@ -15,34 +15,35 @@ namespace NewNpc2
     {
         #region Consts
 
-        private const float FRIEND_STEP = 1;
-        private const float ENERGY_STEP = 0.005f;
-        private const float SPEND_ENERGY_STEP = 0.5f;
-        private const float START_ENERGY = 0.3f;
-        private const int INT_MAX_EXCHANGES = 4;
-        private const float CORDIAL_D = 0.08f;
-        private const float CRUDE_D = 0.92f;
-        private const float CHANCE_VALUE = 2;
-        private const float CHANCE_VALUE2 = 0.15f;
-        private const float POSITIVE_THRESH = 10;
-        private const float NEGATIVE_THRESH = 0;
-        private const float OWN_BELIEF_SURENESS = 1;
-        private const float START_BASE_THRESH = 0.55f;
-        private const float MAX_BASE_THRESH = 1.05f;
-        private const float MIN_BASE_THRESH = 0.45f;
-        private const float PREVIOUS_TRAITS_WEIGHT = 0.5f;
-        private const float BORED_TIMER = 10f;
-        private const float TARGET_DIST = 2.5f;
-        
+        protected const float FRIEND_STEP = 1;
+        protected const float ENERGY_STEP = 0.008f;
+        protected const float SPEND_ENERGY_STEP = 0.5f;
+        protected const float START_ENERGY = 0.4f;
+        protected const int INT_MAX_EXCHANGES = 5;
+        protected const float CORDIAL_D = 0.08f;
+        protected const float CRUDE_D = 0.92f;
+        protected const float CHANCE_VALUE = 2;
+        protected const float CHANCE_VALUE2 = 0.15f;
+        protected const float POSITIVE_THRESH = 10;
+        protected const float NEGATIVE_THRESH = 0;
+        protected const float OWN_BELIEF_SURENESS = 1;
+        protected const float START_BASE_THRESH = 0.55f;
+        protected const float MAX_BASE_THRESH = 1.05f;
+        protected const float MIN_BASE_THRESH = 0.45f;
+        protected const float PREVIOUS_TRAITS_WEIGHT = 0.5f;
+        protected const float BORED_TIMER = 10f;
+        protected const float TARGET_DIST = 2.5f;
+        protected const int TIME_RESPONSE = 3;
+
 
         #endregion
 
 
         //class with the personality traits
-        private Traits personality;
+        protected Traits personality;
 
         //List of possible statuses
-        private List<Status> status;
+        protected List<Status> status;
 
         private float _energy;
         public float energy
@@ -58,9 +59,9 @@ namespace NewNpc2
                 else _energy = value;
             }
         }
-        private float threshold;
+        protected float threshold;
 
-        public CharacterObject _characterObject;
+        private CharacterObject _characterObject;
         public CharacterObject characterObject
         {
             get
@@ -81,22 +82,22 @@ namespace NewNpc2
 
         //social network
         //3 unidirectional relations between this and other characters
-        private List<Feeling> friendlyFeelings;
-        private List<Feeling> romanticFeelings;
-        private List<Feeling> admiration;
+        protected List<Feeling> friendlyFeelings;
+        protected List<Feeling> romanticFeelings;
+        protected List<Feeling> admiration;
 
         //belief network
-        private Dictionary<Character,List<Feeling>> beliefs;
+        protected Dictionary<Character,List<Feeling>> beliefs;
 
-        private Dictionary<Character, List<Notion>> notions;
+        protected Dictionary<Character, List<Notion>> notions;
 
-        private intent currIntent;
+        protected intent currIntent;
 
         //list of social exchanges known
         //each exchange is paired with the respective believability 
-        private Dictionary<SocialExchange, float> memory;
+        protected Dictionary<SocialExchange, float> memory;
 
-        public Culture _culture;
+        private Culture _culture;
         public Culture Culture
         {
             get
@@ -106,11 +107,11 @@ namespace NewNpc2
             }
         }
 
-        private List<SocialInteraction> intendedSocialExchange;
         public SocialInteraction npcIntended;
 
 
         public bool performing;
+        public bool onResponse;
 
         private List<SocialInteraction> last;
 
@@ -124,7 +125,9 @@ namespace NewNpc2
         public Character target;
         public bool hasTarget;
 
-        public List<Dialog> dialogs;
+        public SocialExchange onExchange;
+
+        private Counter respCounter;
 
 
         public Rumor.Information.type preference
@@ -206,15 +209,16 @@ namespace NewNpc2
 
             last = new List<SocialInteraction>();
 
-            intendedSocialExchange = new List<SocialInteraction>();
             initialState();
 
             threshold = exchangeThreshold();
             energy = InitialEnergy();
             performing = false;
+            onResponse = false;
 
             timeSinceLast = 0;
-            dialogs = new List<Dialog>();
+
+            respCounter = new Counter();
         }
 
         public List<SocialInteraction> getLast()
@@ -236,22 +240,40 @@ namespace NewNpc2
             {
                 reached();
             }
+            if (onResponse && respCounter.severalSeconds(dt, TIME_RESPONSE))
+            {
+                respond();
+            }
+        }
+        private void respond()
+        {
+            float result = onExchange.calculateResponse();
+
+            Dialog d = onExchange.getResponse(result);
+
+            showDialog(d);
+
+            SubModule.makeExchange(onExchange);
+        }
+
+        private void OnResponse()
+        {
+            onResponse = true;
         }
 
         private void reached()
         {
             hasTarget = false;
+            target.OnResponse();
 
+            if(agent.GetComponent<CampaignAgentComponent>().AgentNavigator != null)
             agent.GetComponent<CampaignAgentComponent>().AgentNavigator.GetBehaviorGroup<DailyBehaviorGroup>().RemoveBehavior<FollowAgentBehavior>();
-            
-            
-            if(npcIntended.hasPaths) showDialog(npcIntended.getDialog(calcDialogType(), 0, this));
-            else showDialog(npcIntended.getDialog(calcDialogType(), 0));
 
             target.calcResponse(this, npcIntended, getIntent());
 
-            target = null;
-            npcIntended = null;
+            if (npcIntended.hasPaths) showDialog(npcIntended.getDialog(calcDialogType(), 0, this));
+            else showDialog(npcIntended.getDialog(calcDialogType(), 0));
+
         }
 
         public void exchange(Character tar,SocialInteraction inten)
@@ -260,8 +282,8 @@ namespace NewNpc2
             target = tar;
             npcIntended = inten;
 
-            OnExchange();
-            target.OnExchange();
+            performing = true;
+            target.performing = true;
 
             moveTo();
         }
@@ -270,12 +292,15 @@ namespace NewNpc2
         {
             if (hasTarget && agent.Position.Distance(target.agent.Position) > TARGET_DIST)
             {
-                DailyBehaviorGroup bg = agent.GetComponent<CampaignAgentComponent>().AgentNavigator.GetBehaviorGroup<DailyBehaviorGroup>();
-                bg.AddBehavior<FollowAgentBehavior>().SetTargetAgent(target.agent);
+                if (agent.GetComponent<CampaignAgentComponent>().AgentNavigator != null)
+                {
+                    DailyBehaviorGroup bg = agent.GetComponent<CampaignAgentComponent>().AgentNavigator.GetBehaviorGroup<DailyBehaviorGroup>();
+                    bg.AddBehavior<FollowAgentBehavior>().SetTargetAgent(target.agent);
 
-                bg.SetScriptedBehavior<FollowAgentBehavior>();
+                    bg.SetScriptedBehavior<FollowAgentBehavior>();
 
-                agent.SetLookAgent(target.agent);
+                    agent.SetLookAgent(target.agent);
+                }
             }
         }
 
@@ -290,62 +315,9 @@ namespace NewNpc2
 
         public void calcResponse(Character init, SocialInteraction si, intent i)
         {
-            SocialExchange se = new SocialExchange(init, this, si, i);
-            float result = se.calculateResponse();
-            Dialog d = se.getResponse(result);
-            showDialog(d);
-
-            SubModule.makeExchange(se);
+            onExchange = new SocialExchange(init, this, si, i);
         }
 
-        public void chooseDialog(intent i, Character c)
-        {
-            Random rand = SubModule.rand;
-
-            Dictionary<float, SocialInteraction> d = new Dictionary<float, SocialInteraction>();
-
-            List<SocialInteraction> interactions = new List<SocialInteraction>();
-            interactions.AddRange(Culture.CulturalExchanges());
-            interactions.AddRange(SubModule.existingExchanges.Values);
-            addCulture(interactions);
-
-            foreach (SocialInteraction si in interactions)
-            {
-                if (si.validate(this.characterObject, c.characterObject))
-                {
-                    float res = (float)(si.calculateVolition(this, c, i) + (2 * CHANCE_VALUE * rand.NextDouble() - CHANCE_VALUE));
-                    while (d.ContainsKey(res))
-                        res += (float)rand.NextDouble() * (CHANCE_VALUE * 0.05f);
-                    d.Add(res, si);
-                }
-            }
-            List<float> l = d.Keys.ToList();
-            l.Sort();
-            l.Reverse();
-
-            for (int j = 0; j < INT_MAX_EXCHANGES; j++)
-            {
-                dialogs.Add(d[l[j]].chooseDialog(sentenceType.Normal,this));
-                dialogs[j].playera = true;
-            }
-            foreach(Dialog x in dialogs)
-            {
-                if (x.playera)
-                {
-                    if (x.cresponse) { }
-                }
-            }
-            foreach(SocialInteraction si in SocialInteractionManager.allInteractions())
-            {
-                foreach (Tuple<Dialog,Dialog> dia in si.sentences)
-                {
-                    if (dia.Item1.playera)
-                    {
-                        if (dia.Item1.cresponse) { }
-                    }
-                }
-            }
-        }
 
         private void setExchange(SocialInteraction si)
         {
@@ -411,6 +383,33 @@ namespace NewNpc2
             return res;
         }
 
+        internal Feeling getLowestFeeling(Character c = null)
+        {
+            if (c == null)
+            {
+                Feeling res = new Feeling(c,1,intent.Neutral);
+                foreach(Feeling f in friendlyFeelings)
+                {
+                    if (f.getIntensity() < res.getIntensity()) res = f;
+                }
+                foreach (Feeling f in romanticFeelings)
+                {
+                    if (f.getIntensity() < res.getIntensity()) res = f;
+                }
+                return res;
+            }
+            else
+            {
+                Feeling res = getFeeling(friendlyFeelings, c);
+                Feeling tem = getFeeling(romanticFeelings, c);
+                if (tem == null && res != null) return res;
+                if (res == null && tem != null) return tem;
+                if (tem == null && res == null) return null;
+                if (tem.getIntensity() < res.getIntensity() / 2) res = tem;
+                return res;
+            }
+        }
+
         internal List<Feeling> getBeliefs(Character character)
         {
             List<Feeling> l;
@@ -447,27 +446,6 @@ namespace NewNpc2
             if (!status.Contains(s)) status.Add(s);
         }
 
-        public void clearIntented()
-        {
-            intendedSocialExchange.Clear();
-        }
-
-        public void setIntendedRule(SocialInteraction si)
-        {
-            intendedSocialExchange.Add(si);
-        }
-
-        public List<SocialInteraction> getIntented()
-        {
-            return intendedSocialExchange;
-        }
-
-        public List<SocialInteraction> getIntented(Character c, intent i)
-        {
-            calcIntended(c, i);
-            currIntent = i;
-            return intendedSocialExchange;
-        }
 
         public float calcNpcVolition(Character r)
         {
@@ -508,7 +486,7 @@ namespace NewNpc2
             }
         }
 
-        private void addCulture(List<SocialInteraction> interactions)
+        protected void addCulture(List<SocialInteraction> interactions)
         {
             foreach(SocialInteraction i in interactions)
             {
@@ -554,37 +532,6 @@ namespace NewNpc2
             return npcIntended;
         }
 
-        private void calcIntended(Character r, intent intent)
-        {
-            Random rand = SubModule.rand;
-
-            Dictionary<float, SocialInteraction> d = new Dictionary<float, SocialInteraction>();
-
-            List<SocialInteraction> interactions = new List<SocialInteraction>();
-            interactions.AddRange(Culture.CulturalExchanges());
-            interactions.AddRange(SubModule.existingExchanges.Values);
-            addCulture(interactions);
-
-            foreach (SocialInteraction si in interactions)
-            {
-                if (si.validate(this.characterObject, r.characterObject))
-                {
-                    float res = (float)(si.calculateVolition(this, r, intent) + (2 * CHANCE_VALUE * rand.NextDouble() - CHANCE_VALUE));
-                    //TDODO fix
-                    while (d.ContainsKey(res))
-                        res += (float)rand.NextDouble() * (CHANCE_VALUE * 0.05f); 
-                    d.Add(res, si);
-                }
-            }
-            List<float> l = d.Keys.ToList();
-            l.Sort();
-            l.Reverse();
-
-            for (int i = 0; i < INT_MAX_EXCHANGES; i++)
-            {
-                intendedSocialExchange.Add(d[l[i]]);
-            }
-        }
 
         internal sentenceType calcDialogType()
         {
@@ -695,7 +642,10 @@ namespace NewNpc2
         }
 
 
-
+        internal Character getUnliked()
+        {
+            return getLowestFeeling().getInitiator();
+        }
 
         //TODO
         internal bool isFalse(SocialExchange se)
@@ -737,16 +687,11 @@ namespace NewNpc2
             return res;
         }
 
-        internal void OnExchange()
+        internal virtual void FinishedExchange(SocialInteraction si = null)
         {
-            performing = true;
-        }
-
-        internal void FinishedExchange(SocialInteraction si = null)
-        {
-            dialogs.Clear();
             setExchange(si);
             performing = false;
+            onResponse = false;
         }
 
         internal float getEnergy()
@@ -907,7 +852,7 @@ namespace NewNpc2
 
         #endregion
 
-        internal class Traits
+        protected class Traits
         {
             public float kind; //likeness
             public float stubborn; //chances in the beliefs
@@ -1003,5 +948,138 @@ namespace NewNpc2
             Normal = 0
         }
     }
+
+    public class MainCharacter : Character
+    {
+
+        public List<Dialog> dialogs;
+        protected List<SocialInteraction> intendedSocialExchange;
+        //protected List<SocialInteraction> allInteractions;
+
+        public MainCharacter(Hero h) : base(h)
+        {
+            dialogs = new List<Dialog>();
+            intendedSocialExchange = new List<SocialInteraction>();
+        }
+
+        public MainCharacter(Agent a) : base(a)
+        {
+            dialogs = new List<Dialog>();
+            intendedSocialExchange = new List<SocialInteraction>();
+        }
+
+        internal override void FinishedExchange(SocialInteraction si = null)
+        {
+            base.FinishedExchange(si);
+            dialogs.Clear();
+        }
+
+        private void calcIntended(Character r, intent intent)
+        {
+            Random rand = SubModule.rand;
+
+            Dictionary<float, SocialInteraction> d = new Dictionary<float, SocialInteraction>();
+
+            List<SocialInteraction> interactions = new List<SocialInteraction>();
+            interactions.AddRange(Culture.CulturalExchanges());
+            interactions.AddRange(SubModule.existingExchanges.Values);
+            addCulture(interactions);
+
+            foreach (SocialInteraction si in interactions)
+            {
+                if (si.validate(this.characterObject, r.characterObject))
+                {
+                    float res = (float)(si.calculateVolition(this, r, intent) + (2 * CHANCE_VALUE * rand.NextDouble() - CHANCE_VALUE));
+                    //TDODO fix
+                    while (d.ContainsKey(res))
+                        res += (float)rand.NextDouble() * (CHANCE_VALUE * 0.05f);
+                    d.Add(res, si);
+                }
+            }
+            List<float> l = d.Keys.ToList();
+            l.Sort();
+            l.Reverse();
+
+            for (int i = 0; i < INT_MAX_EXCHANGES; i++)
+            {
+                intendedSocialExchange.Add(d[l[i]]);
+            }
+        }
+
+        public void clearIntented()
+        {
+            dialogs.Clear();
+            intendedSocialExchange.Clear();
+        }
+
+        public void setIntendedRule(SocialInteraction si)
+        {
+            intendedSocialExchange.Add(si);
+        }
+
+        public List<SocialInteraction> getIntented()
+        {
+            return intendedSocialExchange;
+        }
+
+        public List<SocialInteraction> getIntented(Character c, intent i)
+        {
+            calcIntended(c, i);
+            currIntent = i;
+            return intendedSocialExchange;
+        }
+
+
+        public void chooseDialog(intent i, Character c)
+        {
+            Random rand = SubModule.rand;
+
+            Dictionary<float, SocialInteraction> d = new Dictionary<float, SocialInteraction>();
+
+            List<SocialInteraction> interactions = new List<SocialInteraction>();
+            interactions.AddRange(SocialInteractionManager.allInteractions());
+            addCulture(interactions);
+
+            foreach (SocialInteraction si in interactions)
+            {
+                if (si.validate(this.characterObject, c.characterObject))
+                {
+                    float res = (float)(si.calculateVolition(this, c, i) + (2 * CHANCE_VALUE * rand.NextDouble() - CHANCE_VALUE));
+                    while (d.ContainsKey(res))
+                        res += (float)rand.NextDouble() * (CHANCE_VALUE * 0.05f);
+                    d.Add(res, si);
+                }
+            }
+            List<float> l = d.Keys.ToList();
+            l.Sort();
+            l.Reverse();
+
+            for (int j = 0; j < INT_MAX_EXCHANGES; j++)
+            {
+                dialogs.Add(d[l[j]].chooseDialog(sentenceType.Normal, this));
+                dialogs[j].playera = true;
+            }
+            foreach (Dialog x in dialogs)
+            {
+                if (x.playera)
+                {
+                    if (x.cresponse) { }
+                }
+            }
+            foreach (SocialInteraction si in SocialInteractionManager.allInteractions())
+            {
+                foreach (Tuple<Dialog, Dialog> dia in si.sentences)
+                {
+                    if (dia.Item1.playera)
+                    {
+                        if (dia.Item1.cresponse) { }
+                    }
+                }
+            }
+        }
+
+
+    }
+
 
 }

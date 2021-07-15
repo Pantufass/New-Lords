@@ -24,7 +24,7 @@ namespace NewNpc2
         public static Condition Adults()
         {
             Condition c = new Condition("Adults");
-            c.setDel((List<dynamic> d) => true);
+            c.setDel((List<dynamic> d) => (d[1] as Character).characterObject.Age > 18);
             return c;
         }
 

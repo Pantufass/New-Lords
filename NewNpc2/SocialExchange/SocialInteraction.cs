@@ -33,6 +33,7 @@ namespace NewNpc2
         protected List<Path> paths;
 
         public bool hasPaths;
+        public bool turnOff;
 
         public SocialInteraction(string n, float up, float low)
         {
@@ -54,7 +55,7 @@ namespace NewNpc2
             instRules = new List<InstRule>();
             paths = new List<Path>();
 
-
+            turnOff = true;
         }
 
 
