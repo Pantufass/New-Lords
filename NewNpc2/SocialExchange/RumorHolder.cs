@@ -92,6 +92,7 @@ namespace NewNpc2
     public class RumorParty : RumorHolder
     {
         protected Rumor.Information.type preference;
+        [SaveableField(5)]
         protected MobileParty party;
 
         public RumorParty(MobileParty mp, int m = 3) : base(m)

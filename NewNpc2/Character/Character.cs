@@ -50,11 +50,11 @@ namespace NewNpc2
             }
         }
 
-        //[SaveableField(1)]
+        [SaveableField(1)]
         //class with the personality traits
         protected Traits personality;
 
-        //[SaveableField(2)]
+        [SaveableField(2)]
         //List of possible statuses
         protected List<Status> status;
 
@@ -122,14 +122,14 @@ namespace NewNpc2
 
         //social network
         //3 unidirectional relations between this and other characters
-        //[SaveableField(6)]
+        [SaveableField(6)]
         protected List<Feeling> friendlyFeelings;
-        //[SaveableField(7)]
+        [SaveableField(7)]
         protected List<Feeling> romanticFeelings;
-        //[SaveableField(8)]
+        [SaveableField(8)]
         protected List<Feeling> admiration;
 
-        //[SaveableField(9)]
+        [SaveableField(9)]
         //belief network
         protected Dictionary<Character,List<Feeling>> beliefs;
 
@@ -139,7 +139,7 @@ namespace NewNpc2
 
         //list of social exchanges known
         //each exchange is paired with the respective believability 
-        //[SaveableField(10)]
+        [SaveableField(10)]
         protected Dictionary<SocialExchange, float> memory;
 
         [SaveableField(11)]

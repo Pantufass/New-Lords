@@ -253,8 +253,8 @@ namespace NewNpc2
 
         public override void SyncData(IDataStore dataStore)
         {
-            dataStore.SyncData("Parties", ref parties);
-            dataStore.SyncData("RumorHolders", ref settlements);
+           dataStore.SyncData("Parties", ref parties);
+           dataStore.SyncData("RumorHolders", ref settlements);
         }
     }
 }

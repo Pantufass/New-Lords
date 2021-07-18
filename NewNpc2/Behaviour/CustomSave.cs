@@ -8,6 +8,7 @@ using TaleWorlds.MountAndBlade;
 using TaleWorlds.SaveSystem;
 using static NewNpc2.Character;
 using static NewNpc2.NewCharacterRelationManager;
+using static NewNpc2.Rumor;
 
 namespace NewNpc2
 {
@@ -29,9 +30,12 @@ namespace NewNpc2
             AddClassDefinition(typeof(Culture), 8);
             AddClassDefinition(typeof(Traits), 9);
             AddClassDefinition(typeof(CharacterManager), 10);
+            AddClassDefinition(typeof(Information), 13);
 
             AddClassDefinition(typeof(NewCharacterRelationManager), 11);
             AddClassDefinition(typeof(Relations), 12);
+
+            AddEnumDefinition(typeof(Status),14);
 
         }
 
@@ -46,6 +50,7 @@ namespace NewNpc2
             ConstructContainerDefinition(typeof(Dictionary<SocialExchange, float>));
             ConstructContainerDefinition(typeof(Dictionary<CharacterObject, Character>));
             ConstructContainerDefinition(typeof(List<SocialExchange>));
+            ConstructContainerDefinition(typeof(List<Rumor>));
 
             //ConstructContainerDefinition(typeof(Dictionary<Character, Agent>));
 

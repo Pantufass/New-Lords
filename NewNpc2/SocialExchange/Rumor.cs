@@ -13,10 +13,13 @@ namespace NewNpc2
         private const float INTEREST_VALUE = 1f;
         private const float I = 0.5f;
 
+        [SaveableField(1)]
         private float value;
 
+        [SaveableField(2)]
         private SocialExchange s;
 
+        [SaveableField(3)]
         public Information info;
 
         public Rumor(SocialExchange social) 
@@ -95,8 +98,11 @@ namespace NewNpc2
 
         public class Information
         {
+            [SaveableField(4)]
             protected type infotype;
+            [SaveableField(5)]
             public List<string> values;
+            [SaveableField(6)]
             public bool war;
 
             public Information(type t = type.Gossip)
