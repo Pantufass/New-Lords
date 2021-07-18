@@ -5,14 +5,17 @@ using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.MountAndBlade;
+using TaleWorlds.SaveSystem;
 
 namespace NewNpc2
 {
-    public static class CharacterManager
+    public class CharacterManager
     {
         private static MainCharacter _main;
-        public static Dictionary<Character, Agent> characters;
-        public static Dictionary<CharacterObject, Character> characters2;
+        //[SaveableField(2)]
+        public  Dictionary<Character, Agent> characters;
+        [SaveableField(3)]
+        public Dictionary<CharacterObject, Character> characters2;
         public static MainCharacter MainCharacter
         {
             get
@@ -31,31 +34,20 @@ namespace NewNpc2
                 _main = value;
             }
         }
-        public static Dictionary<string, Culture> cultures;
 
-
-        public static void startAgents()
+        public CharacterManager()
         {
             characters = new Dictionary<Character, Agent>();
+            characters2 = new Dictionary<CharacterObject, Character>();
         }
 
-        public static void createCultures()
-        {
-            cultures = new Dictionary<string, Culture>();
-
-            Culture x = CultureManager.createCultureX();
-            cultures.Add(x.name, x);
-
-
-        }
-
-        public static void main(Agent a)
+        public void main(Agent a)
         {
             if (characters.TryGetValue(MainCharacter, out Agent agent))
             {
                 if (agent != a)
                 {
-                    MainCharacter.setAgent(a);
+                    MainCharacter.agent = a;
                     characters[MainCharacter] = a;
                 }
             }
@@ -65,8 +57,9 @@ namespace NewNpc2
             }
         }
 
-        public static Character findChar(Hero h)
+        public Character findChar(Hero h)
         {
+            if (h == null) return null;
             if (h == Hero.MainHero) return MainCharacter;
             foreach(KeyValuePair<Character, Agent> pair in characters)
             {
@@ -88,7 +81,7 @@ namespace NewNpc2
             return c;
         }
 
-        public static Character findChar(CharacterObject c)
+        public Character findChar(CharacterObject c)
         {
             if (c.IsHero && c == Hero.MainHero.CharacterObject) return MainCharacter;
             foreach (KeyValuePair<Character, Agent> pair in characters)
@@ -105,14 +98,14 @@ namespace NewNpc2
             return cha;
         }
 
-        public static void addChar(Agent a)
+        public void addChar(Agent a)
         {
             Character c = new Character(a);
             characters.Add(c, a);
             characters2.Add((CharacterObject)a.Character, c);
         }
 
-        private static Character getCharacter(Agent a)
+        private Character getCharacter(Agent a)
         {
             Character c = new Character(a);
             characters.Add(c, a);
@@ -120,7 +113,7 @@ namespace NewNpc2
             return c;
         }
 
-        public static Character findChar(Agent h)
+        public Character findChar(Agent h)
         {
             if (h == Agent.Main) return MainCharacter;
             foreach (KeyValuePair<Character,Agent> pair in characters)
@@ -131,7 +124,7 @@ namespace NewNpc2
             return getCharacter(h);
         }
 
-        public static List<InfluenceRule> generalRules()
+        public List<InfluenceRule> generalRules()
         {
             List<InfluenceRule> ir = new List<InfluenceRule>();
 
@@ -161,8 +154,8 @@ namespace NewNpc2
                 if ((d[0] as Character).agent != null && (d[1] as Character).agent != null)
                 {
                     float dist = (d[0] as Character).agent.Position.Distance((d[1] as Character).agent.Position);
-                    if (dist < 3) dist = 3;
-                    return 30 / (dist * dist);
+                    if (dist < 4) dist = 4;
+                    return 60 / (dist * dist * dist);
                 }
                 return 0;
             });
@@ -172,7 +165,7 @@ namespace NewNpc2
             return ir;
         }
 
-        public static List<Character> getCharacters(IReadOnlyList<Agent> agents)
+        public List<Character> getCharacters(IReadOnlyList<Agent> agents)
         {
             List<Character> res = new List<Character>();
             foreach(Agent a in agents)
@@ -185,8 +178,9 @@ namespace NewNpc2
                 }
                 else if (a.Character != null && characters2.TryGetValue((CharacterObject)a.Character, out Character c)) {
                     res.Add(c);
-                    c.setAgent(a);
-                    characters[c] = a;
+                    c.agent = a;
+                    if (!characters.ContainsKey(c)) characters.Add(c, a);
+                    else characters[c] = a;
                 }
                 else
                 {
@@ -199,10 +193,31 @@ namespace NewNpc2
             }
             return res;
         }
-
-        internal static Character findChar(PartyBase partyBase)
+        public List<Character> getCharacters(IReadOnlyList<Hero> heroes)
         {
-            throw new NotImplementedException();
+            List<Character> res = new List<Character>();
+            foreach (Hero h in heroes)
+            {
+                if (h.CharacterObject == null)
+                    continue;
+                if (h == Hero.MainHero)
+                {
+                    res.Add(MainCharacter);
+                }
+                else if (h.CharacterObject != null && characters2.TryGetValue(h.CharacterObject, out Character c))
+                {
+                    res.Add(c);
+                }
+                else
+                {
+                    Character character = new Character(h);
+                    if (h.CharacterObject != null) characters2.Add(h.CharacterObject, character);
+                    res.Add(character);
+                }
+
+            }
+            return res;
         }
+
     }
 }

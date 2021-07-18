@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.Core;
 using TaleWorlds.MountAndBlade;
+using TaleWorlds.SaveSystem;
 using TaleWorlds.TwoDimension;
 
 namespace NewNpc2
@@ -16,13 +17,13 @@ namespace NewNpc2
         #region Consts
 
         protected const float FRIEND_STEP = 1;
-        protected const float ENERGY_STEP = 0.008f;
-        protected const float SPEND_ENERGY_STEP = 0.5f;
+        protected const float ENERGY_STEP = 0.01f;
+        protected const float SPEND_ENERGY_STEP = 0.4f;
         protected const float START_ENERGY = 0.4f;
         protected const int INT_MAX_EXCHANGES = 5;
         protected const float CORDIAL_D = 0.08f;
         protected const float CRUDE_D = 0.92f;
-        protected const float CHANCE_VALUE = 2;
+        protected const float CHANCE_VALUE = 1;
         protected const float CHANCE_VALUE2 = 0.15f;
         protected const float POSITIVE_THRESH = 10;
         protected const float NEGATIVE_THRESH = 0;
@@ -38,10 +39,22 @@ namespace NewNpc2
 
         #endregion
 
+        public string Name
+        {
+            get
+            {
+                if (hero != null) return hero.Name.ToString();
+                if (agent != null) return agent.Name.ToString();
+                if (characterObject != null) return characterObject.Name.ToString();
+                return "no name";
+            }
+        }
 
+        //[SaveableField(1)]
         //class with the personality traits
         protected Traits personality;
 
+        //[SaveableField(2)]
         //List of possible statuses
         protected List<Status> status;
 
@@ -59,8 +72,24 @@ namespace NewNpc2
                 else _energy = value;
             }
         }
-        protected float threshold;
+        public float threshold
+        {
+            get
+            {
+                float res = START_BASE_THRESH;
 
+                res += (personality.annoying * START_BASE_THRESH * -0.4f);
+                res += (personality.calculating * START_BASE_THRESH * 0.2f);
+
+                if (res > MAX_BASE_THRESH) return MAX_BASE_THRESH;
+                if (res < MIN_BASE_THRESH) return MIN_BASE_THRESH;
+                return res;
+
+            }
+        }
+
+
+        [SaveableField(3)]
         private CharacterObject _characterObject;
         public CharacterObject characterObject
         {
@@ -77,15 +106,30 @@ namespace NewNpc2
         }
 
 
-        public Agent agent;
+        [SaveableField(4)]
+        protected Agent _agent;
+        public Agent agent
+        {
+            get { return _agent; }
+            set
+            {
+                initialState();
+                _agent = value;
+            }
+        }
+        [SaveableField(5)]
         public Hero hero;
 
         //social network
         //3 unidirectional relations between this and other characters
+        //[SaveableField(6)]
         protected List<Feeling> friendlyFeelings;
+        //[SaveableField(7)]
         protected List<Feeling> romanticFeelings;
+        //[SaveableField(8)]
         protected List<Feeling> admiration;
 
+        //[SaveableField(9)]
         //belief network
         protected Dictionary<Character,List<Feeling>> beliefs;
 
@@ -95,8 +139,10 @@ namespace NewNpc2
 
         //list of social exchanges known
         //each exchange is paired with the respective believability 
+        //[SaveableField(10)]
         protected Dictionary<SocialExchange, float> memory;
 
+        [SaveableField(11)]
         private Culture _culture;
         public Culture Culture
         {
@@ -112,6 +158,8 @@ namespace NewNpc2
 
         public bool performing;
         public bool onResponse;
+        public bool initResponse;
+        public bool onStand;
 
         private List<SocialInteraction> last;
 
@@ -127,7 +175,9 @@ namespace NewNpc2
 
         public SocialExchange onExchange;
 
-        private Counter respCounter;
+        private MissionTimer respTimer;
+        private MissionTimer initTimer;
+        private MissionTimer standTimer;
 
 
         public Rumor.Information.type preference
@@ -169,7 +219,6 @@ namespace NewNpc2
 
         public Character(Agent a)
         {
-            agent = a;
             if (a == Agent.Main)
             {
                 personality = new Traits(true);
@@ -177,13 +226,9 @@ namespace NewNpc2
             personality = new Traits();
             if (a != null) characterObject = a.Character as CharacterObject;
             CreateChar();
-        }
-
-
-        public void setAgent(Agent a)
-        {
             agent = a;
         }
+
 
         public void setHero(Hero h)
         {
@@ -211,14 +256,18 @@ namespace NewNpc2
 
             initialState();
 
-            threshold = exchangeThreshold();
             energy = InitialEnergy();
             performing = false;
             onResponse = false;
 
             timeSinceLast = 0;
 
-            respCounter = new Counter();
+            if(Mission.Current != null)
+            {
+                respTimer = new MissionTimer(TIME_RESPONSE);
+                initTimer = new MissionTimer(TIME_RESPONSE * 2);
+                standTimer = new MissionTimer(TIME_RESPONSE);
+            }
         }
 
         public List<SocialInteraction> getLast()
@@ -233,23 +282,56 @@ namespace NewNpc2
 
         public void Tick(float dt)
         {
-            if (timeSinceLast > BORED_TIMER && !isBored()) status.Add(Status.Bored);
+            if (timeSinceLast > BORED_TIMER && !isBored())
+            {
+                status.Add(Status.Bored);
+                timeSinceLast = 0;
+            }
             else timeSinceLast += dt;
 
             if (hasTarget && agent.Position.Distance(target.agent.Position) < TARGET_DIST)
             {
                 reached();
             }
-            if (onResponse && respCounter.severalSeconds(dt, TIME_RESPONSE))
+            if (onResponse && respTimer.Check(false))
             {
                 respond();
             }
+            if(initResponse && initTimer.Check(false))
+            {
+                initRespond();
+            }
+            if(onStand && standTimer.Check(false))
+            {
+                unstand();
+            }
+
         }
+
+        private void initRespond()
+        {
+            stand();
+            initResponse = false;
+            if (initTimer == null) initTimer = new MissionTimer(TIME_RESPONSE * 2);
+            initTimer.Check(true);
+            if(onExchange.resp != null)
+            {
+                Dialog d = npcIntended.getDialog(calcDialogType(),onExchange.resp.value, 2, this);
+                if (d.value != -1) showDialog(d);
+            }
+        }
+
         private void respond()
         {
+
+            respTimer.Check(true);
+            onResponse = false;
+
             float result = onExchange.calculateResponse();
 
             Dialog d = onExchange.getResponse(result);
+
+            stand();
 
             showDialog(d);
 
@@ -258,6 +340,8 @@ namespace NewNpc2
 
         private void OnResponse()
         {
+            if (respTimer == null) respTimer = new MissionTimer(TIME_RESPONSE);
+            respTimer.Check(true);
             onResponse = true;
         }
 
@@ -269,9 +353,19 @@ namespace NewNpc2
             if(agent.GetComponent<CampaignAgentComponent>().AgentNavigator != null)
             agent.GetComponent<CampaignAgentComponent>().AgentNavigator.GetBehaviorGroup<DailyBehaviorGroup>().RemoveBehavior<FollowAgentBehavior>();
 
-            target.calcResponse(this, npcIntended, getIntent());
+            onExchange = new SocialExchange(this, target, npcIntended, getIntent());
+            target.calcResponse(onExchange);
 
-            if (npcIntended.hasPaths) showDialog(npcIntended.getDialog(calcDialogType(), 0, this));
+            stand();
+            if (npcIntended == null) 
+                return;
+            if (npcIntended.hasPaths)
+            {
+                if (initTimer == null) initTimer = new MissionTimer(TIME_RESPONSE * 2);
+                initTimer.Check(true);
+                initResponse = true;
+                showDialog(npcIntended.getDialog(calcDialogType(), 0, 0, this));
+            }
             else showDialog(npcIntended.getDialog(calcDialogType(), 0));
 
         }
@@ -304,6 +398,27 @@ namespace NewNpc2
             }
         }
 
+        private void stand()
+        {
+            onStand = true;
+            if(standTimer == null) standTimer = new MissionTimer(TIME_RESPONSE);
+            if (agent.GetComponent<CampaignAgentComponent>().AgentNavigator != null)
+            {
+                DailyBehaviorGroup bg = agent.GetComponent<CampaignAgentComponent>().AgentNavigator.GetBehaviorGroup<DailyBehaviorGroup>();
+                bg.AddBehavior<StandGuardBehavior>();
+
+                bg.SetScriptedBehavior<StandGuardBehavior>();
+            }
+        }
+
+        private void unstand()
+        {
+            if (agent.GetComponent<CampaignAgentComponent>().AgentNavigator != null)
+                agent.GetComponent<CampaignAgentComponent>().AgentNavigator.GetBehaviorGroup<DailyBehaviorGroup>().RemoveBehavior<StandGuardBehavior>();
+            onStand = false;
+
+        }
+
         public void showDialog(Dialog d)
         {
             foreach (MissionBehaviour mb in Mission.Current.MissionBehaviours)
@@ -313,9 +428,9 @@ namespace NewNpc2
             }
         }
 
-        public void calcResponse(Character init, SocialInteraction si, intent i)
+        public void calcResponse(SocialExchange se)
         {
-            onExchange = new SocialExchange(init, this, si, i);
+            onExchange = se;
         }
 
 
@@ -339,7 +454,8 @@ namespace NewNpc2
             RumorHolder rh = SubModule.rb.findSettlement(s);
             
             rumor = rh.getRumor(this);
-            if (rumor != null) hasRumor = true;
+            if (rumor != null) 
+                hasRumor = true;
         }
 
         public Rumor getRumor()
@@ -360,17 +476,6 @@ namespace NewNpc2
             return threshold * START_ENERGY + threshold * personality.annoying * START_ENERGY + SubModule.rand.NextFloat() * START_ENERGY;
         }
 
-        private float exchangeThreshold()
-        {
-            float res = START_BASE_THRESH;
-
-            res += (personality.annoying * START_BASE_THRESH * -0.4f);
-            res += (personality.calculating * START_BASE_THRESH * 0.2f);
-
-            if (res > MAX_BASE_THRESH) return MAX_BASE_THRESH;
-            if (res < MIN_BASE_THRESH) return MIN_BASE_THRESH;
-            return res;
-        }
 
         internal Feeling getStrongestFeeling(Character c)
         {
@@ -427,7 +532,7 @@ namespace NewNpc2
 
         private void initialState()
         {
-
+            status.Clear();
             var rand = SubModule.rand;
             var match = Enum.GetValues(typeof(Status)).Cast<Status>().ToArray();
             //one random status
@@ -480,8 +585,20 @@ namespace NewNpc2
                 case "Khuzaits":
                     _culture = CultureManager.createKhuzaits();
                     break;
+                case "Vlandia":
+                    _culture = CultureManager.createVlandia();
+                    break;
+                case "Battania":
+                    _culture = CultureManager.createBattania();
+                    break;
+                case "Aserai":
+                    _culture = CultureManager.createAserai();
+                    break;
+                case "Sturgians":
+                    _culture = CultureManager.createSturgians();
+                    break;
                 default:
-                    _culture = CultureManager.createCultureX();
+                    _culture = CultureManager.createEmpire();
                     break;
             }
         }
@@ -517,13 +634,18 @@ namespace NewNpc2
 
             foreach (SocialInteraction si in interactions)
             {
-                if (si.validate(this.characterObject, r.characterObject))
+                if (si.validate(this, r))
                 {
                     float res = (float)(si.calculateVolition(this, r, intent) + (2 * CHANCE_VALUE * rand.NextDouble() - CHANCE_VALUE));
                     if (res > d.Key) d = new KeyValuePair<float, SocialInteraction>(res, si);
                 }
             }
             npcIntended = d.Value;
+            if (d.Value.Equals("RelayInformation"))
+            {
+                _ = d.Key;
+            }
+
             return d.Key;
         }
 
@@ -646,7 +768,10 @@ namespace NewNpc2
         {
             return getLowestFeeling().getInitiator();
         }
-
+        internal bool isHero()
+        {
+            return (hero != null);
+        }
         //TODO
         internal bool isFalse(SocialExchange se)
         {
@@ -666,7 +791,7 @@ namespace NewNpc2
 
         public List<InfluenceRule> getRules()
         {
-            return CharacterManager.generalRules();
+            return NPCDialogBehaviour.characterManager.generalRules();
         }
 
         //TODO
@@ -681,9 +806,12 @@ namespace NewNpc2
         internal float calcCharacterInterest(Character c)
         {
             float res = 0;
-            res += getFeeling(friendlyFeelings, c).getIntensity() * 0.8f;
-            res += getFeeling(romanticFeelings, c).getIntensity() * 2f;
-            res += getFeeling(admiration, c).getIntensity() * 0.5f;
+            Feeling temp = getFeeling(friendlyFeelings, c);
+            if(temp != null) res += temp.getIntensity() * 0.8f;
+            temp = getFeeling(romanticFeelings, c);
+            if(temp != null) res += temp.getIntensity() * 2f;
+            temp = getFeeling(admiration, c);
+            if(temp != null) res += temp.getIntensity() * 0.5f;
             return res;
         }
 
@@ -691,7 +819,6 @@ namespace NewNpc2
         {
             setExchange(si);
             performing = false;
-            onResponse = false;
         }
 
         internal float getEnergy()
@@ -852,23 +979,46 @@ namespace NewNpc2
 
         #endregion
 
-        protected class Traits
+        public class Traits
         {
+
+            [SaveableField(1)]
             public float kind; //likeness
+
+            [SaveableField(2)]
             public float stubborn; //chances in the beliefs
+
+            [SaveableField(3)]
             public float liar; //inventing rumors
+
+            [SaveableField(4)]
             public float curious; //wants to know/asks more stuff
+
+            [SaveableField(5)]
             public float helpful; //helps out
+
+            [SaveableField(6)]
             public float shy; //more or ness energy for exchanges 
+
+            [SaveableField(7)]
             public float careful; //i dont know yet
+
+            [SaveableField(8)]
             public float sensitive; //changes in the beliefs
+
+            [SaveableField(9)]
             public float honor; //likeness
+
+            [SaveableField(10)]
             public float charm; //love at first sight
 
+            [SaveableField(11)]
             public float annoying; //energy for exchanges
 
+            [SaveableField(12)]
             public float calculating; //i dont know yet
 
+            [SaveableField(13)]
             public bool isGay; 
 
             internal Traits()
@@ -928,7 +1078,7 @@ namespace NewNpc2
         }
 
         
-
+        
         public enum Status
         {
             Wounded=-10,
@@ -987,7 +1137,7 @@ namespace NewNpc2
 
             foreach (SocialInteraction si in interactions)
             {
-                if (si.validate(this.characterObject, r.characterObject))
+                if (si.validate(this, r))
                 {
                     float res = (float)(si.calculateVolition(this, r, intent) + (2 * CHANCE_VALUE * rand.NextDouble() - CHANCE_VALUE));
                     //TDODO fix
@@ -1042,7 +1192,7 @@ namespace NewNpc2
 
             foreach (SocialInteraction si in interactions)
             {
-                if (si.validate(this.characterObject, c.characterObject))
+                if (si.validate(this, c))
                 {
                     float res = (float)(si.calculateVolition(this, c, i) + (2 * CHANCE_VALUE * rand.NextDouble() - CHANCE_VALUE));
                     while (d.ContainsKey(res))

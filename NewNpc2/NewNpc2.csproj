@@ -70,23 +70,20 @@
   <!-- Files & Classes -->
   <ItemGroup>
     <Compile Include="Behaviour\CampaignEventBehaviour.cs" />
-    <Compile Include="Behaviour\DialogFlowBehaviour.cs" />
+    <Compile Include="Behaviour\CustomSave.cs" />
     <Compile Include="Behaviour\DialogManager.cs" />
     <Compile Include="Behaviour\DialogTarget.cs" />
     <Compile Include="Behaviour\MissionViewBehaviour.cs" />
     <Compile Include="Behaviour\DialogMatrixBehaviour.cs" />
     <Compile Include="Behaviour\NPCDialogBehaviour.cs" />
-    <Compile Include="Behaviour\NpcStartBehaviour.cs" />
     <Compile Include="Behaviour\OnTick.cs" />
     <Compile Include="Behaviour\RumorBehaviour.cs" />
-    <Compile Include="Behaviour\SingleInteractionBehaviour.cs" />
     <Compile Include="Character\Character.cs" />
     <Compile Include="Character\CharacterManager.cs" />
     <Compile Include="Character\Culture.cs" />
     <Compile Include="Character\Feeling.cs" />
     <Compile Include="Character\Introduction.cs" />
     <Compile Include="Character\NewCharacterRelationManager.cs" />
-    <Compile Include="Behaviour\PlayerStartBehaviour.cs" />
     <Compile Include="Patch.cs" />
     <Compile Include="Rules\Condition.cs" />
     <Compile Include="Rules\ConditionManager.cs" />

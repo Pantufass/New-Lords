@@ -108,7 +108,7 @@ namespace NewNpc2
         {
             if (IsEnabled)
             {
-                if (counter.severalSeconds(dt,4))
+                if (counter.severalSeconds(dt,3))
                 {
 					IsEnabled = false;
                 }

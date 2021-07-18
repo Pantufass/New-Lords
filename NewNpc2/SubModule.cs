@@ -29,13 +29,14 @@ namespace NewNpc2
 
         public static List<TriggerRule> triggerRules;
 
-        public static List<SocialExchange> SocialFactsDatabase;
-
         public static NPCDialogBehaviour npc;
         public static RumorBehaviour rb;
 
         //Relationships in the world
         public static NewCharacterRelationManager newRelationManager;
+
+        public static int talkedCounter = 0;
+        public static int inTavernCounter = 0;
 
         public static void DoPatching()
         {
@@ -48,7 +49,6 @@ namespace NewNpc2
 
             rand = new Random();
 
-            SocialFactsDatabase = new List<SocialExchange>();
 
             newRelationManager = new NewCharacterRelationManager();
 
@@ -61,9 +61,6 @@ namespace NewNpc2
 
             triggerRules = TriggerRuleManager.createRules();
 
-
-            CharacterManager.characters2 = new Dictionary<CharacterObject, Character>();
-            CharacterManager.startAgents();
 
 
             
@@ -106,21 +103,21 @@ namespace NewNpc2
         {
             runTriggerRules(se.getInstRules(), se);
 
-            SocialFactsDatabase.Add(se);
+            npc.SocialFactsDatabase.Add(se);
 
             se.finish();
 
             if (se.type.IsImportant)
             {
                 se.setInCharacters();
-                RumorBehaviour.CreateGossip(se);
+                rb.CreateGossip(se);
             }
         }
 
         public static void findPatter()
         {
             Dictionary<Tuple<Character, SocialInteraction>, float> list = new Dictionary<Tuple<Character, SocialInteraction>, float>();
-            foreach(SocialExchange si in SocialFactsDatabase)
+            foreach(SocialExchange si in npc.SocialFactsDatabase)
             {
                 Tuple<Character,SocialInteraction> t = new Tuple<Character, SocialInteraction>(si.getInitiator(), si.type);
                 if (list.ContainsKey(t)) list[t]++;
@@ -131,6 +128,8 @@ namespace NewNpc2
                 if (pair.Value > PATTERN_MIN) RumorBehaviour.setPattern(pair.Key.Item1,pair.Key.Item2);
             }
         }
+
+        
 
         public static void endInteraction()
         {

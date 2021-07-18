@@ -16,7 +16,8 @@ namespace NewNpc2
 {
     public class DialogManager : ViewModel
     {
-        private Counter secCounter;
+        private MissionTimer secCounter;
+        public static bool firstImp = false;
 
         public DialogManager(Mission mission, Camera c) 
         {
@@ -25,7 +26,7 @@ namespace NewNpc2
             this._missionCamera = c;
             this._mission = mission;
 
-            secCounter = new Counter();
+            secCounter = new MissionTimer(0.2f);
 
         }
 
@@ -39,8 +40,9 @@ namespace NewNpc2
         {
             foreach(DialogTarget dt in Targets)
             {
-                if (dt.TargetAgent == c.agent)
+                if (dt.TargetAgent == c.agent && c.agent.Position.Distance( Agent.Main.Position) < 50)
                 {
+                    
                     dt.Name = d.sentence;
                     dt.IsEnabled = true;
                     break;
@@ -55,7 +57,7 @@ namespace NewNpc2
 
         private void characterEnergy()
         {
-            foreach (Character c in CharacterManager.getCharacters(_mission.Agents))
+            foreach (Character c in NPCDialogBehaviour.characterManager.getCharacters(_mission.Agents))
             {
                 c.raiseEnergy();
             }
@@ -65,8 +67,13 @@ namespace NewNpc2
         {
             if(_mission != null)
             {
+                if (firstImp)
+                {
+                    firstImp = false;
+                    NPCDialogBehaviour.MissionTick();
+                }
                 Tick(dt);
-                if (secCounter.second(dt))
+                if (secCounter.Check(true))
                 {
                     Tick();
                 }

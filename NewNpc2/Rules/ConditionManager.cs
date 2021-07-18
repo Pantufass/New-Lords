@@ -32,8 +32,8 @@ namespace NewNpc2
         {
             Condition c = new Condition("NoRomanceYet",(List<dynamic> d) => {
                 if (d.Count < 2) return false;
-                if (d[0] is CharacterObject && d[1] is CharacterObject)
-                    return NewCharacterRelationManager.GetRomantic((d[0] as CharacterObject), (d[1] as CharacterObject)) < NewCharacterRelationManager.relation.Good;
+                if (d[0] is Character && d[1] is Character)
+                    return NewCharacterRelationManager.GetRomantic((d[0] as Character).characterObject, (d[1] as Character).characterObject) < NewCharacterRelationManager.relation.Good;
                 else return false;
                 });
             return c;
@@ -43,8 +43,8 @@ namespace NewNpc2
         {
             Condition c = new Condition("WithRomance", (List<dynamic> d) => {
                 if (d.Count < 2) return false;
-                if (d[0] is CharacterObject && d[1] is CharacterObject)
-                    return NewCharacterRelationManager.GetRomantic((d[0] as CharacterObject), (d[1] as CharacterObject)) > NewCharacterRelationManager.relation.Neutral;
+                if (d[0] is Character && d[1] is Character)
+                    return NewCharacterRelationManager.GetRomantic((d[0] as Character).characterObject, (d[1] as Character).characterObject) > NewCharacterRelationManager.relation.Neutral;
                 else return false;
             });
             return c;
@@ -55,7 +55,7 @@ namespace NewNpc2
             Condition c = new Condition("LordsOnly", (List<dynamic> d) => {
                 if (d.Count < 2) return false;
                 if (d[0] is Character && d[1] is Character)
-                    return ((d[0] as Character).characterObject as CharacterObject).Occupation == Occupation.Lord && ((d[1] as Character).characterObject as CharacterObject).Occupation == Occupation.Lord;
+                    return ((d[0] as Character).characterObject).Occupation == Occupation.Lord && ((d[1] as Character).characterObject).Occupation == Occupation.Lord;
                 else return false;
             });
             return c;

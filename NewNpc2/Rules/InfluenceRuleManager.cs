@@ -121,7 +121,9 @@ namespace NewNpc2
 
             n = "InterestRumor";
             r = new InfluenceRule(n);
-            r.setDel((List<dynamic> d) =>(d[0] as Character).hasRumor ? (d[0] as Character).getRumorValue() * 6f : -5);
+            r.setDel((List<dynamic> d) => {
+                return (d[0] as Character).hasRumor ? (d[0] as Character).getRumorValue() * 6f : -10;
+                });
             existing.Add(n, r);
 
 
@@ -158,6 +160,23 @@ namespace NewNpc2
             n = "LowerRel";
             r = new InfluenceRule(n);
             r.setDel((List<dynamic> d) => 6 * (d[2] as intent? == intent.Negative ? 1 : -0.5f));
+            existing.Add(n, r);
+
+            n = "Wealthy";
+            r = new InfluenceRule(n);
+            r.setDel((List<dynamic> d) => {
+
+                if (d[0] is Character)
+                {
+                    Character c = d[0] as Character;
+                    if (c.isHero())
+                    {
+                        return (float) Math.Log(c.hero.Gold,2) - 7.5f;
+                    }
+
+                }
+                return -20;
+            });
             existing.Add(n, r);
 
 

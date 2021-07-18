@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
+using TaleWorlds.SaveSystem;
 
 namespace NewNpc2
 {
-    public class Rumor
+    public class Rumor 
     {
         private const float INTEREST_VALUE = 1f;
         private const float I = 0.5f;
@@ -18,17 +19,28 @@ namespace NewNpc2
 
         public Information info;
 
-        public Rumor(SocialExchange social)
+        public Rumor(SocialExchange social) 
         {
             s = social;
             info = new Information();
             value = 1f;
         }
-        public Rumor(Information i, SocialExchange social = null, float v = 1f)
+        public Rumor(Information i, SocialExchange social = null, float v = 1f) 
         {
             info = i;
             value = v;
             s = social;
+        }
+
+
+        public bool Equals(Rumor r)
+        {
+            bool res = true;
+            res = res && r is Rumor;
+            res = res && this is Rumor;
+            if(s != null && r.s != null) res = res && s.Equals(r.s);
+            res = res && info.Equals(r.info);
+            return res;
         }
 
         public SocialExchange exchange()
@@ -47,7 +59,7 @@ namespace NewNpc2
             {
                 involved.Add(s.getInitiator());
                 involved.Add(s.getReceiver());
-                involved.AddRange(s.others);
+                //involved.AddRange(s.others);
 
                 foreach (Character inv in involved)
                 {
@@ -72,6 +84,10 @@ namespace NewNpc2
             return value;
         }
 
+        public void raiseValue()
+        {
+            value *= 1.08f;
+        }
         public void lowerValue()
         {
             value *= 0.9f;

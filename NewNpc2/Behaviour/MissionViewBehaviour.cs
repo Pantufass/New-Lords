@@ -31,7 +31,7 @@ namespace NewNpc2
         public override void OnMissionScreenInitialize()
         {
 
-			CharacterManager.main(Agent.Main);
+			NPCDialogBehaviour.characterManager.main(Agent.Main);
 
 			base.OnMissionScreenInitialize();
 
@@ -80,7 +80,7 @@ namespace NewNpc2
 			base.OnMissionScreenTick(dt);
 			this._dataSource.IsEnabled = true;
 			_dataSource.MissionTick(dt);
-			foreach (Character c in CharacterManager.getCharacters(Mission.Current.Agents))
+			foreach (Character c in NPCDialogBehaviour.characterManager.getCharacters(Mission.Current.Agents))
 			{
 				c.Tick(dt);
 			}

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
+using TaleWorlds.SaveSystem;
 
 namespace NewNpc2
 {
@@ -11,7 +12,9 @@ namespace NewNpc2
     {
         protected float INTEREST_VALUE = 0.7f;
 
+        [SaveableField(1)]
         protected List<Rumor> holding;
+        [SaveableField(2)]
         protected int max;
 
         public RumorHolder(int m = 6)
@@ -20,13 +23,30 @@ namespace NewNpc2
             max = m;
         }
 
+        private bool foundRumor(Rumor r)
+        {
+            foreach(Rumor rumor in holding)
+            {
+                if (rumor.Equals(r)) return true;
+            }
+            return false;
+        }
+
         public virtual void setRumors(List<Rumor> r)
         {
             foreach (Rumor rumor in holding)
             {
                 rumor.lowerValue();
             }
-            holding.AddRange(r);
+            foreach(Rumor rumor in r)
+            {
+                if (!foundRumor(rumor))
+                    holding.Add(rumor);
+                else
+                {
+                    holding.Find((Rumor rum) => rum.Equals(rumor)).raiseValue();
+                }
+            }
             holding.OrderByDescending(rumor => rumor.getValue());
             for (int i = 0; i < (holding.Count - max); i++)
             {

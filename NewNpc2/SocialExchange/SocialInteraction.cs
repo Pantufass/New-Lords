@@ -138,7 +138,7 @@ namespace NewNpc2
         }
 
         //return a sum of the preconditions
-        public bool validate(BasicCharacterObject c1, BasicCharacterObject c2)
+        public bool validate(Character c1, Character c2)
         {
             List<dynamic> l = new List<dynamic>();
             l.Add(c1);
@@ -225,15 +225,16 @@ namespace NewNpc2
             return getTheDialog(t, 0);
         }
 
-        public Dialog getDialog(sentenceType t, float v, Character r = null)
+        public Dialog getDialog(sentenceType t, float v, int depth = 0, Character r = null)
         {
-
-            if (hasPaths)
+            Dialog d;
+            if (hasPaths && depth < paths.Count)
             {
-                Dialog d = paths.First().sentence(r);
+                d = paths[depth].sentence(r,(int)v);
                 if (d != null) return d;
             }
-            return getTheDialog(t, v);
+            d = getTheDialog(t, v);
+            return d;
         }
 
         public void clearDialog()
@@ -247,7 +248,7 @@ namespace NewNpc2
 
         public string getResponse(float v,Character c = null)
         {
-            if (hasPaths && paths.Count > 1)
+            if (hasPaths && paths.Count > 2)
             {
                 Dialog d = paths[1].sentence(c);
                 if (d != null) return d.sentence;
@@ -292,6 +293,10 @@ namespace NewNpc2
         public bool Equals(SocialInteraction obj)
         {
             return obj.name.Equals(this.name);
+        }
+        public bool Equals(string s)
+        {
+            return s.Equals(this.name);
         }
     }
 

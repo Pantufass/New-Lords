@@ -68,7 +68,7 @@ namespace NewNpc2
             Terrible=1
         }
 
-        internal class Relations
+        public class Relations
         {
 
             // Token: 0x0600332E RID: 13102 RVA: 0x000E748C File Offset: 0x000E568C
@@ -91,7 +91,7 @@ namespace NewNpc2
             }
 
             // Token: 0x040011BF RID: 4543
-            [SaveableField(0)]
+            [SaveableField(1)]
             private readonly Dictionary<long, relation> _relations = new Dictionary<long, relation>();
         }
 

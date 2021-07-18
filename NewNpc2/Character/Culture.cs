@@ -49,6 +49,11 @@ namespace NewNpc2
         {
             return newData;
         }
+
+        public bool Equals(Culture c)
+        {
+            return name.Equals(c.name);
+        }
     }
 
     public class InteractionData
@@ -116,6 +121,53 @@ namespace NewNpc2
             return khu;
         }
 
+        public static Culture createSturgians()
+        {
+            Culture c = new Culture("Sturgians");
+
+
+
+
+
+            return c;
+        }
+
+
+        public static Culture createAserai()
+        {
+            Culture c = new Culture("Aserai");
+
+
+            c.addExchange(SocialInteractionManager.Complain());
+            c.addExchange(SocialInteractionManager.Embelish());
+
+
+
+            return c;
+        }
+
+
+
+        public static Culture createBattania()
+        {
+            Culture c = new Culture("Battania");
+
+
+            c.energyMod = 1.05f;
+            c.interestMod = 0.8f;
+
+            return c;
+        }
+
+
+
+        public static Culture createVlandia()
+        {
+            Culture c = new Culture("Vlandia");
+
+
+            return c;
+        }
 
     }
 }

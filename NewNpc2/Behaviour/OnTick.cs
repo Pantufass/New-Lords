@@ -32,6 +32,11 @@ namespace NewNpc2
             return severalSeconds(dt, 1);
         }
 
+        public void toZero()
+        {
+            counter = 0;
+        }
+
         public bool severalSeconds(float dt, int seconds)
         {
             counter += dt;

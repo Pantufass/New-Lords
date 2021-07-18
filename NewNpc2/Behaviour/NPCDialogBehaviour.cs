@@ -15,8 +15,17 @@ namespace NewNpc2
     {
 
         private Mission currentMission;
-        private bool missionReady = false;
-        private bool firstDone = false;
+
+         
+        public List<SocialExchange> SocialFactsDatabase;
+        public static CharacterManager characterManager;
+
+
+        public NPCDialogBehaviour()
+        {
+            characterManager = new CharacterManager();
+            SocialFactsDatabase = new List<SocialExchange>();
+        }
 
         public override void RegisterEvents()
         {
@@ -28,11 +37,18 @@ namespace NewNpc2
 
         public override void SyncData(IDataStore dataStore)
         {
-
+            dataStore.SyncData("CharacterManager", ref characterManager);
+            dataStore.SyncData("SocialFactsDatabase", ref SocialFactsDatabase);
         }
 
         private void OnSessionLaunched(CampaignGameStarter campaign)
         {
+
+        }
+
+        public static void MissionTick()
+        {
+            if (Mission.Current.Agents.Count > 0) Microtheory.FirstImpression(characterManager.getCharacters(Mission.Current.Agents));
         }
 
         private void AfterGameLoad()
@@ -42,17 +58,16 @@ namespace NewNpc2
 
         private void OnMissionEnd(IMission mission)
         {
-            currentMission = null;
-            missionReady = false;
+            DialogManager.firstImp = false;
         }
 
         private void OnMissionStart(IMission mission)
         {
             this.currentMission = (Mission) mission;
-            missionReady = true;
+            DialogManager.firstImp = true;
 
 
-            Microtheory.FirstImpression(CharacterManager.getCharacters(currentMission.Agents));
+            Microtheory.FirstImpression(characterManager.getCharacters(currentMission.Agents));
         }
 
 
@@ -61,19 +76,23 @@ namespace NewNpc2
 
             InformationManager.DisplayMessage(new InformationMessage(character.agent.Name +" - " +character.getEnergy()));
 
-            if (missionReady)  characterVolition(character);
+            if(Mission.Current != null) characterVolition(character);
         }
 
         private bool notIntoExchange(Character character)
         {
+            
             return character.hero == Hero.MainHero || character.agent == Agent.Main ||
                 character.agent.Character != null && character.agent.Character.Name.ToString() == "Training Master";
         }
         private void characterVolition(Character character)
         {
-            if (notIntoExchange(character)) 
-                
+            if (notIntoExchange(character)){
+                if (character.performing)
+                    return;
                 return;
+            }
+
 
             character.calcRumor();
 
@@ -83,10 +102,10 @@ namespace NewNpc2
                 return;
             }
 
-            Tuple<float, Character, SocialInteraction> pair = new Tuple<float, Character, SocialInteraction>(-10,CharacterManager.MainCharacter,null);
-            foreach(Character c in CharacterManager.getCharacters(currentMission.Agents))
+            Tuple<float, Character, SocialInteraction> pair = new Tuple<float, Character, SocialInteraction>(-100, CharacterManager.MainCharacter,null);
+            foreach(Character c in characterManager.getCharacters(currentMission.Agents))
             {
-                if (c == character) continue;
+                if (c == character || c.performing) continue;
                 float r = character.calcNpcVolition(c);
                 if (r > pair.Item1) 
                     pair = new Tuple<float, Character, SocialInteraction>(r, c, character.getNpcIntended());
@@ -99,6 +118,11 @@ namespace NewNpc2
             else showDialog(pair.Item3.getDialog(character.calcDialogType(), pair.Item1), character);
 
             */
+            if (pair.Item3 == null)
+            {
+
+                character.exchange(pair.Item2, pair.Item3);
+            }
 
 
             character.exchange(pair.Item2, pair.Item3);

@@ -90,11 +90,11 @@ namespace NewNpc2
             starter.AddDialogLine("start_wanderer_unmet", "start", "wanderer_meet_player_response2", "{=EPpTmCXw}{VOICED_LINE}", new ConversationSentence.OnConditionDelegate(this.conversation_wanderer_meet_on_condition), null, 1100, null);
             starter.AddDialogLine("town_or_village_start", "start", "town_or_village_talk2", "Hello, Can i help you?", new ConversationSentence.OnConditionDelegate(this.conversation_town_or_village_start_on_condition), null, 1000, null);
 
-            starter.AddPlayerLine("tavernmaid_order_food", "taverngamehost_talk", buffer, "Converse", null, null, 1000, null, null);
-            starter.AddPlayerLine("tavernmaid_order_food", "tavernmaid_talk", buffer, "Converse", null, null, 1000, null, null);
-            starter.AddPlayerLine("talk_bard_player_leave", "talk_bard_player", buffer, "Converse", null, null, 1000, null, null);
+            starter.AddPlayerLine("tavernmaid_order_food", "taverngamehost_talk", buffer, "Converse", null, () => converse_consequence(), 1000, null, null);
+            starter.AddPlayerLine("tavernmaid_order_food", "tavernmaid_talk", buffer, "Converse", null, () => converse_consequence(), 1000, null, null);
+            starter.AddPlayerLine("talk_bard_player_leave", "talk_bard_player", buffer, "Converse", null, () => converse_consequence(), 1000, null, null);
 
-            starter.AddPlayerLine("town_or_village_player", "hero_main_options", buffer, "Converse", null, null, 1000, null, null);
+            starter.AddPlayerLine("town_or_village_player", "hero_main_options", buffer, "Converse", null, () => converse_consequence(), 1000, null, null);
             
             /*
             starter.AddPlayerLine("town_or_village_player", "lord_start", buffer, "Converse", null, null, 1000, null, null);
@@ -102,9 +102,9 @@ namespace NewNpc2
             starter.AddPlayerLine("town_or_village_player", "lord_meet_in_main_party_player_response", buffer, "Converse", null, null, 1000, null, null);
             */
 
-            starter.AddPlayerLine("town_or_village_player", "wanderer_meet_player_response2", buffer, "Converse", null, null, 1000, null, null);
+            starter.AddPlayerLine("town_or_village_player", "wanderer_meet_player_response2", buffer, "Converse", null, () => converse_consequence(), 1000, null, null);
 
-            starter.AddPlayerLine("town_or_village_player", "town_or_village_talk2", buffer, "Converse", null, null, 1000, null, null);
+            starter.AddPlayerLine("town_or_village_player", "town_or_village_talk2", buffer, "Converse", null, () => converse_consequence(), 1000, null, null);
 
             starter.AddDialogLine("town_or_village_player", buffer, outtoken, " ", null, null, 1000, null);
 
@@ -113,6 +113,10 @@ namespace NewNpc2
             starter.AddPlayerLine("player_is_leaving_neutral_or_friendly", "wanderer_meet_player_response2", "hero_leave", "{=9mBy0qNW}I must leave now.", new ConversationSentence.OnConditionDelegate(this.conversation_player_is_leaving_neutral_or_friendly_on_condition), null, 1, null, null);
         }
 
+        private void converse_consequence()
+        {
+            SubModule.talkedCounter++;
+        }
         private bool conversation_town_or_village_start_on_condition()
         {
             return (CharacterObject.OneToOneConversationCharacter.Occupation == Occupation.Villager || CharacterObject.OneToOneConversationCharacter.Occupation == Occupation.Townsfolk) && PlayerEncounter.Current != null && PlayerEncounter.InsideSettlement;
@@ -350,7 +354,7 @@ namespace NewNpc2
         {
             CharacterObject c = CharacterObject.OneToOneConversationCharacter;
             
-            Character character = CharacterManager.findChar(c);
+            Character character = NPCDialogBehaviour.characterManager.findChar(c);
             CharacterManager.MainCharacter.chooseDialog(i,character);
 
             /**
@@ -368,7 +372,7 @@ namespace NewNpc2
         {
             social.clearDialog();
             CharacterObject c = CharacterObject.OneToOneConversationCharacter;
-            Character character = CharacterManager.findChar(c);
+            Character character = NPCDialogBehaviour.characterManager.findChar(c);
             SocialExchange se = new SocialExchange(CharacterManager.MainCharacter, character, social, CharacterManager.MainCharacter.getIntent());
             float result = se.calculateResponse();
             se.chooseResponse(result);

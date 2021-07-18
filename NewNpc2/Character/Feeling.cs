@@ -3,15 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaleWorlds.SaveSystem;
 
 namespace NewNpc2
 {
     public class Feeling
     {
+        [SaveableField(1)]
         protected Character initiator;
 
+        [SaveableField(2)]
         protected intent intent;
 
+        [SaveableField(3)]
         protected float intensity;
 
         public Feeling(Character init)

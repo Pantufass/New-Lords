@@ -119,3 +119,9 @@ dialogos longos
 dialogs back and forth
 gerar mais rumores
 fix player dialog
+
+---------
+
+gift exchange
+make them stop on exchange
+back and forth better

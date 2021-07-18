@@ -78,8 +78,8 @@ namespace NewNpc2
 
         public static void Defeat(Hero w, Hero l)
         {
-            Character w1 = CharacterManager.findChar(w);
-            Character l1 = CharacterManager.findChar(l);
+            Character w1 = NPCDialogBehaviour.characterManager.findChar(w);
+            Character l1 = NPCDialogBehaviour.characterManager.findChar(l);
             l1.overpowered(w1);
         }
 
@@ -87,7 +87,7 @@ namespace NewNpc2
         public static void QuestCompleted(QuestBase qb, QuestBase.QuestCompleteDetails qd)
         {
             float value = 8;
-            Character qc = CharacterManager.findChar(qb.QuestGiver.CharacterObject);
+            Character qc = NPCDialogBehaviour.characterManager.findChar(qb.QuestGiver.CharacterObject);
             qc.overpowered(CharacterManager.MainCharacter, 0.2f);
             qc.raiseFriendly(CharacterManager.MainCharacter,value);
         }

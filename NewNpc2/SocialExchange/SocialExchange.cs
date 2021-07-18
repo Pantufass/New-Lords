@@ -42,6 +42,7 @@ namespace NewNpc2
             receiver = r;
             base.intent = i;
             rumor = null;
+            others = new List<Character>();
         }
 
         //TODO calculate the receiver's response
@@ -63,21 +64,21 @@ namespace NewNpc2
         public void chooseResponse(float result)
         {
             if (result > type.upperThresh)
-                resp = type.chooseDialog(sentenceType.pResponse);
+                resp = type.getDialog(sentenceType.pResponse, result,1);
             else if (result > type.lowerThresh)
-                resp = type.chooseDialog(sentenceType.normalResponse);
-            else resp = type.chooseDialog(sentenceType.nResponse);
+                resp = type.getDialog(sentenceType.normalResponse, result, 1);
+            else resp = type.getDialog(sentenceType.nResponse, result, 1);
 
         }
 
         public Dialog getResponse(float result)
         {
-
             if (result > type.upperThresh)
-                return type.getDialog(sentenceType.pResponse, result);
+                resp = type.getDialog(sentenceType.pResponse, result, 1, initiator);
             else if (result > type.lowerThresh)
-                return type.getDialog(sentenceType.normalResponse, result);
-            else return type.getDialog(sentenceType.nResponse, result);
+                resp = type.getDialog(sentenceType.normalResponse, result, 1, initiator);
+            else resp = type.getDialog(sentenceType.nResponse, result, 1, initiator);
+            return resp;
         }
 
         public void setOutcome(float v)

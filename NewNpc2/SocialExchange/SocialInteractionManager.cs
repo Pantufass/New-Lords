@@ -176,8 +176,9 @@ namespace NewNpc2
             sc.Add(n, t);
         }
 
-        private static void Compliment(Dictionary<string, SocialInteraction> sc)
+        public static SocialInteraction Compliment()
         {
+
             string n = "Compliment";
             SocialInteraction t = new SocialInteraction(n, 10, 0);
 
@@ -193,7 +194,7 @@ namespace NewNpc2
             t.addInitRule(r);
 
             SubModule.existingRules.TryGetValue("BeingNice", out r);
-            t.addInitRule(r,false);
+            t.addInitRule(r, false);
 
             SubModule.existingRules.TryGetValue("Charming", out r);
             t.addRespRule(r);
@@ -211,11 +212,18 @@ namespace NewNpc2
             t.addsentence("Thank you so much", 1, sentenceType.pResponse);
             t.addsentence("Thank You", 1, sentenceType.normalResponse);
             t.addsentence("Not really", 2, sentenceType.nResponse);
-            sc.Add(n, t);
+
+            return t;
+        }
+        private static void Compliment(Dictionary<string, SocialInteraction> sc)
+        {
+            SocialInteraction si = Compliment();
+            sc.Add(si.name, si);
         }
 
-        private static void Insult(Dictionary<string, SocialInteraction> sc)
+        public static SocialInteraction Insult()
         {
+
             string n = "Insult";
             SocialInteraction t = new SocialInteraction(n, 10, 0);
 
@@ -247,7 +255,13 @@ namespace NewNpc2
             t.addsentence("That is a good one", 1, sentenceType.pResponse);
             t.addsentence("Uh", 1, sentenceType.pResponse);
             t.addsentence("No", 2, sentenceType.nResponse);
-            sc.Add(n, t);
+            return t;
+        }
+
+        private static void Insult(Dictionary<string, SocialInteraction> sc)
+        {
+            SocialInteraction si = Insult();
+            sc.Add(si.name, si);
         }
 
         private static void Assault(Dictionary<string, SocialInteraction> sc)
@@ -402,16 +416,17 @@ namespace NewNpc2
             InfluenceRule r;
 
             SubModule.existingRules.TryGetValue("LikesToSpeak", out r);
-            t.addInitRule(r);
+            t.addInitRule(r,false);
 
             SubModule.existingRules.TryGetValue("InterestRumor", out r);
             t.addInitRule(r);
 
             SubModule.existingRules.TryGetValue("Positive", out r);
-            t.addInitRule(r);
+            t.addInitRule(r,false);
 
             t.addPath(new Path(t,"I have to tell you something."));
             t.addPath(new Path(t,"That is really interesting.", 1));
+            t.addPath(new Path(t," ", 2));
 
             t.addInstRule(new InstRule("Hear", (List<dynamic> d) =>
             {
@@ -425,6 +440,26 @@ namespace NewNpc2
             sc.Add(n, t);
         }
 
+        public static SocialInteraction Gift()
+        {
+            string n = "Gift";
+            SocialInteraction t = new SocialInteraction(n, 10, 0);
+
+            Condition c;
+
+            InfluenceRule r;
+            SubModule.existingRules.TryGetValue("Positive", out r);
+            t.addInitRule(r);
+            SubModule.existingRules.TryGetValue("LikesThem", out r);
+            t.addInitRule(r);
+            SubModule.existingRules.TryGetValue("BeingNice", out r);
+            t.addInitRule(r);
+
+            t.addsentence("I have a gift for you");
+
+            return t;
+
+        }
 
         private static void Gossip(Dictionary<string, SocialInteraction> sc)
         {
@@ -449,9 +484,7 @@ namespace NewNpc2
             sc.Add(n, t);
         }
 
-
-        //romance
-        private static void Flirt(Dictionary<string, SocialInteraction> sc)
+        public static SocialInteraction Flirt()
         {
             string n = "Flirt";
             SocialInteraction t = new SocialInteraction(n, 10, 0);
@@ -482,7 +515,15 @@ namespace NewNpc2
             t.addsentence("Yes", 1, sentenceType.pResponse);
             t.addsentence("Uh okay", 1, sentenceType.normalResponse);
             t.addsentence("Not really", 2, sentenceType.nResponse);
-            sc.Add(n, t);
+
+            return t;
+        }
+
+        //romance
+        private static void Flirt(Dictionary<string, SocialInteraction> sc)
+        {
+            SocialInteraction si = Flirt();
+            sc.Add(si.name, si);
         }
 
         private static void Date(Dictionary<string, SocialInteraction> sc)
@@ -634,6 +675,19 @@ namespace NewNpc2
 
             return l;
 
+        }
+
+        public static List<SocialInteraction> rumorInteractions()
+        {
+            List<SocialInteraction> l = new List<SocialInteraction>();
+
+
+            l.Add(Flirt());
+            l.Add(Insult());
+            l.Add(Complain());
+            l.Add(Compliment());
+
+            return l;
         }
 
         public static Dictionary<string, SocialInteraction> createSocialExchanges()

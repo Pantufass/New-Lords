@@ -49,7 +49,8 @@ namespace NewNpc2
         {
             foreach (Settlement s in Settlement.All)
             {
-                settlements.Add(s, new RumorHolder());
+                if(!settlements.ContainsKey(s))
+                    settlements.Add(s, new RumorHolder());
             }
 
         }
@@ -64,9 +65,8 @@ namespace NewNpc2
         private void OnSettlement(MobileParty mp, Settlement s, Hero h)
         {
             if (mp == null || s == null || h == null) return;
-            Character c = CharacterManager.findChar(h);
+            Character c = NPCDialogBehaviour.characterManager.findChar(h);
             c.setSet(s);
-            if (h == Hero.MainHero) MainHeroOnSet(s);
             RumorParty party;
             if (!parties.TryGetValue(mp, out party))
             {
@@ -80,7 +80,7 @@ namespace NewNpc2
                 settlements.Add(s, curr);
             }
 
-            initSet(curr);
+            //initSet(curr);
             curr.setRumors(party.getRumors());
         }
 
@@ -94,19 +94,6 @@ namespace NewNpc2
 
         }
 
-        
-        private void MainHeroOnSet(Settlement s)
-        {
-            RumorHolder holder;
-            if (settlements.TryGetValue(s, out holder)) currentSet = holder;
-            else
-            {
-                holder = new RumorHolder();
-                settlements.Add(s, holder);
-                currentSet = holder;
-            }
-
-        }
 
         private void OnPartyCreated(MobileParty mp)
         {
@@ -157,12 +144,12 @@ namespace NewNpc2
 
         private void OnWarDeclared(IFaction declarer, IFaction declared)
         {
-            SocialExchange se = new SocialExchange(CharacterManager.findChar(declarer.Leader), CharacterManager.findChar(declared.Leader), SocialInteractionManager.War(), intent.Negative);
+            SocialExchange se = new SocialExchange(NPCDialogBehaviour.characterManager.findChar(declarer.Leader), NPCDialogBehaviour.characterManager.findChar(declared.Leader), SocialInteractionManager.War(), intent.Negative);
 
             List<string> l = new List<string>();
             l.Add(declarer.Name.ToString());
             l.Add(declared.Name.ToString());
-            Rumor r = new Rumor(new Rumor.Information(l, true), se, 0.7f);
+            Rumor r = new Rumor(new Rumor.Information(l,true), se, 0.7f);
 
             WorldEvent(r);
         }
@@ -170,9 +157,9 @@ namespace NewNpc2
 
         private void OnMapEvent(MapEvent me)
         {
-            if (me.Winner.LeaderParty.LeaderHero == null) return;
-            Character winner = CharacterManager.findChar(me.Winner.LeaderParty.LeaderHero);
-            Character loser = CharacterManager.findChar(me.GetLeaderParty(me.DefeatedSide));
+            if (!me.HasWinner || me.Winner.LeaderParty.LeaderHero == null || me.GetNumberOfInvolvedMen() < 30) return;
+            Character winner = NPCDialogBehaviour.characterManager.findChar(me.Winner.LeaderParty.LeaderHero);
+            Character loser = NPCDialogBehaviour.characterManager.findChar(me.GetLeaderParty(me.DefeatedSide).LeaderHero);
 
 
             SocialExchange se = new SocialExchange(winner, loser, SocialInteractionManager.Battle(), intent.Neutral);
@@ -183,7 +170,7 @@ namespace NewNpc2
 
         private void OnDefeat(Hero winner, Hero loser)
         {
-            SocialExchange se = new SocialExchange(CharacterManager.findChar(winner.CharacterObject), CharacterManager.findChar(loser.CharacterObject), SocialInteractionManager.Battle(), intent.Neutral);
+            SocialExchange se = new SocialExchange(NPCDialogBehaviour.characterManager.findChar(winner.CharacterObject), NPCDialogBehaviour.characterManager.findChar(loser.CharacterObject), SocialInteractionManager.Battle(), intent.Neutral);
             Rumor r = new Rumor(new Rumor.Information(Rumor.Information.type.Warfare), se);
 
             if (winner == Hero.MainHero) CloseWorldEvent(r, winner.GetPosition(), true);
@@ -193,23 +180,52 @@ namespace NewNpc2
         private void DailyTick()
         {
             Settlement s = Settlement.All[SubModule.rand.Next(Settlement.All.Count)];
-            CreateGossip(settlements[s],s);
+            CreateRandomGossip(s);
         }
 
-        private void CreateGossip(RumorHolder rh, Settlement s)
+        private bool CreateRandomGossip(Settlement s)
         {
-
-        }
-
-        public static void CreateGossip(SocialExchange se)
-        {
-            if (se.getInitiator().agent != null)
+            
+            List<Character> l = new List<Character>();
+            l.AddRange(NPCDialogBehaviour.characterManager.getCharacters(s.HeroesWithoutParty));
+            foreach (MobileParty p in s.Parties)
             {
-
+                if (p.LeaderHero != null) l.Add(NPCDialogBehaviour.characterManager.findChar(p.LeaderHero));
+                else if (p.Leader != null) l.Add(NPCDialogBehaviour.characterManager.findChar(p.Leader));
             }
-            else if (se.getReceiver().agent != null)
-            {
+            Character c = null;
+            if (l.Count == 0) return false;
+            if (SubModule.rand.Next(5) < 1) c = l[SubModule.rand.Next(l.Count)];
+            List<SocialInteraction> si = SocialInteractionManager.rumorInteractions();
+            SocialExchange se = new SocialExchange(l[SubModule.rand.Next(l.Count)],c,si[SubModule.rand.Next(si.Count)],intent.Neutral);
 
+            CreateGossip(se,s);
+            return true;
+        }
+
+        public void CreateGossip(SocialExchange se, Settlement s = null)
+        {
+            if(s != null)
+            {
+                if (!settlements.TryGetValue(s, out RumorHolder rh))
+                {
+                    rh = new RumorHolder();
+                    settlements.Add(s, rh);
+                }
+                List<Rumor> l = new List<Rumor>();
+                l.Add(new Rumor(se));
+                rh.addRumor(new Rumor(se));
+                return;
+            }
+            Character c = se.getInitiator();
+            if (c.isHero())
+            {
+                if (!settlements.TryGetValue(c.hero.CurrentSettlement, out RumorHolder rh))
+                {
+                    rh = new RumorHolder();
+                    settlements.Add(s, rh);
+                }
+                rh.addRumor(new Rumor(se));
             }
         }
 
@@ -237,7 +253,8 @@ namespace NewNpc2
 
         public override void SyncData(IDataStore dataStore)
         {
-           
+            dataStore.SyncData("Parties", ref parties);
+            dataStore.SyncData("RumorHolders", ref settlements);
         }
     }
 }
